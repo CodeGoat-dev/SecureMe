@@ -266,7 +266,7 @@ async def handle_arming():
                         security_code = await load_security_code_from_file()
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
                         print("Waiting for security code")
-    while attempts < security_code_max_entry_attempts:
+                        while attempts < security_code_max_entry_attempts:
                             code = ""
                             while len(code) < security_code_max_length:
                                 key = read_keypad_key()
@@ -316,7 +316,7 @@ async def handle_arming():
                         security_code = await load_security_code_from_file()
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
                         print("Waiting for security code")
-    while attempts < security_code_max_entry_attempts:
+                        while attempts < security_code_max_entry_attempts:
                             code = ""
                             while len(code) < security_code_max_length:
                                 key = read_keypad_key()
