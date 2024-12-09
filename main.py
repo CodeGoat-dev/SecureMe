@@ -270,6 +270,7 @@ async def handle_arming():
                             continue
                         elif not result:  # Max attempts reached or incorrect
                             continue
+                    await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Disarming")
                     buzzer_volume = get_buzzer_volume()
                     is_armed = False
@@ -286,6 +287,7 @@ async def handle_arming():
                             continue
                         elif not result:  # Max attempts reached or incorrect
                             continue
+                    await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Arming")
                     buzzer_volume = get_buzzer_volume()
                     await play_dynamic_bell(250, buzzer_volume)
