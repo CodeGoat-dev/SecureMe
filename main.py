@@ -261,49 +261,15 @@ async def handle_arming():
                         alarm_active = False
                         buzzer.duty_u16(0)  # Stop the buzzer immediately
                     if security_code:
-                        attempts = 0
                         entering_security_code = True
-                        security_code = await load_security_code_from_file()
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
                         print("Waiting for security code")
-                        while attempts < security_code_max_entry_attempts:
-                            code = ""
-                            while len(code) < security_code_max_length:
-                                key = read_keypad_key()
-                                if key:
-                                    if key == "#":
-                                        print(f"Code entered: {code}")
-                                        break
-                                    elif key == "*":
-                                        if len(code) == 0:
-                                            print("Code entry cancelled.")
-                                            break
-                                        print("Code cleared!")
-                                        code = ""
-                                    else:
-                                        code += key
-                                        print(f"Key pressed: {key}")
-                                await asyncio.sleep(0.1)  # Slight delay to avoid multiple detections
-                            entering_security_code = False
-                            if len(code) == 0:
-                                print("Code entry cancelled.")
-                                continue
-                            if not code == security_code:
-                                attempts += 1  # Increment the failed attempts counter
-                                print(f"Invalid security code provided. Attempt {attempts}/{security_code_max_entry_attempts}.")
-                                if attempts >= security_code_max_entry_attempts:
-                                    print("Maximum attempts reached. Triggering alarm.")
-                                    await alarm()
-                                    break
-                                await alarm()
-                                continue
-                            # Reset attempts on success
-                            attempts = 0
-                            await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
-                            print("Access granted.")
-                            break  # Exit the loop on success
-                        else:
-                            print("Out of attempts. Taking further action if needed.")
+                        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_max_length)
+                        entering_security_code = False
+                        if result is None:  # User cancelled
+                            continue
+                        elif not result:  # Max attempts reached or incorrect
+                            continue
                     print("Disarming")
                     buzzer_volume = get_buzzer_volume()
                     is_armed = False
@@ -311,49 +277,15 @@ async def handle_arming():
                     await system_ready_indicator()
                 else:
                     if security_code:
-                        attempts = 0      # Initialize attempts counter
                         entering_security_code = True
-                        security_code = await load_security_code_from_file()
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
                         print("Waiting for security code")
-                        while attempts < security_code_max_entry_attempts:
-                            code = ""
-                            while len(code) < security_code_max_length:
-                                key = read_keypad_key()
-                                if key:
-                                    if key == "#":
-                                        print(f"Code entered: {code}")
-                                        break
-                                    elif key == "*":
-                                        if len(code) == 0:
-                                            print("Code entry cancelled.")
-                                            break
-                                        print("Code cleared!")
-                                        code = ""
-                                    else:
-                                        code += key
-                                        print(f"Key pressed: {key}")
-                                await asyncio.sleep(0.1)  # Slight delay to avoid multiple detections
-                            entering_security_code = False
-                            if len(code) == 0:
-                                print("Code entry cancelled.")
-                                continue
-                            if not code == security_code:
-                                attempts += 1  # Increment the failed attempts counter
-                                print(f"Invalid security code provided. Attempt {attempts}/{security_code_max_entry_attempts}.")
-                                if attempts >= security_code_max_entry_attempts:
-                                    print("Maximum attempts reached. Triggering alarm.")
-                                    await alarm()
-                                    break
-                                await alarm()
-                                continue
-                            # Reset attempts on success
-                            attempts = 0
-                            await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
-                            print("Access granted.")
-                            break  # Exit the loop on success
-                        else:
-                            print("Out of attempts. Taking further action if needed.")
+                        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_max_length)
+                        entering_security_code = False
+                        if result is None:  # User cancelled
+                            continue
+                        elif not result:  # Max attempts reached or incorrect
+                            continue
                     print("Arming")
                     buzzer_volume = get_buzzer_volume()
                     await play_dynamic_bell(250, buzzer_volume)
@@ -620,6 +552,47 @@ def keypad_entry_indicator():
         led.value(0)
     except Exception as e:
         print(f"Error in keypad_entry_indicator: {e}")
+
+# Security code entry
+async def enter_security_code(security_code, max_attempts, max_length):
+    """Handle security code entry with cancellation support."""
+    attempts = 0
+    while attempts < max_attempts:
+        code = ""
+        while len(code) < max_length:
+            key = read_keypad_key()
+            if key:
+                if key == "#":  # Submit code
+                    print(f"Code entered: {code}")
+                    break
+                elif key == "*":  # Cancel or clear code
+                    if len(code) == 0:
+                        print("Code entry cancelled.")
+                        return None  # Cancellation
+                    print("Code cleared!")
+                    code = ""  # Reset
+                else:
+                    code += key
+                    print(f"Key pressed: {key}")
+            await asyncio.sleep(0.1)  # Slight delay to avoid multiple detections
+
+        if len(code) == 0:  # Code entry cancelled
+            print("Code entry cancelled.")
+            return None
+        if code != security_code:  # Incorrect code
+            attempts += 1
+            print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
+            if attempts >= max_attempts:
+                print("Maximum attempts reached. Triggering alarm.")
+                await alarm()  # Trigger the alarm after too many attempts
+                return False  # Return False to indicate max attempts exceeded
+            await alarm()
+            continue
+
+        # Correct code
+        print("Access granted.")
+        return True  # Success
+    return False  # Max attempts exceeded
 
 # System start-up
 async def system_startup():
