@@ -102,6 +102,8 @@ async def play_dynamic_bell(frequency, initial_volume, loop_delay=0.1, times=5):
                 await asyncio.sleep(loop_delay)
     except Exception as e:
         print(f"Error in play_dynamic_bell: {e}")
+    finally:
+        buzzer.duty_u16(0)  # Turn off the buzzer
 
 async def play_alarm(alarm_type="sweep", start_freq=500, end_freq=3000, cycles=10, step=50, duration=0.01):
     """
@@ -243,6 +245,7 @@ async def alarm():
         print(f"Error in alarm: {e}") 
     finally:
         alarm_active = False
+        led.value(0)
 
 # Arming handler
 async def handle_arming():
@@ -408,6 +411,8 @@ async def handle_arming_indicator():
             await asyncio.sleep(1)  # Polling interval
     except Exception as e:
         print(f"Error in handle_arming_indicator: {e}")
+    finally:
+        led.value(0)
 
 # Unused pin initialization function
 async def initialize_pins(skip_pins=None):
@@ -518,6 +523,8 @@ async def system_startup_indicator():
         buzzer.duty_u16(0)
     except Exception as e:
         print(f"Error in system_startup_indicator: {e}")
+    finally:
+        buzzer.duty_u16(0)  # Turn off the buzzer
 
 # System ready indicator
 async def system_ready_indicator():
@@ -537,6 +544,8 @@ async def system_ready_indicator():
         led.value(0)
     except Exception as e:
         print(f"Error in system_ready_indicator: {e}")
+    finally:
+        buzzer.duty_u16(0)  # Turn off the buzzer
 
 # Keypad entry indicator
 def keypad_entry_indicator():
@@ -554,6 +563,8 @@ def keypad_entry_indicator():
         led.value(0)
     except Exception as e:
         print(f"Error in keypad_entry_indicator: {e}")
+    finally:
+        buzzer.duty_u16(0)  # Turn off the buzzer
 
 # Security code entry
 async def enter_security_code(security_code, max_attempts, max_length):
