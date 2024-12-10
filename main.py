@@ -529,6 +529,9 @@ def read_keypad_key():
         return None
     except Exception as e:
         print(f"Error in read_keypad_key: {e}")
+    finally:
+        for i, row in enumerate(keypad_rows):
+            row.low()
 
 # System startup indicator
 async def system_startup_indicator():
