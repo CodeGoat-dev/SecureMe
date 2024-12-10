@@ -414,6 +414,31 @@ async def handle_arming_indicator():
     finally:
         led.value(0)
 
+# Keypad key detection
+async def detect_keypad_keys():
+    """Detect matrix keypad key commands."""
+    global is_armed, entering_security_code
+
+    try:
+        print("Detecting keypad keys...")
+
+        while True:
+            if entering_security_code:
+                await asyncio.sleep(0.05)
+                continue
+
+            key = read_keypad_key()
+            if key:
+                if key == "d":
+                    print("Initiating change_security_code.")
+                    await change_security_code()
+                else:
+                    print(f"Unhandled key press detected: {key}")
+
+            await asyncio.sleep(0.05)  # Polling interval
+    except Exception as e:
+        print(f"Error in detect_keypad_keys: {e}")
+
 # Unused pin initialization function
 async def initialize_pins(skip_pins=None):
     """
@@ -607,6 +632,78 @@ async def enter_security_code(security_code, max_attempts, max_length):
         return True  # Success
     return False  # Max attempts exceeded
 
+# Change security code
+async def change_security_code():
+    global security_code, entering_security_code
+
+    try:
+        if security_code:
+            entering_security_code = True
+            await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
+            await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
+
+            print("Waiting for current security code")
+            result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_max_length)
+
+            if result is None:  # User cancelled
+                print("User cancelled the security code entry.")
+                entering_security_code = False
+                return
+            elif not result:  # Max attempts reached or incorrect
+                print("Max attempts reached or incorrect code entered.")
+                entering_security_code = False
+                return
+
+            # Helper function for entering and confirming the code
+            async def enter_code(prompt):
+                print(prompt)
+                code = ""
+                while len(code) < security_code_max_length:
+                    key = read_keypad_key()
+                    if key:
+                        if key == "#":
+                            print(f"Code entered: {code}")
+                            break
+                        elif key == "*":
+                            if len(code) == 0:
+                                print("Code entry cancelled.")
+                                return None
+                            print("Code cleared!")
+                            code = ""
+                        else:
+                            code += key
+                            print(f"Key pressed: {key}")
+                    await asyncio.sleep(0.1)  # Slight delay to avoid multiple detections
+                return code
+
+            # Enter new code
+            new_code = await enter_code("Enter new security code:")
+            if new_code is None:
+                entering_security_code = False
+                return
+
+            # Confirm new code
+            new_code_confirmation = await enter_code("Confirm new security code:")
+            if new_code_confirmation is None:
+                entering_security_code = False
+                return
+
+            if new_code != new_code_confirmation:
+                print("Confirmation code does not match.")
+                entering_security_code = False
+                return
+
+            # Update the security code
+            security_code = new_code
+            await save_security_code_to_file()
+            print(f"Security code updated. New code: {security_code}")
+
+        entering_security_code = False
+    except Exception as e:
+        print(f"Error in change_security_code: {e}")
+    finally:
+        entering_security_code = False
+
 # System start-up
 async def system_startup():
     """System firmware initialization."""
@@ -654,7 +751,8 @@ async def main():
         handle_alarm_sound_switching(),
         detect_motion(),
         detect_tilt(),
-        handle_arming_indicator()
+        handle_arming_indicator(),
+        detect_keypad_keys()
     )
 
 # Startup and run
