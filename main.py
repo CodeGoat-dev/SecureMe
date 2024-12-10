@@ -57,6 +57,7 @@ buzzer_volume = 0
 security_code = "0000"
 entering_security_code = False
 security_code_max_entry_attempts = 3
+security_code_min_length = 4
 security_code_max_length = 8
 keypad_characters = [
     ["1", "2", "3", "A"],
@@ -267,7 +268,7 @@ async def handle_arming():
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
                         print("Waiting for security code")
-                        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_max_length)
+                        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
                         entering_security_code = False
                         if result is None:  # User cancelled
                             continue
@@ -284,7 +285,7 @@ async def handle_arming():
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
                         print("Waiting for security code")
-                        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_max_length)
+                        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
                         entering_security_code = False
                         if result is None:  # User cancelled
                             continue
@@ -428,8 +429,8 @@ async def detect_keypad_keys():
                 continue
 
             key = read_keypad_key()
-            if key:
-                if key == "d":
+            if key and not entering_security_code:
+                if key == "D":
                     print("Initiating change_security_code.")
                     await change_security_code()
                 else:
@@ -592,7 +593,7 @@ def keypad_entry_indicator():
         buzzer.duty_u16(0)  # Turn off the buzzer
 
 # Security code entry
-async def enter_security_code(security_code, max_attempts, max_length):
+async def enter_security_code(security_code, max_attempts, min_length, max_length):
     """Handle security code entry with cancellation support."""
     attempts = 0
     while attempts < max_attempts:
@@ -601,6 +602,9 @@ async def enter_security_code(security_code, max_attempts, max_length):
             key = read_keypad_key()
             if key:
                 if key == "#":  # Submit code
+                    if len(code) < min_length:
+                        print(f"Code too short: {code}")
+                        return None  # Cancellation
                     print(f"Code entered: {code}")
                     break
                 elif key == "*":  # Cancel or clear code
@@ -617,6 +621,11 @@ async def enter_security_code(security_code, max_attempts, max_length):
         if len(code) == 0:  # Code entry cancelled
             print("Code entry cancelled.")
             return None
+
+        if len(code) < min_length:  # Code too short
+            print(f"Code too short: {code}")
+            return None
+
         if code != security_code:  # Incorrect code
             attempts += 1
             print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
@@ -643,16 +652,20 @@ async def change_security_code():
             await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
 
             print("Waiting for current security code")
-            result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_max_length)
+            result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
 
             if result is None:  # User cancelled
                 print("User cancelled the security code entry.")
                 entering_security_code = False
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                 return
             elif not result:  # Max attempts reached or incorrect
                 print("Max attempts reached or incorrect code entered.")
                 entering_security_code = False
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                 return
+
+            await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
 
             # Helper function for entering and confirming the code
             async def enter_code(prompt):
@@ -662,6 +675,9 @@ async def change_security_code():
                     key = read_keypad_key()
                     if key:
                         if key == "#":
+                            if code < security_code_min_length:
+                                print(f"Code too short: {code}")
+                                return None
                             print(f"Code entered: {code}")
                             break
                         elif key == "*":
@@ -680,22 +696,29 @@ async def change_security_code():
             new_code = await enter_code("Enter new security code:")
             if new_code is None:
                 entering_security_code = False
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                 return
+
+            await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
 
             # Confirm new code
             new_code_confirmation = await enter_code("Confirm new security code:")
             if new_code_confirmation is None:
                 entering_security_code = False
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                 return
 
             if new_code != new_code_confirmation:
                 print("Confirmation code does not match.")
                 entering_security_code = False
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                 return
 
             # Update the security code
             security_code = new_code
             await save_security_code_to_file()
+            await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
+            await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
             print(f"Security code updated. New code: {security_code}")
 
         entering_security_code = False
