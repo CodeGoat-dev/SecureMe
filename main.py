@@ -264,6 +264,7 @@ async def handle_arming():
                         print("Stopping alarm...")
                         alarm_active = False
                         buzzer.duty_u16(0)  # Stop the buzzer immediately
+                    security_code = await load_security_code_from_file()
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -281,6 +282,7 @@ async def handle_arming():
                     await play_dynamic_bell(250, buzzer_volume)
                     await system_ready_indicator()
                 else:
+                    security_code = await load_security_code_from_file()
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -521,7 +523,7 @@ def read_keypad_key():
                 if col.value() == 1:
                     row.low()
                     keypad_entry_indicator()
-                    time.sleep_ms(100)
+                    time.sleep_ms(50)
                     return keypad_characters[i][j]
             row.low()
         return None
@@ -646,6 +648,7 @@ async def change_security_code():
     global security_code, entering_security_code
 
     try:
+        security_code = await load_security_code_from_file()
         if security_code:
             entering_security_code = True
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
