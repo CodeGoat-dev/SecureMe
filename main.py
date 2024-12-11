@@ -516,13 +516,16 @@ def get_buzzer_volume():
 # Read a single key from the keypad
 def read_keypad_key():
     """Read a key press from the matrix keypad."""
+    global entering_security_code
+
     try:
         for i, row in enumerate(keypad_rows):
             row.high()
             for j, col in enumerate(keypad_cols):
                 if col.value() == 1:
                     row.low()
-                    keypad_entry_indicator()
+                    if entering_security_code:
+                        keypad_entry_indicator()
                     time.sleep_ms(50)
                     return keypad_characters[i][j]
             row.low()
