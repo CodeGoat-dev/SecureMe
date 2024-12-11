@@ -59,6 +59,7 @@ entering_security_code = False
 security_code_max_entry_attempts = 3
 security_code_min_length = 4
 security_code_max_length = 8
+keypad_locked = True
 keypad_characters = [
     ["1", "2", "3", "A"],
     ["4", "5", "6", "B"],
@@ -420,7 +421,7 @@ async def handle_arming_indicator():
 # Keypad key detection
 async def detect_keypad_keys():
     """Detect matrix keypad key commands."""
-    global is_armed, entering_security_code
+    global is_armed, keypad_locked, entering_security_code
 
     try:
         print("Detecting keypad keys...")
@@ -432,7 +433,13 @@ async def detect_keypad_keys():
 
             key = read_keypad_key()
             if key and not entering_security_code:
-                if key == "D":
+                if keypad_locked and key != "A":
+                    await asyncio.sleep(0.05)
+                    continue
+                if key == "A":
+                    print("Initiating keypad_lock.")
+                    await keypad_lock()
+                elif key == "D":
                     print("Initiating change_security_code.")
                     await change_security_code()
                 else:
@@ -526,7 +533,7 @@ def read_keypad_key():
                     row.low()
                     if entering_security_code:
                         keypad_entry_indicator()
-                    time.sleep_ms(50)
+                    time.sleep_ms(100)
                     return keypad_characters[i][j]
             row.low()
         return None
@@ -559,6 +566,7 @@ async def system_startup_indicator():
         print(f"Error in system_startup_indicator: {e}")
     finally:
         buzzer.duty_u16(0)  # Turn off the buzzer
+        led.value(0)
 
 # System ready indicator
 async def system_ready_indicator():
@@ -580,6 +588,7 @@ async def system_ready_indicator():
         print(f"Error in system_ready_indicator: {e}")
     finally:
         buzzer.duty_u16(0)  # Turn off the buzzer
+        led.value(0)
 
 # Keypad entry indicator
 def keypad_entry_indicator():
@@ -599,6 +608,56 @@ def keypad_entry_indicator():
         print(f"Error in keypad_entry_indicator: {e}")
     finally:
         buzzer.duty_u16(0)  # Turn off the buzzer
+        led.value(0)
+
+# Keypad lock indicator
+def keypad_lock_indicator(locked = True):
+    """Play the keypad lock indicator."""
+    global buzzer_volume
+
+    try:
+        buzzer_volume = get_buzzer_volume()
+
+        buzzer.duty_u16(buzzer_volume)
+
+        led.value(1)
+
+        if locked:
+            buzzer.freq(400)
+            time.sleep(0.05)
+            buzzer.freq(200)
+            time.sleep(0.05)
+        else:
+            buzzer.freq(200)
+            time.sleep(0.05)
+            buzzer.freq(400)
+            time.sleep(0.05)
+
+        buzzer.duty_u16(0)
+
+        led.value(0)
+    except Exception as e:
+        print(f"Error in keypad_entry_indicator: {e}")
+    finally:
+        buzzer.duty_u16(0)  # Turn off the buzzer
+        led.value(0)
+
+# Matrix keypad lock
+async def keypad_lock():
+    """Handle locking and unlocking the matrix keypad."""
+    global keypad_locked
+
+    try:
+        if keypad_locked:
+            print("Keypad unlocked.")
+            keypad_locked = False
+            keypad_lock_indicator(keypad_locked)
+        else:
+            print("Keypad locked.")
+            keypad_locked = True
+            keypad_lock_indicator(keypad_locked)
+    except Exception as e:
+        print(f"Error in keypad_lock: {e}")
 
 # Security code entry
 async def enter_security_code(security_code, max_attempts, min_length, max_length):
