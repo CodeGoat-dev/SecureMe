@@ -81,6 +81,19 @@ class CaptivePortal:
         except Exception as e:
             print(f"Error starting Access point: {e}")
 
+    async def stop_ap(self):
+        """Stops the access point."""
+        try:
+            if not self.ap_if.isconnected():
+                print("The access point is not currently enabled.")
+                return
+            self.ap_if.config(essid="", password="")
+            self.ap_if.active(False)
+            self.ap_if.deinit()
+            print("Access point stopped.")
+        except Exception as e:
+            print(f"Error stopping Access point: {e}")
+
     async def handle_request(self, reader, writer):
         """Handles incoming HTTP requests."""
         try:
@@ -152,9 +165,8 @@ class CaptivePortal:
 
                 if self.sta.isconnected():
                     self.save_config(ssid, password)
-                    self.ap_if.active(False)
-                    self.ap_if.deinit()
-                    self.stop_server()
+                    await self.stop_ap()
+                    await self.stop_server()
                     return f"<html><head><title>Connected</title></head><body><h1>Connected</h1><p>You successfully connected to {ssid}.</p><p><h2>Information</h2><p>The access point has been shut down and you can now close this page.</p><p>© (c) 2024 Goat Technologies</p></body></html>"
                 else:
                     return f"<html><head><title>Connection Failed</title></head><body><h1>Connection Failed</h1><p>Failed to connect to {ssid}.</p></body></html>"
@@ -192,7 +204,7 @@ class CaptivePortal:
     def stop_server(self):
         """Stops the HTTP server."""
         if self.server:
-            self.server.close()
+            await self.server.await_closed()
             print("Server stopped.")
 
     async def run(self):
