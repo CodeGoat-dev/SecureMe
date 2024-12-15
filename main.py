@@ -11,12 +11,26 @@
 
 # Imports
 from machine import Pin, PWM, ADC
+import os
 import time
 import uasyncio as asyncio
 import uos
+from CaptivePortal import CaptivePortal
+
+def isPicoW():
+    try:
+        # Try to import the network module, which is only available on Pico W
+        import network
+        return True  # Pico W has Wi-Fi, so return True
+    except ImportError:
+        # If the network module is unavailable, it's a regular Pico
+        return False
 
 # Pin constants
-LED_PIN = 25
+if isPicoW():
+    LED_PIN = "LED"
+else:
+    LED_PIN = 25
 BUZZER_PIN = 1
 PIR_PIN = 2
 TILT_SWITCH_PIN = 3
@@ -48,7 +62,7 @@ keypad_rows = [Pin(pin, Pin.OUT) for pin in keypad_row_pins]
 keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 
 # Global variables
-config_file = "alarm_config.txt"
+alarm_config_file = "alarm_config.txt"
 security_code_config_file = "security_config.txt"
 is_armed = True
 alarm_active = False
@@ -325,7 +339,7 @@ async def handle_alarm_testing():
 # Alarm sound switching handler
 async def handle_alarm_sound_switching():
     """Handle switching the alarm sound for the system."""
-    global buzzer_volume, alarm_sound, config_file
+    global buzzer_volume, alarm_sound, alarm_config_file
 
     try:
         # Load the saved alarm sound value or default
@@ -471,12 +485,27 @@ async def initialize_pins(skip_pins=None):
             # Ignore invalid pin numbers or configuration errors
             pass
 
+# Configure network interfaces on PicoW
+def configure_network():
+    import network
+    ap = network.WLAN(network.AP_IF)
+    sta = network.WLAN(network.STA_IF)
+
+    try:
+        ap.deinit()
+        ap.config(essid="", password="")
+        ap.active(False)
+        sta.deinit()
+        sta.active(False)
+    except Exception as e:
+        print(f"Error in configure_network: {e}")
+
 # Alarm sound loading function
 async def load_alarm_sound_from_file():
     """Load the alarm sound value from a file."""
     try:
-        if config_file in uos.listdir("/"):
-            with open(config_file, "r") as f:
+        if alarm_config_file in uos.listdir("/"):
+            with open(alarm_config_file, "r") as f:
                 return int(f.read().strip())
         else:
             return 0
@@ -488,7 +517,7 @@ async def load_alarm_sound_from_file():
 async def save_alarm_sound_to_file():
     """Save the current alarm sound to a file."""
     try:
-        with open(config_file, "w") as f:
+        with open(alarm_config_file, "w") as f:
             f.write(str(alarm_sound))
     except Exception as e:
         print(f"Error writing to config file: {e}")
@@ -803,11 +832,16 @@ async def system_startup():
     print("Starting...")
 
     try:
-        await initialize_pins(skip_pins=[LED_PIN, BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, POTENTIOMETER_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3]])
+        if isPicoW():
+            print("Initializing network interfaces...")
+            configure_network()
+
+        print("Configuring unused GPIO pins...")
+        await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, POTENTIOMETER_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3]])
 
         await system_startup_indicator()
 
-        print("Warming up PIR...")
+        print("Warming up PIR sensor...")
 
         buzzer_volume = get_buzzer_volume()
 
@@ -816,6 +850,7 @@ async def system_startup():
             await play_dynamic_bell(250, buzzer_volume, 0.1, 1)
         print("PIR sensor ready!")
         await system_ready_indicator()
+        print("System ready.")
     except Exception as e:
         print(f"Error in system_startup: {e}")
 
@@ -831,6 +866,13 @@ async def main():
     """Main coroutine to handle firmware services"""
     global buzzer_volume
 
+    # Instantiate the captive portal
+    portal = CaptivePortal()
+
+    # Configure captive portal settings
+    portal.ssid = "Goat - SecureMe"
+    portal.password = "secureme"
+
     buzzer_volume = get_buzzer_volume()
 
     await system_startup()
@@ -838,12 +880,13 @@ async def main():
     # Run all tasks concurrently
     await asyncio.gather(
         handle_arming(),
+        handle_arming_indicator(),
         handle_alarm_testing(),
         handle_alarm_sound_switching(),
         detect_motion(),
         detect_tilt(),
-        handle_arming_indicator(),
-        detect_keypad_keys()
+        detect_keypad_keys(),
+        portal.run()
     )
 
 # Startup and run
