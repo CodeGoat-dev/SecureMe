@@ -73,8 +73,13 @@ class CaptivePortal:
         except Exception as e:
             print(f"Error saving configuration: {e}")
 
-    async def start_ap(self, ip_address=self.ap_ip_address, subnet=self.ap_subnet, gateway=self.ap_gateway, dns=self.ap_dns):
+    async def start_ap(self):
         """Starts the access point with WPA2 security and optional custom IP configuration."""
+        ip_address = self.ap_ip_address
+        subnet = self.ap_subnet
+        gateway = self.ap_gateway
+        dns = self.ap_dns
+
         try:
             if len(self.password) < 8:
                 raise ValueError("Password must be at least 8 characters long.")
