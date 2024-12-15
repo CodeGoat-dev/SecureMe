@@ -18,6 +18,10 @@ class CaptivePortal:
         self.http_port = 80
         self.sta = network.WLAN(network.STA_IF)
         self.ap_if = network.WLAN(network.AP_IF)
+        self.ap_ip_address = "192.168.4.1"
+        self.ap_subnet = "255.255.255.0"
+        self.ap_gateway = "192.168.4.1"
+        self.ap_dns = "192.168.4.1"
         self.ip_address = None
         self.config_file = "network_config.txt"
 
@@ -69,14 +73,20 @@ class CaptivePortal:
         except Exception as e:
             print(f"Error saving configuration: {e}")
 
-    async def start_ap(self):
-        """Starts the access point with WPA2 security."""
+    async def start_ap(self, ip_address=self.ap_ip_address, subnet=self.ap_subnet, gateway=self.ap_gateway, dns=self.ap_dns):
+        """Starts the access point with WPA2 security and optional custom IP configuration."""
         try:
             if len(self.password) < 8:
                 raise ValueError("Password must be at least 8 characters long.")
+
             self.ap_if.config(essid=self.ssid, password=self.password)
             self.ap_if.active(True)
+
+            # Configure access point IP settings
+            self.ap_if.ifconfig((ip_address, subnet, gateway, dns))
+
             self.ip_address = self.ap_if.ifconfig()[0]
+
             print(f"Access point started. SSID: {self.ssid}, IP: {self.ip_address}")
         except Exception as e:
             print(f"Error starting Access point: {e}")
@@ -87,9 +97,11 @@ class CaptivePortal:
             if not self.ap_if.isconnected():
                 print("The access point is not currently enabled.")
                 return
+
             self.ap_if.config(essid="", password="")
             self.ap_if.active(False)
             self.ap_if.deinit()
+
             print("Access point stopped.")
         except Exception as e:
             print(f"Error stopping Access point: {e}")
@@ -201,7 +213,7 @@ class CaptivePortal:
         while True:
             await asyncio.sleep(1)  # Keep the server running
 
-    def stop_server(self):
+    async def stop_server(self):
         """Stops the HTTP server."""
         if self.server:
             await self.server.await_closed()
