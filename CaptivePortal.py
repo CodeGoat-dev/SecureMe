@@ -2,7 +2,7 @@
 # Version 1.00
 # © (c) 2024 Goat Technologies
 # Description:
-# Provides captive portal and wireless connectivity for Goat firmware.
+# Provides captive portal and wireless connectivity for Goat device firmware.
 
 # Imports
 import network
@@ -12,20 +12,30 @@ import utime
 
 # CaptivePortal class
 class CaptivePortal:
+    # Constructor
     def __init__(self, ssid="Goat - Captive Portal", password="securepassword"):
+        # Network configuration
+        self.config_file = "network_config.txt"
+
+        # Interface configuration
+        self.sta = network.WLAN(network.STA_IF)
+        self.ap_if = network.WLAN(network.AP_IF)
+        self.ip_address = None
+        self.server = None
+
+        # Access point settings
         self.ssid = ssid
         self.password = password
         self.http_port = 80
-        self.sta = network.WLAN(network.STA_IF)
-        self.ap_if = network.WLAN(network.AP_IF)
+
+        # Access point IP settings
         self.ap_ip_address = "192.168.4.1"
         self.ap_subnet = "255.255.255.0"
         self.ap_gateway = "192.168.4.1"
         self.ap_dns = "192.168.4.1"
-        self.ip_address = None
-        self.config_file = "network_config.txt"
 
-        self.server = None
+        # STA web server configuration
+        self.sta_web_server = None
 
     def load_config(self):
         """Loads saved network configuration and connects."""
@@ -52,6 +62,9 @@ class CaptivePortal:
                     if self.sta.isconnected():
                         self.ip_address = self.sta.ifconfig()[0]
                         print(f"Connected to {ssid}. IP: {self.ip_address}")
+                        if self.sta_web_server:
+                            web_server = self.sta_web_server()
+                            self.server = await web_server.run()
                         break
                     else:
                         print(f"Attempt {attempts + 1}: Failed to connect to Wi-Fi.")
@@ -155,7 +168,9 @@ class CaptivePortal:
             html += f"<h2>Error scanning networks: {e}</h2>"
         finally:
             self.sta.active(False)
-        html += "<a href='/'>Back</a></body></html>"
+        html += "<a href='/'>Go Back</a><br>
+            <p>© (c) 2024 Goat Technologies</p>
+            </body></html>"
         return html
 
     async def connect_to_wifi(self, request):
@@ -184,6 +199,9 @@ class CaptivePortal:
                     self.save_config(ssid, password)
                     await self.stop_ap()
                     await self.stop_server()
+                    if self.sta_web_server:
+                        web_server = self.sta_web_server()
+                        self.server = await web_server.run()
                     return f"<html><head><title>Connected</title></head><body><h1>Connected</h1><p>You successfully connected to {ssid}.</p><p><h2>Information</h2><p>The access point has been shut down and you can now close this page.</p><p>© (c) 2024 Goat Technologies</p></body></html>"
                 else:
                     return f"<html><head><title>Connection Failed</title></head><body><h1>Connection Failed</h1><p>Failed to connect to {ssid}.</p></body></html>"
