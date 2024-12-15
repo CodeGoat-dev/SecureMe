@@ -15,11 +15,13 @@ class CaptivePortal:
     def __init__(self, ssid="Goat - Captive Portal", password="securepassword"):
         self.ssid = ssid
         self.password = password
-        self.port = 80
+        self.http_port = 80
         self.sta = network.WLAN(network.STA_IF)
         self.ap_if = network.WLAN(network.AP_IF)
         self.ip_address = None
         self.config_file = "network_config.txt"
+
+        self.server = None
 
     def load_config(self):
         """Loads saved network configuration and connects."""
@@ -152,6 +154,7 @@ class CaptivePortal:
                     self.save_config(ssid, password)
                     self.ap_if.active(False)
                     self.ap_if.deinit()
+                    self.stop_server()
                     return f"<html><head><title>Connected</title></head><body><h1>Connected</h1><p>You successfully connected to {ssid}.</p><p><h2>Information</h2><p>The access point has been shut down and you can now close this page.</p><p>© (c) 2024 Goat Technologies</p></body></html>"
                 else:
                     return f"<html><head><title>Connection Failed</title></head><body><h1>Connection Failed</h1><p>Failed to connect to {ssid}.</p></body></html>"
@@ -180,11 +183,17 @@ class CaptivePortal:
         """Starts the HTTP server asynchronously."""
         if not self.ip_address:
             raise RuntimeError("AP IP address not assigned. Cannot start server.")
-        server = await asyncio.start_server(self.handle_request, self.ip_address, self.port)
-        print(f"Serving on {self.ip_address}:{self.port}")
+        self.server = await asyncio.start_server(self.handle_request, self.ip_address, self.http_port)
+        print(f"Serving on {self.ip_address}:{self.http_port}")
 
         while True:
             await asyncio.sleep(1)  # Keep the server running
+
+    def stop_server(self):
+        """Stops the HTTP server."""
+        if self.server:
+            self.server.close()
+            print("Server stopped.")
 
     async def run(self):
         """Runs the captive portal setup."""
