@@ -15,8 +15,8 @@ import os
 import time
 import uasyncio as asyncio
 import uos
-from CaptivePortal import CaptivePortal
 
+# Check if running on a PicoW microcontroller
 def isPicoW():
     try:
         # Try to import the network module, which is only available on Pico W
@@ -25,6 +25,10 @@ def isPicoW():
     except ImportError:
         # If the network module is unavailable, it's a regular Pico
         return False
+
+# Conditionally import CaptivePortal
+if isPicoW():
+    from CaptivePortal import CaptivePortal
 
 # Pin constants
 if isPicoW():
@@ -867,27 +871,32 @@ async def main():
     global buzzer_volume
 
     # Instantiate the captive portal
-    portal = CaptivePortal()
-
-    # Configure captive portal settings
-    portal.ssid = "Goat - SecureMe"
-    portal.password = "secureme"
+    if isPicoW():
+        portal = CaptivePortal()
+        # Configure captive portal settings
+        portal.ssid = "Goat - SecureMe"
+        portal.password = "secureme"
 
     buzzer_volume = get_buzzer_volume()
 
     await system_startup()
 
-    # Run all tasks concurrently
-    await asyncio.gather(
+    # Create task list
+    tasks = [
         handle_arming(),
         handle_arming_indicator(),
         handle_alarm_testing(),
         handle_alarm_sound_switching(),
         detect_motion(),
         detect_tilt(),
-        detect_keypad_keys(),
-        portal.run()
-    )
+        detect_keypad_keys()
+    ]
+
+    if isPicoW():
+        tasks.append(portal.run())
+
+    # Run all tasks concurrently
+    await asyncio.gather(*tasks)
 
 # Startup and run
 try:
