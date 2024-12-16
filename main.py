@@ -490,7 +490,7 @@ async def initialize_pins(skip_pins=None):
             pass
 
 # Configure network interfaces on PicoW
-def configure_network():
+async def configure_network():
     import network
     ap = network.WLAN(network.AP_IF)
     sta = network.WLAN(network.STA_IF)
@@ -847,7 +847,7 @@ async def system_startup():
 
         if isPicoW():
             print("Initializing network interfaces...")
-            configure_network()
+            await configure_network()
 
         print("Configuring unused GPIO pins...")
         await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, POTENTIOMETER_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3]])
