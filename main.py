@@ -663,6 +663,8 @@ def keypad_lock_indicator(locked = True):
         led.value(1)
 
         if locked:
+            buzzer.freq(600)
+            time.sleep(0.05)
             buzzer.freq(400)
             time.sleep(0.05)
             buzzer.freq(200)
@@ -671,6 +673,8 @@ def keypad_lock_indicator(locked = True):
             buzzer.freq(200)
             time.sleep(0.05)
             buzzer.freq(400)
+            time.sleep(0.05)
+            buzzer.freq(600)
             time.sleep(0.05)
 
         buzzer.duty_u16(0)
