@@ -3,6 +3,7 @@
 # © (c) 2024 Goat Technologies
 # Description:
 # Provides captive portal and wireless connectivity for Goat device firmware.
+# Responsible for maintaining network state and managing connection lifetime.
 
 # Imports
 import network
@@ -12,8 +13,10 @@ import utime
 
 # CaptivePortal class
 class CaptivePortal:
-    # Constructor
+    """Provides captive portal and wireless connectivity for Goat device firmware."""
+    # Class constructor
     def __init__(self, ssid="Goat - Captive Portal", password="securepassword"):
+        """Constructs the class and exposes properties."""
         # Network configuration
         self.config_file = "network_config.txt"
 
@@ -38,7 +41,7 @@ class CaptivePortal:
         self.sta_web_server = None
 
     async def load_config(self):
-        """Loads saved network configuration and connects."""
+        """Loads saved network configuration and connects to a saved network."""
         try:
             if self.config_file in uos.listdir("/"):
                 with open(self.config_file, "r") as file:
@@ -81,7 +84,7 @@ class CaptivePortal:
             print(f"Error loading network configuration: {e}")
 
     async def save_config(self, ssid, password):
-        """Saves network configuration to a file."""
+        """Saves network connection configuration to a file."""
         try:
             with open(self.config_file, "w") as file:
                 file.write(f"{ssid}\n{password}")
@@ -129,7 +132,7 @@ class CaptivePortal:
             print(f"Error stopping Access point: {e}")
 
     async def handle_request(self, reader, writer):
-        """Handles incoming HTTP requests."""
+        """Handles incoming HTTP requests for the captive portal."""
         try:
             request = await reader.read(1024)
             request = request.decode()
@@ -163,7 +166,7 @@ class CaptivePortal:
             await writer.wait_closed()
 
     async def scan_networks(self):
-        """Scans for available networks and returns HTML."""
+        """Scans for available wireless networks and returns HTML."""
         self.sta.active(True)
         html = "<html><head><title>Network Scan</title></head><body>"
         html += "<h1>Available Wi-Fi Networks</h1><p>The following wi-fi networks were detected:"
@@ -187,7 +190,7 @@ class CaptivePortal:
         return html
 
     async def connect_to_wifi(self, request):
-        """Parses request for Wi-Fi credentials and connects."""
+        """Parses request for Wi-Fi credentials and connects to the network."""
         try:
             body_start = request.find("\r\n\r\n") + 4
             body = request[body_start:]
@@ -227,6 +230,7 @@ class CaptivePortal:
             return f"<html><head><title>Error</title></head><body><h1>Error</h1><p>An error occurred: {e}</p></body></html>"
 
     async def disconnect_from_wifi(self):
+        """Disconnects from the currently connected wireless network."""
         if not self.sta.isconnected():
             print("The network is not connected.")
             return;
@@ -238,7 +242,7 @@ class CaptivePortal:
             print(f"Error disconnecting from wi-fi: {e}")
 
     def serve_index(self):
-        """Serves the main page."""
+        """Serves the captive portal index page."""
         return """<html>
         <head><title>Wi-Fi Setup</title></head>
         <body>
@@ -254,7 +258,7 @@ class CaptivePortal:
         </html>"""
 
     async def start_server(self):
-        """Starts the HTTP server asynchronously."""
+        """Starts the captive portal HTTP server asynchronously."""
         if not self.ip_address:
             print("AP IP address not assigned. Cannot start server.")
             return
@@ -269,7 +273,7 @@ class CaptivePortal:
             print(f"Error starting server: {e}")
 
     async def stop_server(self):
-        """Stops the HTTP server."""
+        """Stops the captive portal HTTP server."""
         try:
             if self.server:
                 await self.server.await_closed()
@@ -280,7 +284,7 @@ class CaptivePortal:
             print(f"Error stopping server: {e}")
 
     async def run(self):
-        """Runs the captive portal setup."""
+        """Runs the captive portal initialization process and maintains connectivity."""
         try:
             await self.load_config()  # Load and attempt to connect to saved configuration
             if not self.sta.isconnected():
