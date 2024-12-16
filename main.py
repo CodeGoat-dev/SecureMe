@@ -92,7 +92,7 @@ async def play_dynamic_bell(frequency, initial_volume, loop_delay=0.1, times=5):
     
     Args:
     - frequency: Frequency of the tone in Hz
-    - initial_volume: Initial volume (range 0-1023 for duty cycle)
+    - initial_volume: Initial volume (range 0-65535 for duty cycle)
     - loop_delay: Delay between loops in seconds (default 0.1s)
     - times: Number of times to play (default 5)
     """
@@ -549,9 +549,16 @@ async def save_security_code_to_file():
         print(f"Error writing to config file: {e}")
 
 # Buzzer volume retrieval
-def get_buzzer_volume():
-    """Read the current potentiometer value to use as the buzzer volume."""
-    return potentiometer.read_u16()
+def get_buzzer_volume(max_volume=4095):
+    """
+    Read the current potentiometer value and scale it to ensure it does not exceed the maximum volume.
+    Args:
+    - max_volume: The maximum allowable volume (default 4095.
+    """
+    pot_value = potentiometer.read_u16()  # Raw potentiometer value (0-65535)
+
+    scaled_volume = int(pot_value * (max_volume / 65535))  # Scale to max_volume
+    return scaled_volume
 
 # Read a single key from the keypad
 def read_keypad_key():
