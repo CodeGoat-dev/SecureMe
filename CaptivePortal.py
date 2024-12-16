@@ -135,15 +135,26 @@ class CaptivePortal:
             request = request.decode()
             print("Request:", request)
 
-            response = ""
-            if "GET /scan" in request:
-                response = await self.scan_networks()
-            elif "POST /connect" in request:
-                response = await self.connect_to_wifi(request)
+            # Handle captive portal detection endpoints
+            if "GET /generate_204" in request:  # Android detection
+                response = "HTTP/1.1 204 No Content\r\n\r\n"
+            elif "GET /connectivity-check" in request:  # Chrome OS/Chromium-based browsers
+                response = "HTTP/1.1 204 No Content\r\n\r\n"
+            elif "GET /hotspot-detect.html" in request:  # macOS/iOS detection
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"
+                response += "<HTML><BODY><H1>Success</H1></BODY></HTML>"
+            elif "GET /success.txt" in request:  # Windows detection
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"
+                response += "Microsoft Connect Test"
+            elif "GET /ncsi.txt" in request:  # Windows NCSI detection
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"
+                response += "Microsoft NCSI"
             else:
-                response = self.serve_index()
+                # Default response or index page
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
 
-            writer.write("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n".encode() + response.encode())
+            # Write the response
+            writer.write(response.encode())
             await writer.drain()
         except Exception as e:
             print(f"Error handling request: {e}")
