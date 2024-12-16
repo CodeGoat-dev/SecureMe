@@ -37,7 +37,7 @@ class CaptivePortal:
         # STA web server configuration
         self.sta_web_server = None
 
-    def load_config(self):
+    async def load_config(self):
         """Loads saved network configuration and connects."""
         try:
             if self.config_file in uos.listdir("/"):
@@ -63,8 +63,11 @@ class CaptivePortal:
                         self.ip_address = self.sta.ifconfig()[0]
                         print(f"Connected to {ssid}. IP: {self.ip_address}")
                         if self.sta_web_server:
-                            web_server = self.sta_web_server()
-                            self.server = await web_server.run()
+                            try:
+                                web_server = self.sta_web_server()
+                                self.server = await web_server.run()
+                            except Exception as e:
+                                print(f"Error starting web server: {e}")
                         break
                     else:
                         print(f"Attempt {attempts + 1}: Failed to connect to Wi-Fi.")
@@ -77,7 +80,7 @@ class CaptivePortal:
         except Exception as e:
             print(f"Error loading network configuration: {e}")
 
-    def save_config(self, ssid, password):
+    async def save_config(self, ssid, password):
         """Saves network configuration to a file."""
         try:
             with open(self.config_file, "w") as file:
@@ -93,10 +96,11 @@ class CaptivePortal:
         gateway = self.ap_gateway
         dns = self.ap_dns
 
-        try:
-            if len(self.password) < 8:
-                raise ValueError("Password must be at least 8 characters long.")
+        if len(self.password) < 8:
+            print("Password must be at least 8 characters long.")
+            return
 
+        try:
             self.ap_if.config(essid=self.ssid, password=self.password)
             self.ap_if.active(True)
 
@@ -111,11 +115,11 @@ class CaptivePortal:
 
     async def stop_ap(self):
         """Stops the access point."""
-        try:
-            if not self.ap_if.isconnected():
-                print("The access point is not currently enabled.")
-                return
+        if not self.ap_if.isconnected():
+            print("The access point is not currently enabled.")
+            return
 
+        try:
             self.ap_if.config(essid="", password="")
             self.ap_if.active(False)
             self.ap_if.deinit()
@@ -196,19 +200,33 @@ class CaptivePortal:
                     await asyncio.sleep(0.5)
 
                 if self.sta.isconnected():
-                    self.save_config(ssid, password)
+                    await self.save_config(ssid, password)
                     await self.stop_ap()
                     await self.stop_server()
                     if self.sta_web_server:
-                        web_server = self.sta_web_server()
-                        self.server = await web_server.run()
+                        try:
+                            web_server = self.sta_web_server()
+                            self.server = await web_server.run()
+                        except Exception as e:
+                            print(f"Error starting web server: {e}")
                     return f"<html><head><title>Connected</title></head><body><h1>Connected</h1><p>You successfully connected to {ssid}.</p><p><h2>Information</h2><p>The access point has been shut down and you can now close this page.</p><p>© (c) 2024 Goat Technologies</p></body></html>"
                 else:
                     return f"<html><head><title>Connection Failed</title></head><body><h1>Connection Failed</h1><p>Failed to connect to {ssid}.</p></body></html>"
             else:
                 return "<html><head><title>Connection Error</title></head><body><h1>Connection Error</h1><p>The SSID or password for the wi-fi network was not provided.</p></body></html>"
         except Exception as e:
-            return f"<html><head><title>Error</title></head><body><h1>Error: {e}</h1></body></html>"
+            return f"<html><head><title>Error</title></head><body><h1>Error</h1><p>An error occurred: {e}</p></body></html>"
+
+    async def disconnect_from_wifi(self):
+        if not self.sta.isconnected():
+            print("The network is not connected.")
+            return;
+
+        try:
+            self.sta.active(False)
+            self.sta.deinit()
+        except Exception as e:
+            print(f"Error disconnecting from wi-fi: {e}")
 
     def serve_index(self):
         """Serves the main page."""
@@ -229,25 +247,39 @@ class CaptivePortal:
     async def start_server(self):
         """Starts the HTTP server asynchronously."""
         if not self.ip_address:
-            raise RuntimeError("AP IP address not assigned. Cannot start server.")
-        self.server = await asyncio.start_server(self.handle_request, self.ip_address, self.http_port)
-        print(f"Serving on {self.ip_address}:{self.http_port}")
+            print("AP IP address not assigned. Cannot start server.")
+            return
 
-        while True:
-            await asyncio.sleep(1)  # Keep the server running
+        try:
+            self.server = await asyncio.start_server(self.handle_request, self.ip_address, self.http_port)
+            print(f"Serving on {self.ip_address}:{self.http_port}")
+
+            while True:
+                await asyncio.sleep(1)  # Keep the server running
+        except Exception as e:
+            print(f"Error starting server: {e}")
 
     async def stop_server(self):
         """Stops the HTTP server."""
-        if self.server:
-            await self.server.await_closed()
-            print("Server stopped.")
+        try:
+            if self.server:
+                await self.server.await_closed()
+                print("Server stopped.")
+            else:
+                print("Server already stopped.")
+        except Exception as e:
+            print(f"Error stopping server: {e}")
 
     async def run(self):
         """Runs the captive portal setup."""
         try:
-            self.load_config()  # Load and attempt to connect to saved configuration
+            await self.load_config()  # Load and attempt to connect to saved configuration
             if not self.sta.isconnected():
                 await self.start_ap()  # Start AP mode if STA is not connected
                 await self.start_server()
         except Exception as e:
             print(f"Error starting the captive portal: {e}")
+        finally:
+            await self.disconnect_from_wifi()
+            await self.stop_server()
+            await self.stop_ap()
