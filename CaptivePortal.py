@@ -183,9 +183,7 @@ class CaptivePortal:
             html += f"<h2>Error scanning networks: {e}</h2>"
         finally:
             self.sta.active(False)
-        html += "<a href='/'>Go Back</a><br>
-            <p>© (c) 2024 Goat Technologies</p>
-            </body></html>"
+        html += "<a href='/'>Go Back</a><br><p>© (c) 2024 Goat Technologies</p></body></html>"
         return html
 
     async def connect_to_wifi(self, request):
@@ -288,6 +286,13 @@ class CaptivePortal:
             if not self.sta.isconnected():
                 await self.start_ap()  # Start AP mode if STA is not connected
                 await self.start_server()
+
+            # Keep the network stack active
+            while True:
+                if not self.ap_if.isactive() and not self.sta.isactive():
+                    break
+
+                await asyncio.sleep(0.05)
         except Exception as e:
             print(f"Error starting the captive portal: {e}")
         finally:
