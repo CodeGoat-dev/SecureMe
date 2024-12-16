@@ -840,7 +840,7 @@ async def system_startup():
     """System firmware initialization."""
     global buzzer_volume
 
-    print("Starting...")
+    print("Initializing firmware...")
 
     try:
         await system_startup_indicator()
@@ -909,9 +909,9 @@ async def main():
 try:
     asyncio.run(main())
 except KeyboardInterrupt:
-    print("Program stopped.")
+    print("Shutting down firmware...")
 finally:
     buzzer.duty_u16(0)
     led.value(0)
-    system_shutdown()
-    print("Cleaned up resources.")
+    await system_shutdown()
+    print("Firmware shutdown complete.")
