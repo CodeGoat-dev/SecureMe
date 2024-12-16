@@ -836,14 +836,14 @@ async def system_startup():
     print("Starting...")
 
     try:
+        await system_startup_indicator()
+
         if isPicoW():
             print("Initializing network interfaces...")
             configure_network()
 
         print("Configuring unused GPIO pins...")
         await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, POTENTIOMETER_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3]])
-
-        await system_startup_indicator()
 
         print("Warming up PIR sensor...")
 
