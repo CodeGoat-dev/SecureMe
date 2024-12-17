@@ -293,7 +293,7 @@ class CaptivePortal:
 
             # Keep the network stack active
             while True:
-                if not self.ap_if.isactive() and not self.sta.isactive():
+                if not self.ap_if.isconnected() and not self.sta.isconnected():
                     break
 
                 await asyncio.sleep(0.05)

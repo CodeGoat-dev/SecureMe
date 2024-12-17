@@ -917,5 +917,5 @@ except KeyboardInterrupt:
 finally:
     buzzer.duty_u16(0)
     led.value(0)
-    await system_shutdown()
+    system_shutdown()
     print("Firmware shutdown complete.")
