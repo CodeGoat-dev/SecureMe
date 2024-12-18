@@ -152,6 +152,10 @@ class CaptivePortal:
             elif "GET /ncsi.txt" in request:  # Windows NCSI detection
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"
                 response += "Microsoft NCSI"
+            elif "GET /scan" in request:  # Wireless network scan
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + await self.scan_networks()
+            elif "POST /connect" in request:  # Wireless network connection
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + await self.connect_to_wifi(request)
             else:
                 # Default response or index page
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
