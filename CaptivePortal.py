@@ -30,6 +30,7 @@ class CaptivePortal:
         self.ssid = ssid
         self.password = password
         self.http_port = 80
+        self.network_connection_timeout = 10
 
         # Access point IP settings
         self.ap_ip_address = "192.168.4.1"
@@ -58,7 +59,7 @@ class CaptivePortal:
                     self.sta.connect(ssid, password)
                     print(f"Attempting to connect to {ssid}...")
 
-                    timeout = utime.time() + 10
+                    timeout = utime.time() + self.network_connection_timeout
                     while not self.sta.isconnected() and utime.time() < timeout:
                         utime.sleep(0.5)
 
