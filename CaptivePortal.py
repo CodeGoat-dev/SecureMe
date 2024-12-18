@@ -170,11 +170,21 @@ class CaptivePortal:
             writer.close()
             await writer.wait_closed()
 
+    def html_template(title, body):
+        """Generates an HTML page template."""
+        return f"""<html>
+        <head><title>{title}</title></head>
+        <body>
+            <h1>{title}</h1>
+            {body}
+            <p>© (c) 2024 Goat Technologies</p>
+        </body>
+        </html>"""
+
     async def scan_networks(self):
         """Scans for available wireless networks and returns HTML."""
         self.sta.active(True)
-        html = "<html><head><title>Network Scan</title></head><body>"
-        html += "<h1>Available Wi-Fi Networks</h1><p>The following wi-fi networks were detected:"
+        html = "<p>Network scan complete.</p><h2>Available Wi-Fi Networks</h2><p>The following wi-fi networks were detected:"
         try:
             networks = self.sta.scan()
             for net in networks:
@@ -191,8 +201,8 @@ class CaptivePortal:
             html += f"<h2>Error scanning networks: {e}</h2>"
         finally:
             self.sta.active(False)
-        html += "<a href='/'>Go Back</a><br><p>© (c) 2024 Goat Technologies</p></body></html>"
-        return html
+        html += "<a href='/'>Go Back</a>"
+        return html_template("Goat - Captive Portal", html)
 
     async def connect_to_wifi(self, request):
         """Parses request for Wi-Fi credentials and connects to the network."""
@@ -212,7 +222,7 @@ class CaptivePortal:
                 self.sta.active(True)
                 self.sta.connect(ssid, password)
 
-                timeout = utime.time() + 10
+                timeout = utime.time() + network_connection_timeout
                 while not self.sta.isconnected() and utime.time() < timeout:
                     await asyncio.sleep(0.5)
 
@@ -226,43 +236,23 @@ class CaptivePortal:
                             self.server = await web_server.run()
                         except Exception as e:
                             print(f"Error starting web server: {e}")
-                    return f"""<html>
-                    <head><title>Connected</title></head>
-                    <body>
-                    <h1>Connected</h1>
+                    body = f"""<h2>Connected</h2>
                     <p>You successfully connected to {ssid}.</p>
                     <h2>Information</h2>
-                    <p>The access point has been shut down and you can now close this page.</p>
-                    <p>© (c) 2024 Goat Technologies</p>
-                    </body>
-                    </html>"""
+                    <p>The access point has been shut down and you can now close this page.</p>"""
+                    return html_template("Goat - Captive Portal", body)
                 else:
-                    return f"""<html>
-                    <head><title>Connection Failed</title></head>
-                    <body>
-                    <h1>Connection Failed</h1>
-                    <p>Failed to connect to {ssid}.</p>
-                    <p>© (c) 2024 Goat Technologies</p>
-                    </body>
-                    </html>"""
+                    body = f"""<h2>Connection Failed</h2>
+                    <p>Failed to connect to {ssid}.</p>"""
+                    return html_template("Goat - Captive Portal", body)
             else:
-                return """<html>
-                <head><title>Connection Error</title></head>
-                <body>
-                <h1>Connection Error</h1>
-                <p>The SSID or password for the wi-fi network was not provided.</p>
-                <p>© (c) 2024 Goat Technologies</p>
-                </body>
-                </html>"""
+                body = """<h2>Connection Error</h2>
+                <p>The SSID or password for the wi-fi network was not provided.</p>"""
+                return html_template("Goat - Captive Portal", body)
         except Exception as e:
-            return f"""<html>
-            <head><title>Error</title></head>
-            <body>
-            <h1>Error</h1>
-            <p>An error occurred: {e}</p>
-            <p>© (c) 2024 Goat Technologies</p>
-            </body>
-            </html>"""
+            body = f"""<h2>Error</h2>
+            <p>An error occurred: {e}</p>"""
+            return html_template("Goat - Captive Portal", body)
 
     async def disconnect_from_wifi(self):
         """Disconnects from the currently connected wireless network."""
@@ -278,19 +268,12 @@ class CaptivePortal:
 
     def serve_index(self):
         """Serves the captive portal index page."""
-        return """<html>
-        <head><title>Goat - Captive Portal</title></head>
-        <body>
-            <h1>Welcome</h1>
-            <p>Welcome  to the Goat - Captive Portal.<br>
-            You can use the captive portal to connect your Goat device to your wireless network.</p>
-            <h2>Connect To A Network</h2>
-            <p>Connecting to your network unlocks the full power of Goat devices with features such as web interfaces, mobile app control and more.<br>
-            Click the link below to scan for networks.</p>
-            <p><a href='/scan'>Start Scan</a></p>
-            <p>© (c) 2024 Goat Technologies</p>
-        </body>
-        </html>"""
+        body = """<p>Welcome to the Goat - Captive Portal.<br>
+        Use the portal to connect your Goat device to your wireless network.</p>
+        <h2>Connect To A Network</h2>
+        <p>Click the link below to scan for networks:</p>
+        <p><a href='/scan'>Start Scan</a></p>"""
+        return html_template("Goat - Captive Portal", body)
 
     async def start_server(self):
         """Starts the captive portal HTTP server asynchronously."""
