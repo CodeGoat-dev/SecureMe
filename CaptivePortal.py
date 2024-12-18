@@ -221,13 +221,43 @@ class CaptivePortal:
                             self.server = await web_server.run()
                         except Exception as e:
                             print(f"Error starting web server: {e}")
-                    return f"<html><head><title>Connected</title></head><body><h1>Connected</h1><p>You successfully connected to {ssid}.</p><p><h2>Information</h2><p>The access point has been shut down and you can now close this page.</p><p>© (c) 2024 Goat Technologies</p></body></html>"
+                    return f"""<html>
+                    <head><title>Connected</title></head>
+                    <body>
+                    <h1>Connected</h1>
+                    <p>You successfully connected to {ssid}.</p>
+                    <h2>Information</h2>
+                    <p>The access point has been shut down and you can now close this page.</p>
+                    <p>© (c) 2024 Goat Technologies</p>
+                    </body>
+                    </html>"""
                 else:
-                    return f"<html><head><title>Connection Failed</title></head><body><h1>Connection Failed</h1><p>Failed to connect to {ssid}.</p></body></html>"
+                    return f"""<html>
+                    <head><title>Connection Failed</title></head>
+                    <body>
+                    <h1>Connection Failed</h1>
+                    <p>Failed to connect to {ssid}.</p>
+                    <p>© (c) 2024 Goat Technologies</p>
+                    </body>
+                    </html>"""
             else:
-                return "<html><head><title>Connection Error</title></head><body><h1>Connection Error</h1><p>The SSID or password for the wi-fi network was not provided.</p></body></html>"
+                return """<html>
+                <head><title>Connection Error</title></head>
+                <body>
+                <h1>Connection Error</h1>
+                <p>The SSID or password for the wi-fi network was not provided.</p>
+                <p>© (c) 2024 Goat Technologies</p>
+                </body>
+                </html>"""
         except Exception as e:
-            return f"<html><head><title>Error</title></head><body><h1>Error</h1><p>An error occurred: {e}</p></body></html>"
+            return f"""<html>
+            <head><title>Error</title></head>
+            <body>
+            <h1>Error</h1>
+            <p>An error occurred: {e}</p>
+            <p>© (c) 2024 Goat Technologies</p>
+            </body>
+            </html>"""
 
     async def disconnect_from_wifi(self):
         """Disconnects from the currently connected wireless network."""
@@ -244,7 +274,7 @@ class CaptivePortal:
     def serve_index(self):
         """Serves the captive portal index page."""
         return """<html>
-        <head><title>Wi-Fi Setup</title></head>
+        <head><title>Goat - Captive Portal</title></head>
         <body>
             <h1>Welcome</h1>
             <p>Welcome  to the Goat - Captive Portal.<br>
