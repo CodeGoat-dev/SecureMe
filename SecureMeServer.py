@@ -7,18 +7,17 @@
 # Imports
 import network
 import uasyncio as asyncio
-import uos
 import utime
 
 # SecureMeServer class
 class SecureMeServer:
     """Provides the web server for the Goat - SecureMe firmware."""
     # Class constructor
-    def __init__(self, port=8000):
+    def __init__(self, ip_address="0.0.0.0", http_port=8000):
         """Constructs the class and exposes properties."""
-        self.ip_address = "0.0.0.0"
+        self.ip_address = ip_address
         self.server = None
-        self.http_port = 8000
+        self.http_port = http_port
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
