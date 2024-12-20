@@ -10,12 +10,13 @@ import network
 import uasyncio as asyncio
 import uos
 import utime
+from CaptivePortalDNS import CaptivePortalDNS
 
 # CaptivePortal class
 class CaptivePortal:
     """Provides captive portal and wireless connectivity for Goat device firmware."""
     # Class constructor
-    def __init__(self, ssid="Goat - Captive Portal", password="securepassword"):
+    def __init__(self, ssid="Goat - Captive Portal", password="securepassword", sta_web_server = None):
         """Constructs the class and exposes properties."""
         # Network configuration
         self.config_file = "network_config.txt"
@@ -38,8 +39,11 @@ class CaptivePortal:
         self.ap_gateway = "192.168.4.1"
         self.ap_dns = "192.168.4.1"
 
+        # Captive portal DNS server
+        self.dns_server = CaptivePortalDNS(portal_ip=self.ap_ip_address)
+
         # STA web server configuration
-        self.sta_web_server = None
+        self.sta_web_server = sta_web_server
 
     async def load_config(self):
         """Loads saved network configuration and connects to a saved network."""
@@ -68,8 +72,7 @@ class CaptivePortal:
                         print(f"Connected to {ssid}. IP: {self.ip_address}")
                         if self.sta_web_server:
                             try:
-                                web_server = self.sta_web_server()
-                                self.server = await web_server.run()
+                                self.server = await self.sta_web_server.run()
                             except Exception as e:
                                 print(f"Error starting web server: {e}")
                         break
@@ -170,7 +173,7 @@ class CaptivePortal:
             writer.close()
             await writer.wait_closed()
 
-    def html_template(title, body):
+    def html_template(self, title, body):
         """Generates an HTML page template."""
         return f"""<html>
         <head><title>{title}</title></head>
@@ -202,7 +205,7 @@ class CaptivePortal:
         finally:
             self.sta.active(False)
         html += "<a href='/'>Go Back</a>"
-        return html_template("Goat - Captive Portal", html)
+        return self.html_template("Goat - Captive Portal", html)
 
     async def connect_to_wifi(self, request):
         """Parses request for Wi-Fi credentials and connects to the network."""
@@ -240,19 +243,19 @@ class CaptivePortal:
                     <p>You successfully connected to {ssid}.</p>
                     <h2>Information</h2>
                     <p>The access point has been shut down and you can now close this page.</p>"""
-                    return html_template("Goat - Captive Portal", body)
+                    return self.html_template("Goat - Captive Portal", body)
                 else:
                     body = f"""<h2>Connection Failed</h2>
                     <p>Failed to connect to {ssid}.</p>"""
-                    return html_template("Goat - Captive Portal", body)
+                    return self.html_template("Goat - Captive Portal", body)
             else:
                 body = """<h2>Connection Error</h2>
                 <p>The SSID or password for the wi-fi network was not provided.</p>"""
-                return html_template("Goat - Captive Portal", body)
+                return self.html_template("Goat - Captive Portal", body)
         except Exception as e:
             body = f"""<h2>Error</h2>
             <p>An error occurred: {e}</p>"""
-            return html_template("Goat - Captive Portal", body)
+            return self.html_template("Goat - Captive Portal", body)
 
     async def disconnect_from_wifi(self):
         """Disconnects from the currently connected wireless network."""
@@ -273,7 +276,7 @@ class CaptivePortal:
         <h2>Connect To A Network</h2>
         <p>Click the link below to scan for networks:</p>
         <p><a href='/scan'>Start Scan</a></p>"""
-        return html_template("Goat - Captive Portal", body)
+        return self.html_template("Goat - Captive Portal", body)
 
     async def start_server(self):
         """Starts the captive portal HTTP server asynchronously."""
@@ -305,9 +308,11 @@ class CaptivePortal:
         """Runs the captive portal initialization process and maintains connectivity."""
         try:
             await self.load_config()  # Load and attempt to connect to saved configuration
+
             if not self.sta.isconnected():
                 await self.start_ap()  # Start AP mode if STA is not connected
                 await self.start_server()
+                await self.dns_server.start_dns()
 
             # Keep the network stack active
             while True:
@@ -318,6 +323,9 @@ class CaptivePortal:
         except Exception as e:
             print(f"Error starting the captive portal: {e}")
         finally:
+            if self.sta_web_server:
+                await self.sta_web_server.stop_server()
             await self.disconnect_from_wifi()
+            await self.dns_server.stop_dns()
             await self.stop_server()
             await self.stop_ap()
