@@ -26,9 +26,10 @@ def isPicoW():
         # If the network module is unavailable, it's a regular Pico
         return False
 
-# Conditionally import CaptivePortal
+# Conditional imports
 if isPicoW():
     from CaptivePortal import CaptivePortal
+    from SecureMeServer import SecureMeServer
 
 # Pin constants
 if isPicoW():
@@ -881,12 +882,10 @@ async def main():
     """Main coroutine to handle firmware services"""
     global buzzer_volume
 
-    # Instantiate the captive portal
+    # Instantiate network specific features
     if isPicoW():
-        portal = CaptivePortal()
-        # Configure captive portal settings
-        portal.ssid = "Goat - SecureMe"
-        portal.password = "secureme"
+        web_server = SecureMeServer()
+        portal = CaptivePortal(ssid="Goat - SecureMe", password="secureme", sta_web_server=web_server)
 
     buzzer_volume = get_buzzer_volume()
 
