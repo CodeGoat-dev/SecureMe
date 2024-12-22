@@ -5,6 +5,7 @@
 # Provides the web server for the Goat - SecureMe firmware.
 
 # Imports
+import machine
 import network
 import uasyncio as asyncio
 import uos
@@ -21,9 +22,12 @@ class SecureMeServer:
         self.http_port = http_port
         self.server = None
 
+        self.alarm_config_file = "alarm_config.txt"
         self.pushover_config_file = "pushover_config.txt"
         self.security_code_config_file = "security_config.txt"
+        self.network_config_file = "network_config.txt"
         self.password_config_file = "admin_password.txt"
+
         self.pushover_api_key = None
         self.admin_password = "secureme"
         self.security_code = "0000"
@@ -110,6 +114,8 @@ class SecureMeServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_pushover_form()
             elif "GET /change_security_code" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_security_code_form()
+            elif "GET /reset_firmware" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reset_firmware_form()
             elif "GET /" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
             elif "POST /update_pushover" in request:
@@ -117,19 +123,38 @@ class SecureMeServer:
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.pushover_api_key = post_data.get('pushover_key', None)
                 await self.save_to_file(self.pushover_config_file, self.pushover_api_key)
-                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nPushover API key updated."
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_security_code" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.security_code = post_data.get('security_code', None)
                 await self.save_to_file(self.security_code_config_file, self.security_code)
-                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nSecurity code updated."
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_password" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.admin_password = post_data.get('password', None)
                 await self.save_to_file(self.password_config_file, self.admin_password)
-                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nPassword updated."
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+            elif "POST /reset_firmware" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                reset_confirmation = post_data.get('reset_confirmation', None)
+                if reset_confirmation != "secureme":
+                    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nReset confirmation mismatch."
+                else:
+                    response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+                    if self.alarm_config_file in uos.listdir("/"):
+                        uos.remove(f"/{self.alarm_config_file}")
+                    if self.pushover_config_file in uos.listdir("/"):
+                        uos.remove(f"/{self.pushover_config_file}")
+                    if self.security_code_config_file in uos.listdir("/"):
+                        uos.remove(f"/{self.security_code_config_file}")
+                    if self.network_config_file in uos.listdir("/"):
+                        uos.remove(f"/{self.network_config_file}")
+                    if self.password_config_file in uos.listdir("/"):
+                        uos.remove(f"/{self.password_config_file}")
+                    machine.reset()
             else:
                 response = "HTTP/1.1 404 Not Found\r\n\r\nNot Found"
 
@@ -162,6 +187,7 @@ class SecureMeServer:
         <li><a href="/change_password">Change Admin Password</a><br></li>
         <li><a href="/change_pushover">Change Pushover API Key</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
+        <li><a href="/reset_firmware">Reset Firmware</a></li>
         </ul></p>
         <h2>About SecureMe</h2>
         <p>SecureMe is a portable, configurable security system designed for simplicity and effectiveness.</p>
@@ -207,6 +233,20 @@ class SecureMeServer:
         </form></p>
         """
         return self.html_template("Change System Security Code", form)
+
+    def serve_reset_firmware_form(self):
+        """Serves the reset firmware form with the current key pre-populated.""" 
+        form = f"""<h2>Reset SecureMe Firmware</h2>
+        <p>If you are having trouble with your SecureMe security system you can try resetting the firmware.<br>
+        Resetting the firmware will clear all current configuration data.</p>
+        <p>To reset the device, type "secureme" in the box below.</p>
+        <p><form method="POST" action="/reset_firmware">
+            <label for="reset_confirmation">Reset Confirmation:</label>
+            <input type="text" id="reset_confirmation" name="reset_confirmation" required>
+            <input type="submit" value="Reset Device">
+        </form></p>
+        """
+        return self.html_template("Reset SecureMe Firmware", form)
 
     async def start_server(self):
         """Starts the SecureMe HTTP server asynchronously."""
