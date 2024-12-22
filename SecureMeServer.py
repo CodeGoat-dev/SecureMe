@@ -34,6 +34,8 @@ class SecureMeServer:
         self.security_code_min_length = 4
         self.security_code_max_length = 8
 
+        self.alert_text = None
+
     async def initialize(self):
         """Initializes the server by loading configuration files."""
         self.pushover_api_key = await self.load_from_file(self.pushover_config_file)
@@ -61,17 +63,28 @@ class SecureMeServer:
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
-        return f"""<html>
+        template = f"""<html>
         <head><title>{title}</title></head>
         <body>
         <h1>{title}</h1>
         <p><a href="/">Home</a></p>
-        {body}
+        """
+
+        if self.alert_text:
+            template += f"""
+            <h2>Alert</h2>
+            <p><b>{self.escape_html(self.alert_text)}</b></p>
+            """
+            self.alert_text = None
+
+        template += f"""{body}
         <h1>Information</h1>
         <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
         <p>© (c) 2024 Goat Technologies</p>
         </body>
         </html>"""
+
+        return template
 
     def authenticate(self, request):
         """Performs basic HTTP authentication."""
@@ -123,18 +136,21 @@ class SecureMeServer:
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.pushover_api_key = post_data.get('pushover_key', None)
                 await self.save_to_file(self.pushover_config_file, self.pushover_api_key)
+                self.alert_text = "Pushover API key updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_security_code" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.security_code = post_data.get('security_code', None)
                 await self.save_to_file(self.security_code_config_file, self.security_code)
+                self.alert_text = "System security code updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_password" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.admin_password = post_data.get('password', None)
                 await self.save_to_file(self.password_config_file, self.admin_password)
+                self.alert_text = "Web administration password updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /reset_firmware" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -166,6 +182,16 @@ class SecureMeServer:
         finally:
             writer.close()
             await writer.wait_closed()
+
+    def escape_html(self, text):
+        """Manually escape HTML characters."""
+        return (
+            text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&#39;")
+        )
 
     def parse_form_data(self, content):
         """Parses URL-encoded form data into a dictionary."""
