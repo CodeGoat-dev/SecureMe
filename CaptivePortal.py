@@ -175,14 +175,19 @@ class CaptivePortal:
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
-        return f"""<html>
+        return f"""
+        <html>
         <head><title>{title}</title></head>
         <body>
             <h1>{title}</h1>
+            <p><a href="/">Home</a></p>
             {body}
+            <h1>Information</h1>
+            <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
             <p>© (c) 2024 Goat Technologies</p>
         </body>
-        </html>"""
+        </html>
+        """
 
     async def scan_networks(self):
         """Scans for available wireless networks and returns HTML."""
