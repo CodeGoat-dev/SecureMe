@@ -28,6 +28,7 @@ def isPicoW():
 
 # Conditional imports
 if isPicoW():
+    import urequests
     from CaptivePortal import CaptivePortal
     from SecureMeServer import SecureMeServer
 
@@ -68,16 +69,20 @@ keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 
 # Global variables
 alarm_config_file = "alarm_config.txt"
+pushover_config_file = "pushover_config.txt"
 security_code_config_file = "security_config.txt"
 is_armed = True
 alarm_active = False
 alarm_sound = 0
+silent_alarm = False
 buzzer_volume = 0
 security_code = "0000"
 entering_security_code = False
 security_code_max_entry_attempts = 3
 security_code_min_length = 4
 security_code_max_length = 8
+pushover_app_token = "ahptofxmi4fg8mhadwpebbb559vovo"
+pushover_api_key = None
 keypad_locked = True
 keypad_characters = [
     ["1", "2", "3", "A"],
@@ -215,6 +220,12 @@ async def alarm():
 
         if buzzer_volume is None or buzzer_volume == 0:
             raise ValueError("Invalid buzzer volume.")
+
+        if isPicoW():
+            if silent_alarm:
+                await send_pushover_notification("Alarm Triggered.")
+                alarm_active = False
+                return
 
         buzzer.duty_u16(buzzer_volume)
 
@@ -440,7 +451,7 @@ async def handle_arming_indicator():
 # Keypad key detection
 async def detect_keypad_keys():
     """Detect matrix keypad key commands."""
-    global is_armed, keypad_locked, entering_security_code
+    global is_armed, silent_alarm, keypad_locked, entering_security_code
 
     try:
         print("Detecting keypad keys...")
@@ -458,6 +469,9 @@ async def detect_keypad_keys():
                 if key == "A":
                     print("Initiating keypad_lock.")
                     await keypad_lock()
+                elif key == "B":
+                    print("Initiating alarm_mode_switch.")
+                    await alarm_mode_switch()
                 elif key == "D":
                     print("Initiating change_security_code.")
                     await change_security_code()
@@ -527,6 +541,28 @@ async def save_alarm_sound_to_file():
     except Exception as e:
         print(f"Error writing to config file: {e}")
 
+# Pushover API key loading function
+async def load_pushover_key_from_file():
+    """Load the Pushover API key value from a file."""
+    try:
+        if pushover_config_file in uos.listdir("/"):
+            with open(pushover_config_file, "r") as f:
+                return str(f.read().strip())
+        else:
+            return str("")
+    except Exception as e:
+        print(f"Error reading config file: {e}")
+        return str("")
+
+# Pushover API key saving function
+async def save_pushover_key_to_file():
+    """Save the current Pushover API key to a file."""
+    try:
+        with open(pushover_config_file, "w") as f:
+            f.write(str(pushover_api_key))
+    except Exception as e:
+        print(f"Error writing to config file: {e}")
+
 # Security code loading function
 async def load_security_code_from_file():
     """Load the security code value from a file."""
@@ -583,6 +619,50 @@ def read_keypad_key():
     finally:
         for i, row in enumerate(keypad_rows):
             row.low()
+
+# Minimal URL encoding function for MicroPython
+def urlencode(data):
+    """Encode a dictionary into a URL-encoded string."""
+    return "&".join(f"{key}={value}" for key, value in data.items())
+
+# Send push notifications using Pushover
+async def send_pushover_notification(message="Testing", timeout=5):
+    """Send push notifications using Pushover."""
+    global pushover_api_key
+
+    url = "https://api.pushover.net/1/messages.json"
+
+    pushover_api_key = await load_pushover_key_from_file()
+
+    # Prepare data as a byte-encoded string
+    data_dict = {
+        "token": pushover_app_token,
+        "user": pushover_api_key,
+        "message": message,
+    }
+    data = urlencode(data_dict).encode("utf-8")
+    
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+    try:
+        # Perform the HTTP request directly in the coroutine
+        print("Sending notification...")
+        response = urequests.post(url, data=data, headers=headers, timeout=timeout)
+        
+        # Handle the response
+        if response.status_code == 200:
+            print("Notification sent successfully!")
+        else:
+            print(f"Failed to send notification. Status code: {response.status_code}")
+        print("Response:", response.text)
+        response.close()
+    except Exception as e:
+        print("Error sending notification:", e)
+    finally:
+        # Ensure response is closed to release resources
+        if 'response' in locals():
+            response.close()
+        await asyncio.sleep(0)  # Yield control back to the event loop
 
 # System startup indicator
 async def system_startup_indicator():
@@ -682,7 +762,43 @@ def keypad_lock_indicator(locked = True):
 
         led.value(0)
     except Exception as e:
-        print(f"Error in keypad_entry_indicator: {e}")
+        print(f"Error in keypad_lock_indicator: {e}")
+    finally:
+        buzzer.duty_u16(0)  # Turn off the buzzer
+        led.value(0)
+
+# Alarm mode switch indicator
+def alarm_mode_switch_indicator(silent = True):
+    """Play the alarm mode switch indicator."""
+    global buzzer_volume
+
+    try:
+        buzzer_volume = get_buzzer_volume()
+
+        buzzer.duty_u16(buzzer_volume)
+
+        led.value(1)
+
+        if silent:
+            buzzer.freq(1200)
+            time.sleep(0.05)
+            buzzer.freq(1000)
+            time.sleep(0.05)
+            buzzer.freq(800)
+            time.sleep(0.05)
+        else:
+            buzzer.freq(800)
+            time.sleep(0.05)
+            buzzer.freq(1000)
+            time.sleep(0.05)
+            buzzer.freq(1200)
+            time.sleep(0.05)
+
+        buzzer.duty_u16(0)
+
+        led.value(0)
+    except Exception as e:
+        print(f"Error in alarm_mode_switch_indicator: {e}")
     finally:
         buzzer.duty_u16(0)  # Turn off the buzzer
         led.value(0)
@@ -703,6 +819,23 @@ async def keypad_lock():
             keypad_lock_indicator(keypad_locked)
     except Exception as e:
         print(f"Error in keypad_lock: {e}")
+
+# Alarm mode switch
+async def alarm_mode_switch():
+    """Handle switching between alarm modes."""
+    global silent_alarm
+
+    try:
+        if silent_alarm:
+            print("Alarm mode set to audible.")
+            silent_alarm = False
+            alarm_mode_switch_indicator(silent_alarmed)
+        else:
+            print("Alarm mode set to silent.")
+            silent_alarm = True
+            alarm_mode_switch_indicator(silent_alarm)
+    except Exception as e:
+        print(f"Error in alarm_mode_switch: {e}")
 
 # Security code entry
 async def enter_security_code(security_code, max_attempts, min_length, max_length):
