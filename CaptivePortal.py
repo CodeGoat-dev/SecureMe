@@ -230,7 +230,7 @@ class CaptivePortal:
                 self.sta.active(True)
                 self.sta.connect(ssid, password)
 
-                timeout = utime.time() + network_connection_timeout
+                timeout = utime.time() + self.network_connection_timeout
                 while not self.sta.isconnected() and utime.time() < timeout:
                     await asyncio.sleep(0.5)
 
