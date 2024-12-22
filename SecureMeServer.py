@@ -1,5 +1,5 @@
 # Goat - SecureMe Server class
-# Version 1.00
+# Version 1.02
 # © (c) 2024 Goat Technologies
 # Description:
 # Provides the web server for the Goat - SecureMe firmware.
@@ -7,17 +7,53 @@
 # Imports
 import network
 import uasyncio as asyncio
+import uos
 import utime
+import ubinascii
 
 # SecureMeServer class
 class SecureMeServer:
     """Provides the web server for the Goat - SecureMe firmware."""
-    # Class constructor
+    
     def __init__(self, ip_address="0.0.0.0", http_port=8000):
         """Constructs the class and exposes properties."""
         self.ip_address = ip_address
-        self.server = None
         self.http_port = http_port
+        self.server = None
+
+        self.pushover_config_file = "pushover_config.txt"
+        self.security_code_config_file = "security_config.txt"
+        self.password_config_file = "admin_password.txt"
+        self.pushover_api_key = None
+        self.admin_password = "secureme"
+        self.security_code = "0000"
+        self.security_code_min_length = 4
+        self.security_code_max_length = 8
+
+    async def initialize(self):
+        """Initializes the server by loading configuration files."""
+        self.pushover_api_key = await self.load_from_file(self.pushover_config_file)
+        self.security_code = await self.load_from_file(self.security_code_config_file)
+        self.admin_password = await self.load_from_file(self.password_config_file) or self.admin_password
+
+    async def load_from_file(self, filename):
+        """Loads data from a specified file."""
+        try:
+            if filename in uos.listdir("/"):
+                with open(filename, "r") as f:
+                    return f.read().strip()
+            return None
+        except Exception as e:
+            print(f"Error loading {filename}: {e}")
+            return None
+
+    async def save_to_file(self, filename, data):
+        """Saves data to a specified file."""
+        try:
+            with open(filename, "w") as f:
+                f.write(data)
+        except Exception as e:
+            print(f"Error saving {filename}: {e}")
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
@@ -25,10 +61,33 @@ class SecureMeServer:
         <head><title>{title}</title></head>
         <body>
         <h1>{title}</h1>
+        <p><a href="/">Home</a></p>
         {body}
+        <h1>Information</h1>
+        <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
         <p>© (c) 2024 Goat Technologies</p>
         </body>
         </html>"""
+
+    def authenticate(self, request):
+        """Performs basic HTTP authentication."""
+        try:
+            if "Authorization: Basic" not in request:
+                return False
+            # Extract and decode credentials
+            auth_header = request.split("Authorization: Basic ")[1].split("\r\n")[0]
+            credentials = ubinascii.a2b_base64(auth_header).decode()
+            username, password = credentials.split(":")
+
+            # Perform plain-text password comparison
+            if username == "admin" and password == self.admin_password:
+                return True
+
+            print("Incorrect credentials.")
+            return False
+        except Exception as e:
+            print(f"Authentication error: {e}")
+            return False
 
     async def handle_request(self, reader, writer):
         """Handles incoming HTTP requests for the web server."""
@@ -37,11 +96,44 @@ class SecureMeServer:
             request = request.decode()
             print("Request:", request)
 
-            # Handle web server endpoints
-            if "GET /" in request:
-                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
+            # Handle authentication
+            if not self.authenticate(request):
+                response = "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"SecureMe\"\r\n\r\nUnauthorized"
+                writer.write(response.encode())
+                await writer.drain()
+                return
 
-            # Write the response
+            # Serve the appropriate pages based on the request
+            if "GET /change_password" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_password_form()
+            elif "GET /change_pushover" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_pushover_form()
+            elif "GET /change_security_code" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_security_code_form()
+            elif "GET /" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
+            elif "POST /update_pushover" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                self.pushover_api_key = post_data.get('pushover_key', None)
+                await self.save_to_file(self.pushover_config_file, self.pushover_api_key)
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nPushover API key updated."
+            elif "POST /update_security_code" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                self.security_code = post_data.get('security_code', None)
+                await self.save_to_file(self.security_code_config_file, self.security_code)
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nSecurity code updated."
+            elif "POST /update_password" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                self.admin_password = post_data.get('password', None)
+                await self.save_to_file(self.password_config_file, self.admin_password)
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nPassword updated."
+            else:
+                response = "HTTP/1.1 404 Not Found\r\n\r\nNot Found"
+
+            # Send the response
             writer.write(response.encode())
             await writer.drain()
         except Exception as e:
@@ -50,11 +142,71 @@ class SecureMeServer:
             writer.close()
             await writer.wait_closed()
 
+    def parse_form_data(self, content):
+        """Parses URL-encoded form data into a dictionary."""
+        post_data = {}
+        pairs = content.split("&")  # Split the form data by '&'
+        for pair in pairs:
+            if "=" in pair:
+                key, value = pair.split("=", 1)  # Split each pair by '='
+                post_data[key] = value  # Store the key-value pair in the dictionary
+        return post_data
+
     def serve_index(self):
         """Serves the web server index page."""
-        body = """<p>Welcome  to the Goat - SecureMe - Portable Security System.<br>
-        More functionality will be added here soon.</p>"""
+        body = """<p>Welcome to the Goat - SecureMe - Portable Security System.<br>
+        Use the web interface to manage system settings securely.</p>
+        <h2>System Settings</h2>
+        <p>Select a setting from the list below.<br>
+        <ul>
+        <li><a href="/change_password">Change Admin Password</a><br></li>
+        <li><a href="/change_pushover">Change Pushover API Key</a></li>
+        <li><a href="/change_security_code">Change System Security Code</a></li>
+        </ul></p>
+        <h2>About SecureMe</h2>
+        <p>SecureMe is a portable, configurable security system designed for simplicity and effectiveness.</p>
+        """
         return self.html_template("Welcome", body)
+
+    def serve_change_password_form(self):
+        """Serves the change password form with the current password pre-populated.""" 
+        form = f"""<h2>Change Administrator Password</h2>
+        <p>To change the administrator password, enter a new password below.</p>
+        <p><form method="POST" action="/update_password">
+            <label for="password">New Admin Password:</label>
+            <input type="password" id="password" name="password" required>
+            <input type="submit" value="Update Password">
+        </form></p>
+        """
+        return self.html_template("Change Admin Password", form)
+
+    def serve_change_pushover_form(self):
+        """Serves the change Pushover API key form with the current key pre-populated.""" 
+        form = f"""<h2>Change Pushover API Key</h2>
+        <p>In order to use the silent alarm feature, you must specify a Pushover API key.<br>
+        The Pushover API key enables the SecureMe firmware to send push notifications when the alarm is triggered.</p>
+        <p>To obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
+        Sign up for an account and register a device to obtain a key.</p>
+        <p><form method="POST" action="/update_pushover">
+            <label for="pushover_key">New Pushover API Key:</label>
+            <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required>
+            <input type="submit" value="Update Pushover Key">
+        </form></p>
+        """
+        return self.html_template("Change Pushover API Key", form)
+
+    def serve_change_security_code_form(self):
+        """Serves the change security code form with the current key pre-populated.""" 
+        form = f"""<h2>Change Security Code</h2>
+        <p>The system security code is required to arm or disarm the system.<br>
+        You should change this from the default value of "0000".</p>
+        <p><form method="POST" action="/update_security_code">
+            <label for="security_code">New Security Code:</label>
+            <input type="number" id="security_code" name="security_code" minlength={self.security_code_min_length} maxlength={self.security_code_max_length} value="{self.security_code}" required>
+            <input type="submit" value="Update Security Code">
+        </form></p>
+        """
+        return self.html_template("Change System Security Code", form)
 
     async def start_server(self):
         """Starts the SecureMe HTTP server asynchronously."""
@@ -69,13 +221,15 @@ class SecureMeServer:
             while True:
                 await asyncio.sleep(1)  # Keep the server running
         except Exception as e:
+            await self.stop_server()
             print(f"Error starting server: {e}")
 
     async def stop_server(self):
         """Stops the SecureMe HTTP server."""
         try:
             if self.server:
-                await self.server.await_closed()
+                self.server.close()
+                await self.server.wait_closed()
                 print("Server stopped.")
             else:
                 print("Server already stopped.")
@@ -83,14 +237,6 @@ class SecureMeServer:
             print(f"Error stopping server: {e}")
 
     async def run(self):
-        """Runs the SecureMe web server initialization process and maintains connectivity."""
-        try:
-            await self.start_server()
-
-            # Keep the web server active
-            while True:
-                await asyncio.sleep(0.05)
-        except Exception as e:
-            print(f"Error starting the SecureMe web server: {e}")
-        finally:
-            await self.stop_server()
+        """Runs the SecureMe web server initialization process."""
+        await self.initialize()
+        await self.start_server()
