@@ -634,6 +634,10 @@ async def send_pushover_notification(message="Testing", timeout=5):
 
     pushover_api_key = await load_pushover_key_from_file()
 
+    if not pushover_api_key:
+        print("A Pushover API key is required to send push notifications.")
+        return
+
     # Prepare data as a byte-encoded string
     data_dict = {
         "token": pushover_app_token,
@@ -823,9 +827,16 @@ async def keypad_lock():
 # Alarm mode switch
 async def alarm_mode_switch():
     """Handle switching between alarm modes."""
-    global silent_alarm
+    global silent_alarm, pushover_api_key
 
     try:
+        pushover_api_key = await load_pushover_key_from_file()
+
+        if not pushover_api_key:
+            print("A Pushover API key is required for silent alarms.")
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+            return
+
         if silent_alarm:
             print("Alarm mode set to audible.")
             silent_alarm = False
