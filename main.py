@@ -768,7 +768,7 @@ def keypad_lock_indicator(locked = True):
         led.value(0)
 
 # Alarm mode switch indicator
-def alarm_mode_switch_indicator(silent = False):
+def alarm_mode_switch_indicator(silent = True):
     """Play the alarm mode switch indicator."""
     global buzzer_volume
 
@@ -829,7 +829,7 @@ async def alarm_mode_switch():
         if silent_alarm:
             print("Alarm mode set to audible.")
             silent_alarm = False
-            alarm_mode_switch_indicator(silent_alarmed)
+            alarm_mode_switch_indicator(silent_alarm)
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
