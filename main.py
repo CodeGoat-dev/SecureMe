@@ -198,9 +198,12 @@ async def play_alarm(alarm_type="sweep", start_freq=500, end_freq=3000, cycles=1
         buzzer.duty_u16(0)
 
 # Alarm method
-async def alarm():
+async def alarm(message):
     """Run the alarm when a sensor detects motion."""
     global buzzer_volume, alarm_active, alarm_sound, entering_security_code
+
+    if not message:
+        return
 
     if alarm_active:
         return
@@ -223,7 +226,7 @@ async def alarm():
 
         if isPicoW():
             if silent_alarm:
-                await send_pushover_notification("Alarm Triggered.")
+                await send_pushover_notification(message)
                 alarm_active = False
                 return
 
@@ -400,8 +403,8 @@ async def detect_motion():
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
-                print("Movement detected.")
-                await alarm()
+                print("Movement Detected.")
+                await alarm("Movement Detected.")
                 print("Detecting movement...")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
@@ -420,8 +423,8 @@ async def detect_tilt():
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
-                print("Tilt detected.")
-                await alarm()
+                print("Tilt Detected.")
+                await alarm("Tilt Detected")
                 print("Detecting tilt...")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
