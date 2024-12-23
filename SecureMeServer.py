@@ -1,5 +1,5 @@
 # Goat - SecureMe Server class
-# Version 1.02
+# Version 1.0.0
 # © (c) 2024 Goat Technologies
 # Description:
 # Provides the web server for the Goat - SecureMe firmware.

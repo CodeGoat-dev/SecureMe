@@ -1,5 +1,5 @@
 # Goat - Captive Portal DNS server class
-# Version 1.00
+# Version 1.0.0
 # © (c) 2024 Goat Technologies
 # Description:
 # Provides DNS services for the captive portal.

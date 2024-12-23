@@ -1,5 +1,5 @@
 # Goat - Captive Portal class
-# Version 1.00
+# Version 1.0.0
 # © (c) 2024 Goat Technologies
 # Description:
 # Provides captive portal and wireless connectivity for Goat device firmware.
