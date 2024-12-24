@@ -13,6 +13,7 @@
 from machine import Pin, PWM, ADC
 import os
 import time
+import utime
 import uasyncio as asyncio
 import uos
 
@@ -71,6 +72,9 @@ keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 alarm_config_file = "alarm_config.txt"
 pushover_config_file = "pushover_config.txt"
 security_code_config_file = "security_config.txt"
+sensor_timeout = 10
+pir_timeout = None
+tilt_timeout = None
 is_armed = True
 alarm_active = False
 alarm_sound = 0
@@ -393,18 +397,24 @@ async def handle_alarm_sound_switching():
 # Motion detection
 async def detect_motion():
     """Detect motion using the PIR sensor."""
-    global is_armed, entering_security_code
+    global is_armed, entering_security_code, pir_timeout
 
     try:
         print("Detecting movement...")
 
         while True:
+            if pir_timeout:
+                if utime.time() < pir_timeout:
+                    await asyncio.sleep(0.5)
+                    continue
+
             if is_armed and pir.value() == 1:
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
                 print("Movement Detected.")
                 await alarm("Movement Detected.")
+                pir_timeout = utime.time() + sensor_timeout
                 print("Detecting movement...")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
@@ -413,18 +423,24 @@ async def detect_motion():
 # Tilt detection
 async def detect_tilt():
     """Detect tilting using the tilt switch sensor."""
-    global is_armed, entering_security_code
+    global is_armed, entering_security_code, tilt_timeout
 
     try:
         print("Detecting tilt...")
 
         while True:
+            if tilt_timeout:
+                if utime.time() < tilt_timeout:
+                    await asyncio.sleep(0.5)
+                    continue
+
             if is_armed and tilt.value() == 1:
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
                 print("Tilt Detected.")
                 await alarm("Tilt Detected")
+                tilt_timeout = utime.time() + sensor_timeout
                 print("Detecting tilt...")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
