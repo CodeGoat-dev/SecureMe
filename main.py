@@ -230,7 +230,7 @@ async def alarm(message):
 
         if isPicoW():
             if silent_alarm:
-                await send_pushover_notification(message)
+                await send_pushover_notification(message=message)
                 alarm_active = False
                 return
 
@@ -644,8 +644,52 @@ def urlencode(data):
     """Encode a dictionary into a URL-encoded string."""
     return "&".join(f"{key}={value}" for key, value in data.items())
 
+# Validate Pushover API key
+async def validate_pushover_api_key(timeout=5):
+    """Validate the configured Pushover API key."""
+    global pushover_api_key
+
+    key_is_valid = False
+
+    url = "https://api.pushover.net/1/users/validate.json"
+
+    pushover_api_key = await load_pushover_key_from_file()
+
+    if not pushover_api_key:
+        key_is_valid = False
+        return key_is_valid
+
+    # Prepare data as a byte-encoded string
+    data_dict = {
+        "token": pushover_app_token,
+        "user": pushover_api_key,
+    }
+    data = urlencode(data_dict).encode("utf-8")
+    
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+    try:
+        response = urequests.post(url, data=data, headers=headers, timeout=timeout)
+        
+        # Handle the response
+        if response.status_code == 200:
+            key_is_valid = True
+        else:
+            key_is_valid = False
+
+        response.close()
+
+        return key_is_valid
+    except Exception as e:
+        return false
+    finally:
+        # Ensure response is closed to release resources
+        if 'response' in locals():
+            response.close()
+        await asyncio.sleep(0)  # Yield control back to the event loop
+
 # Send push notifications using Pushover
-async def send_pushover_notification(message="Testing", timeout=5):
+async def send_pushover_notification(title="Goat - SecureMe", message="Testing", priority=0, timeout=5):
     """Send push notifications using Pushover."""
     global pushover_api_key
 
@@ -662,6 +706,8 @@ async def send_pushover_notification(message="Testing", timeout=5):
         "token": pushover_app_token,
         "user": pushover_api_key,
         "message": message,
+        "priority": priority,
+        "title": title
     }
     data = urlencode(data_dict).encode("utf-8")
     
@@ -848,11 +894,20 @@ async def alarm_mode_switch():
     """Handle switching between alarm modes."""
     global silent_alarm, pushover_api_key
 
+    key_is_valid = None
+
     try:
         pushover_api_key = await load_pushover_key_from_file()
 
         if not pushover_api_key:
             print("A Pushover API key is required for silent alarms.")
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+            return
+
+        key_is_valid = await validate_pushover_api_key()
+
+        if not key_is_valid:
+            print("The configured Pushover API key is invalid.")
             await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
             return
 
