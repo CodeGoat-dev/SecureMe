@@ -83,7 +83,8 @@ is_armed = True
 alarm_active = False
 alarm_sound = 0
 silent_alarm = False
-buzzer_volume = 2048
+default_buzzer_volume = 3072
+buzzer_volume = 3072
 security_code = "0000"
 entering_security_code = False
 security_code_max_entry_attempts = 3
@@ -523,6 +524,8 @@ async def initialize_pins(skip_pins=None):
     Args:
         skip_pins: List of pin numbers to skip during initialization (default: None).
     """
+    print("Configuring unused GPIO pins...")
+
     if skip_pins is None:
         skip_pins = []
 
@@ -539,7 +542,10 @@ async def initialize_pins(skip_pins=None):
 
 # Configure network interfaces on PicoW
 async def configure_network():
+    print("Initializing network interfaces...")
+
     import network
+
     ap = network.WLAN(network.AP_IF)
     sta = network.WLAN(network.STA_IF)
 
@@ -551,6 +557,19 @@ async def configure_network():
         sta.active(False)
     except Exception as e:
         print(f"Error in configure_network: {e}")
+
+# PIR sensor warmup
+async def warmup_pir_sensor():
+    print("Warming up PIR sensor...")
+
+    try:
+        for i in range(pir_warmup_time, 0, -1):
+            print(f"warming up... {i}s remaining.")
+            await play_dynamic_bell(250, buzzer_volume, 0.1, 1)
+
+        print("PIR sensor ready!")
+    except Exception as e:
+        print(f"Error in warmup_pir_sensor: {e}")
 
 # Configuration loader
 async def load_from_file(filename):
@@ -1049,19 +1068,11 @@ async def system_startup():
         await system_startup_indicator()
 
         if isPicoW():
-            print("Initializing network interfaces...")
             await configure_network()
 
-        print("Configuring unused GPIO pins...")
         await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
 
-        print("Warming up PIR sensor...")
-
-        for i in range(pir_warmup_time, 0, -1):
-            print(f"warming up... {i}s remaining.")
-            await play_dynamic_bell(250, buzzer_volume, 0.1, 1)
-
-        print("PIR sensor ready!")
+        await warmup_pir_sensor()
 
         await system_ready_indicator()
 
@@ -1087,6 +1098,10 @@ async def main():
         portal = CaptivePortal(ssid="Goat - SecureMe", password="secureme", sta_web_server=web_server)
 
     buzzer_volume = await load_from_file(buzzer_config_file)
+
+    if not buzzer_volume:
+        buzzer_volume = default_buzzer_volume
+        await save_to_file(buzzer_config_file, buzzer_volume)
 
     await system_startup()
 
