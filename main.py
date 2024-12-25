@@ -10,7 +10,7 @@
 # Designed for Raspberry Pi Pico based microcontrollers.
 
 # Imports
-from machine import Pin, PWM, ADC
+from machine import Pin, PWM
 import os
 import time
 import utime
@@ -44,7 +44,8 @@ TILT_SWITCH_PIN = 3
 ARM_BUTTON_PIN = 4
 ALARM_TEST_BUTTON_PIN = 5
 ALARM_SOUND_BUTTON_PIN = 6
-POTENTIOMETER_PIN = 27
+VOLUME_DOWN_BUTTON_PIN = 15
+VOLUME_UP_BUTTON_PIN = 16
 
 # Define the GPIO pins for keypad rows and columns
 keypad_row_pins = [7, 8, 9, 10]
@@ -56,10 +57,11 @@ NUM_PINS = 30
 # Configure required pins
 led = Pin(LED_PIN, Pin.OUT)
 buzzer = PWM(Pin(BUZZER_PIN))
-potentiometer = ADC(Pin(POTENTIOMETER_PIN))
 arm_button = Pin(ARM_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
 alarm_test_button = Pin(ALARM_TEST_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
 alarm_sound_button = Pin(ALARM_SOUND_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
+volume_down_button = Pin(VOLUME_DOWN_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
+volume_up_button = Pin(VOLUME_UP_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
 pir = Pin(PIR_PIN, Pin.IN, Pin.PULL_DOWN)
 tilt = Pin(TILT_SWITCH_PIN, Pin.IN, Pin.PULL_UP)
 
@@ -70,6 +72,7 @@ keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 
 # Global variables
 alarm_config_file = "alarm_config.txt"
+buzzer_config_file = "buzzer_config.txt"
 pushover_config_file = "pushover_config.txt"
 security_code_config_file = "security_config.txt"
 pir_warmup_time = 60
@@ -80,7 +83,7 @@ is_armed = True
 alarm_active = False
 alarm_sound = 0
 silent_alarm = False
-buzzer_volume = 0
+buzzer_volume = 2048
 security_code = "0000"
 entering_security_code = False
 security_code_max_entry_attempts = 3
@@ -148,11 +151,9 @@ async def play_alarm(alarm_type="sweep", start_freq=500, end_freq=3000, cycles=1
     - step: Frequency increment/decrement step (default 50 Hz, for sweep alarm).
     - duration: Duration to hold each frequency step in seconds (default 0.01s, for sweep alarm).
     """
-    global buzzer_volume, alarm_active
+    global alarm_active
 
     try:
-        buzzer_volume = get_buzzer_volume()
-
         if buzzer_volume is None or buzzer_volume == 0:
             raise ValueError("Invalid buzzer volume.")
 
@@ -205,7 +206,7 @@ async def play_alarm(alarm_type="sweep", start_freq=500, end_freq=3000, cycles=1
 # Alarm method
 async def alarm(message):
     """Run the alarm when a sensor detects motion."""
-    global buzzer_volume, alarm_active, alarm_sound, entering_security_code
+    global alarm_active, alarm_sound, entering_security_code
 
     if not message:
         return
@@ -223,8 +224,6 @@ async def alarm(message):
 
         if not alarm_sound == 0 and not alarm_sound == 1 and not alarm_sound == 2 and not alarm_sound == 3:
             alarm_sound = 0
-
-        buzzer_volume = get_buzzer_volume()
 
         if buzzer_volume is None or buzzer_volume == 0:
             raise ValueError("Invalid buzzer volume.")
@@ -290,10 +289,9 @@ async def alarm(message):
 # Arming handler
 async def handle_arming():
     """Handle the arming and disarming of the system."""
-    global is_armed, buzzer_volume, alarm_active, security_code, entering_security_code
+    global is_armed, alarm_active, security_code, entering_security_code
 
     try:
-        buzzer_volume = get_buzzer_volume()
         security_code = await load_from_file(security_code_config_file)
 
         while True:
@@ -316,7 +314,6 @@ async def handle_arming():
                             continue
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Disarming")
-                    buzzer_volume = get_buzzer_volume()
                     is_armed = False
                     await play_dynamic_bell(250, buzzer_volume)
                     await system_ready_indicator()
@@ -334,7 +331,6 @@ async def handle_arming():
                             continue
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Arming")
-                    buzzer_volume = get_buzzer_volume()
                     await play_dynamic_bell(250, buzzer_volume)
                     await system_ready_indicator()
                     is_armed = True
@@ -345,11 +341,9 @@ async def handle_arming():
 # Alarm test handler
 async def handle_alarm_testing():
     """Test the alarm buzzer."""
-    global buzzer_volume, alarm_active
+    global alarm_active
 
     try:
-        buzzer_volume = get_buzzer_volume()
-
         while True:
             if alarm_test_button.value() == 1:  # Button pressed
                 if alarm_active:
@@ -363,18 +357,15 @@ async def handle_alarm_testing():
 # Alarm sound switching handler
 async def handle_alarm_sound_switching():
     """Handle switching the alarm sound for the system."""
-    global buzzer_volume, alarm_sound, alarm_config_file
+    global alarm_sound, alarm_config_file
 
     try:
         # Load the saved alarm sound value or default
         alarm_sound = await load_from_file(alarm_config_file)
 
-        buzzer_volume = get_buzzer_volume()
-
         while True:
             if alarm_sound_button.value() == 1:  # Button pressed
                 print("Switching alarm sound")
-                buzzer_volume = get_buzzer_volume()
                 if alarm_sound == 0:
                     alarm_sound = 1
                     await play_alarm("sweep_up", 300, 4000, 1)
@@ -394,6 +385,28 @@ async def handle_alarm_sound_switching():
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_alarm_sound_switching: {e}")
+
+# Buzzer volume handler
+async def handle_buzzer_volume():
+    """Handle buzzer volume changes."""
+    global buzzer_volume
+    try:
+        while True:
+            if volume_down_button.value() == 1:  # Button pressed
+                if alarm_active:
+                    continue
+                print("Turning down volume.")
+                await decrease_buzzer_volume()
+
+            if volume_up_button.value() == 1:  # Button pressed
+                if alarm_active:
+                    continue
+                print("Turning up volume.")
+                await increase_buzzer_volume()
+
+            await asyncio.sleep(0.05)  # Polling interval
+    except Exception as e:
+        print(f"Error in handle_buzzer_volume: {e}")
 
 # Motion detection
 async def detect_motion():
@@ -540,38 +553,55 @@ async def configure_network():
         print(f"Error in configure_network: {e}")
 
 # Configuration loader
-    async def load_from_file(self, filename):
-        """Loads data from a specified file."""
-        try:
-            if filename in uos.listdir("/"):
-                with open(filename, "r") as f:
-                    return f.read().strip()
-            return None
-        except Exception as e:
-            print(f"Error loading {filename}: {e}")
-            return None
+async def load_from_file(filename):
+    """Loads and interprets data from a specified file."""
+    try:
+        if filename in uos.listdir("/"):
+            with open(filename, "r") as f:
+                raw_data = f.read().strip()
+                
+                # Interpret the data type
+                if raw_data.isdigit():  # Integer check
+                    return int(raw_data)
+                try:
+                    return float(raw_data)  # Float check
+                except ValueError:
+                    pass  # Not a float, continue
+                return raw_data  # Return as string if not numeric
+        return None
+    except Exception as e:
+        print(f"Error loading {filename}: {e}")
+        return None
 
 # Configuration saver
-    async def save_to_file(self, filename, data):
-        """Saves data to a specified file."""
-        try:
-            with open(filename, "w") as f:
-                f.write(data)
-        except Exception as e:
-            print(f"Error saving {filename}: {e}")
+async def save_to_file(filename, data):
+    """Saves data to a specified file, converting to a string if necessary."""
+    try:
+        # Ensure data is saved as a string
+        with open(filename, "w") as f:
+            f.write(str(data))
+    except Exception as e:
+        print(f"Error saving {filename}: {e}")
 
+# Method to increase buzzer volume by 10%
+async def increase_buzzer_volume():
+    """Increase the buzzer volume by 10%, up to a maximum of 6144."""
+    global buzzer_volume
+    step = int(6144 * 0.1)  # Calculate 10% step
+    buzzer_volume = min(buzzer_volume + step, 4096)
+    await save_to_file(buzzer_config_file, buzzer_volume)
+    print(f"Buzzer volume increased to: {buzzer_volume}")
+    await buzzer_volume_indicator()
 
-# Buzzer volume retrieval
-def get_buzzer_volume(max_volume=4095):
-    """
-    Read the current potentiometer value and scale it to ensure it does not exceed the maximum volume.
-    Args:
-    - max_volume: The maximum allowable volume (default 4095.
-    """
-    pot_value = potentiometer.read_u16()  # Raw potentiometer value (0-65535)
-
-    scaled_volume = int(pot_value * (max_volume / 65535))  # Scale to max_volume
-    return scaled_volume
+# Method to decrease buzzer volume by 10%
+async def decrease_buzzer_volume():
+    """Decrease the buzzer volume by 10%, down to a minimum of 0."""
+    global buzzer_volume
+    step = int(4096 * 0.1)  # Calculate 10% step
+    buzzer_volume = max(buzzer_volume - step, 0)
+    await save_to_file(buzzer_config_file, buzzer_volume)
+    print(f"Buzzer volume decreased to: {buzzer_volume}")
+    await buzzer_volume_indicator()
 
 # Read a single key from the keypad
 def read_keypad_key():
@@ -690,10 +720,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
 # System startup indicator
 async def system_startup_indicator():
     """Play the system startup indicator."""
-    global buzzer_volume
-
     try:
-        buzzer_volume = get_buzzer_volume()
         led.value(1)
         buzzer.duty_u16(buzzer_volume)
         buzzer.freq(500)
@@ -715,11 +742,7 @@ async def system_startup_indicator():
 # System ready indicator
 async def system_ready_indicator():
     """Play the system ready indicator."""
-    global buzzer_volume
-
     try:
-        buzzer_volume = get_buzzer_volume()
-
         buzzer.duty_u16(buzzer_volume)
         buzzer.freq(1000)
         led.value(1)
@@ -734,14 +757,26 @@ async def system_ready_indicator():
         buzzer.duty_u16(0)  # Turn off the buzzer
         led.value(0)
 
+# Buzzer volume indicator
+async def buzzer_volume_indicator():
+    """Play the buzzer volume indicator."""
+    try:
+        led.value(1)
+        buzzer.duty_u16(buzzer_volume)
+        buzzer.freq(1500)
+        await asyncio.sleep(0.1)
+        buzzer.duty_u16(0)
+        led.value(0)
+    except Exception as e:
+        print(f"Error in buzzer_volume_indicator: {e}")
+    finally:
+        buzzer.duty_u16(0)  # Turn off the buzzer
+        led.value(0)
+
 # Keypad entry indicator
 def keypad_entry_indicator():
     """Play the keypad entry indicator."""
-    global buzzer_volume
-
     try:
-        buzzer_volume = get_buzzer_volume()
-
         led.value(1)
         buzzer.duty_u16(buzzer_volume)
         buzzer.freq(200)
@@ -757,11 +792,7 @@ def keypad_entry_indicator():
 # Keypad lock indicator
 async def keypad_lock_indicator(locked = True):
     """Play the keypad lock indicator."""
-    global buzzer_volume
-
     try:
-        buzzer_volume = get_buzzer_volume()
-
         buzzer.duty_u16(buzzer_volume)
 
         led.value(1)
@@ -793,11 +824,7 @@ async def keypad_lock_indicator(locked = True):
 # Alarm mode switch indicator
 async def alarm_mode_switch_indicator(silent = True):
     """Play the alarm mode switch indicator."""
-    global buzzer_volume
-
     try:
-        buzzer_volume = get_buzzer_volume()
-
         buzzer.duty_u16(buzzer_volume)
 
         led.value(1)
@@ -1015,7 +1042,6 @@ async def change_security_code():
 # System start-up
 async def system_startup():
     """System firmware initialization."""
-    global buzzer_volume
 
     print("Initializing firmware...")
 
@@ -1027,11 +1053,9 @@ async def system_startup():
             await configure_network()
 
         print("Configuring unused GPIO pins...")
-        await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, POTENTIOMETER_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3]])
+        await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
 
         print("Warming up PIR sensor...")
-
-        buzzer_volume = get_buzzer_volume()
 
         for i in range(pir_warmup_time, 0, -1):
             print(f"warming up... {i}s remaining.")
@@ -1062,7 +1086,7 @@ async def main():
         web_server = SecureMeServer()
         portal = CaptivePortal(ssid="Goat - SecureMe", password="secureme", sta_web_server=web_server)
 
-    buzzer_volume = get_buzzer_volume()
+    buzzer_volume = await load_from_file(buzzer_config_file)
 
     await system_startup()
 
@@ -1072,6 +1096,7 @@ async def main():
         handle_arming_indicator(),
         handle_alarm_testing(),
         handle_alarm_sound_switching(),
+        handle_buzzer_volume(),
         detect_motion(),
         detect_tilt(),
         detect_keypad_keys()
