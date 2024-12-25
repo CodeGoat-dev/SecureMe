@@ -219,7 +219,7 @@ async def alarm(message):
     alarm_active = True
 
     try:
-        alarm_sound = await load_alarm_sound_from_file()
+        alarm_sound = await load_from_file(alarm_config_file)
 
         if not alarm_sound == 0 and not alarm_sound == 1 and not alarm_sound == 2 and not alarm_sound == 3:
             alarm_sound = 0
@@ -294,7 +294,7 @@ async def handle_arming():
 
     try:
         buzzer_volume = get_buzzer_volume()
-        security_code = await load_security_code_from_file()
+        security_code = await load_from_file(security_code_config_file)
 
         while True:
             if arm_button.value() == 1:  # Button pressed
@@ -303,7 +303,7 @@ async def handle_arming():
                         print("Stopping alarm...")
                         alarm_active = False
                         buzzer.duty_u16(0)  # Stop the buzzer immediately
-                    security_code = await load_security_code_from_file()
+                    security_code = await load_from_file(security_code_config_file)
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -321,7 +321,7 @@ async def handle_arming():
                     await play_dynamic_bell(250, buzzer_volume)
                     await system_ready_indicator()
                 else:
-                    security_code = await load_security_code_from_file()
+                    security_code = await load_from_file(security_code_config_file)
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -367,7 +367,7 @@ async def handle_alarm_sound_switching():
 
     try:
         # Load the saved alarm sound value or default
-        alarm_sound = await load_alarm_sound_from_file()
+        alarm_sound = await load_from_file(alarm_config_file)
 
         buzzer_volume = get_buzzer_volume()
 
@@ -389,7 +389,7 @@ async def handle_alarm_sound_switching():
                     await play_alarm("sweep", 500, 3000, 1)
 
                 # Save the updated alarm sound to the file
-                await save_alarm_sound_to_file()
+                await save_to_file(alarm_config_file, alarm_sound)
 
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
@@ -539,71 +539,27 @@ async def configure_network():
     except Exception as e:
         print(f"Error in configure_network: {e}")
 
-# Alarm sound loading function
-async def load_alarm_sound_from_file():
-    """Load the alarm sound value from a file."""
-    try:
-        if alarm_config_file in uos.listdir("/"):
-            with open(alarm_config_file, "r") as f:
-                return int(f.read().strip())
-        else:
-            return 0
-    except Exception as e:
-        print(f"Error reading config file: {e}")
-        return 0
+# Configuration loader
+    async def load_from_file(self, filename):
+        """Loads data from a specified file."""
+        try:
+            if filename in uos.listdir("/"):
+                with open(filename, "r") as f:
+                    return f.read().strip()
+            return None
+        except Exception as e:
+            print(f"Error loading {filename}: {e}")
+            return None
 
-# Alarm sound saving function
-async def save_alarm_sound_to_file():
-    """Save the current alarm sound to a file."""
-    try:
-        with open(alarm_config_file, "w") as f:
-            f.write(str(alarm_sound))
-    except Exception as e:
-        print(f"Error writing to config file: {e}")
+# Configuration saver
+    async def save_to_file(self, filename, data):
+        """Saves data to a specified file."""
+        try:
+            with open(filename, "w") as f:
+                f.write(data)
+        except Exception as e:
+            print(f"Error saving {filename}: {e}")
 
-# Pushover API key loading function
-async def load_pushover_key_from_file():
-    """Load the Pushover API key value from a file."""
-    try:
-        if pushover_config_file in uos.listdir("/"):
-            with open(pushover_config_file, "r") as f:
-                return str(f.read().strip())
-        else:
-            return str("")
-    except Exception as e:
-        print(f"Error reading config file: {e}")
-        return str("")
-
-# Pushover API key saving function
-async def save_pushover_key_to_file():
-    """Save the current Pushover API key to a file."""
-    try:
-        with open(pushover_config_file, "w") as f:
-            f.write(str(pushover_api_key))
-    except Exception as e:
-        print(f"Error writing to config file: {e}")
-
-# Security code loading function
-async def load_security_code_from_file():
-    """Load the security code value from a file."""
-    try:
-        if security_code_config_file in uos.listdir("/"):
-            with open(security_code_config_file, "r") as f:
-                return str(f.read().strip())
-        else:
-            return str("0000")
-    except Exception as e:
-        print(f"Error reading config file: {e}")
-        return str("0000")
-
-# Security code saving function
-async def save_security_code_to_file():
-    """Save the current security code to a file."""
-    try:
-        with open(security_code_config_file, "w") as f:
-            f.write(str(security_code))
-    except Exception as e:
-        print(f"Error writing to config file: {e}")
 
 # Buzzer volume retrieval
 def get_buzzer_volume(max_volume=4095):
@@ -654,7 +610,7 @@ async def validate_pushover_api_key(timeout=5):
 
     url = "https://api.pushover.net/1/users/validate.json"
 
-    pushover_api_key = await load_pushover_key_from_file()
+    pushover_api_key = await load_from_file(pushover_config_file)
 
     if not pushover_api_key:
         return key_is_valid
@@ -693,7 +649,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
 
     url = "https://api.pushover.net/1/messages.json"
 
-    pushover_api_key = await load_pushover_key_from_file()
+    pushover_api_key = await load_from_file(pushover_config_file)
 
     if not pushover_api_key:
         print("A Pushover API key is required to send push notifications.")
@@ -895,7 +851,7 @@ async def alarm_mode_switch():
     key_is_valid = None
 
     try:
-        pushover_api_key = await load_pushover_key_from_file()
+        pushover_api_key = await load_from_file(pushover_config_file)
 
         if not pushover_api_key:
             print("A Pushover API key is required for silent alarms.")
@@ -974,7 +930,7 @@ async def change_security_code():
     global security_code, entering_security_code
 
     try:
-        security_code = await load_security_code_from_file()
+        security_code = await load_from_file(security_code_config_file)
         if security_code:
             entering_security_code = True
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -1045,7 +1001,7 @@ async def change_security_code():
 
             # Update the security code
             security_code = new_code
-            await save_security_code_to_file()
+            await save_to_file(security_code_config_file, security_code)
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
             await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
             print(f"Security code updated. New code: {security_code}")
