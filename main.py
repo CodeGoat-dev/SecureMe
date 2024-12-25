@@ -656,7 +656,6 @@ async def validate_pushover_api_key(timeout=5):
     pushover_api_key = await load_pushover_key_from_file()
 
     if not pushover_api_key:
-        key_is_valid = False
         return key_is_valid
 
     # Prepare data as a byte-encoded string
@@ -676,8 +675,6 @@ async def validate_pushover_api_key(timeout=5):
             key_is_valid = True
         else:
             key_is_valid = False
-
-        response.close()
 
         return key_is_valid
     except Exception as e:
@@ -801,7 +798,7 @@ def keypad_entry_indicator():
         led.value(0)
 
 # Keypad lock indicator
-def keypad_lock_indicator(locked = True):
+async def keypad_lock_indicator(locked = True):
     """Play the keypad lock indicator."""
     global buzzer_volume
 
@@ -814,18 +811,18 @@ def keypad_lock_indicator(locked = True):
 
         if locked:
             buzzer.freq(600)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(400)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(200)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
         else:
             buzzer.freq(200)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(400)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(600)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
 
         buzzer.duty_u16(0)
 
@@ -837,7 +834,7 @@ def keypad_lock_indicator(locked = True):
         led.value(0)
 
 # Alarm mode switch indicator
-def alarm_mode_switch_indicator(silent = True):
+async def alarm_mode_switch_indicator(silent = True):
     """Play the alarm mode switch indicator."""
     global buzzer_volume
 
@@ -850,18 +847,18 @@ def alarm_mode_switch_indicator(silent = True):
 
         if silent:
             buzzer.freq(1200)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(1000)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(800)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
         else:
             buzzer.freq(800)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(1000)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             buzzer.freq(1200)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
 
         buzzer.duty_u16(0)
 
@@ -881,11 +878,11 @@ async def keypad_lock():
         if keypad_locked:
             print("Keypad unlocked.")
             keypad_locked = False
-            keypad_lock_indicator(keypad_locked)
+            await keypad_lock_indicator(keypad_locked)
         else:
             print("Keypad locked.")
             keypad_locked = True
-            keypad_lock_indicator(keypad_locked)
+            await keypad_lock_indicator(keypad_locked)
     except Exception as e:
         print(f"Error in keypad_lock: {e}")
 
@@ -904,21 +901,21 @@ async def alarm_mode_switch():
             await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
             return
 
-        key_is_valid = await validate_pushover_api_key()
-
-        if not key_is_valid:
-            print("The configured Pushover API key is invalid.")
-            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
-            return
+        if not silent_alarm:
+            key_is_valid = await validate_pushover_api_key()
+            if not key_is_valid:
+                print("The configured Pushover API key is invalid.")
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+                return
 
         if silent_alarm:
             print("Alarm mode set to audible.")
             silent_alarm = False
-            alarm_mode_switch_indicator(silent_alarm)
+            await alarm_mode_switch_indicator(silent_alarm)
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
-            alarm_mode_switch_indicator(silent_alarm)
+            await alarm_mode_switch_indicator(silent_alarm)
     except Exception as e:
         print(f"Error in alarm_mode_switch: {e}")
 
