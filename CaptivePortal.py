@@ -314,23 +314,40 @@ class CaptivePortal:
         try:
             await self.load_config()  # Load and attempt to connect to saved configuration
 
-            if not self.sta.isconnected():
-                await self.start_ap()  # Start AP mode if STA is not connected
-                await self.start_server()
-                await self.dns_server.start_dns()
-
-            # Keep the network stack active
             while True:
-                if not self.ap_if.isconnected() and not self.sta.isconnected():
-                    break
+                if not self.sta.isconnected():
+                    print("Station disconnected, attempting reconnection...")
+                    await self.load_config()  # Reload saved configuration and reconnect
+                    if not self.sta.isconnected():
+                        # Start AP if STA fails to reconnect
+                        print("Switching to AP mode...")
+                        await self.start_ap()
+                        await self.start_server()
+                        await self.dns_server.start_dns()
 
-                await asyncio.sleep(0.05)
+                # Check if both STA and AP are disconnected
+                if not self.sta.isconnected() and not self.ap_if.isconnected():
+                    print("No active connections. Rescanning...")
+                    await asyncio.sleep(2)  # Pause before rescanning
+                    continue
+
+                await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"Error starting the captive portal: {e}")
+            print(f"Error in captive portal: {e}")
         finally:
-            if self.sta_web_server:
-                await self.sta_web_server.stop_server()
-            await self.disconnect_from_wifi()
-            await self.dns_server.stop_dns()
-            await self.stop_server()
-            await self.stop_ap()
+            print("Cleaning up resources...")
+            try:
+                if self.sta_web_server:
+                    print("Stopping STA web server...")
+                    await self.sta_web_server.stop_server()
+                if self.sta.isconnected():
+                    print("Disconnecting from WiFi...")
+                    await self.disconnect_from_wifi()
+                if self.ap_if.isconnected():
+                    print("Stopping DNS and AP server...")
+                    await self.dns_server.stop_dns()
+                    await self.stop_server()
+                    await self.stop_ap()
+            except Exception as cleanup_error:
+                print(f"Error during cleanup: {cleanup_error}")
+            await asyncio.sleep(0)  # Yield control after cleanup
