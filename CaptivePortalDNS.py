@@ -17,45 +17,73 @@ class CaptivePortalDNS:
         self.dns_ip = portal_ip
         self.dns_port = 53
         self.udp_server = None
+        self.buffer_size = 512  # Default DNS packet size
 
     async def start_dns(self):
         """Starts a simple DNS server to redirect all requests to the captive portal."""
-        self.udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_server.bind(('', self.dns_port))
-        print(f"DNS server started on port {self.dns_port}.")
+        try:
+            self.udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.udp_server.setblocking(False)  # Non-blocking mode
+            self.udp_server.bind(('', self.dns_port))
+            print(f"DNS server started on port {self.dns_port}.")
 
+            while True:
+                try:
+                    data, addr = await self._receive_from()
+                    if data:
+                        print(f"DNS query received from {addr}")
+                        response = self.handle_dns_query(data)
+                        await self._send_to(response, addr)
+                except Exception as e:
+                    print(f"Error handling DNS query: {e}")
+        except Exception as e:
+            print(f"Error starting DNS server: {e}")
+        finally:
+            if self.udp_server:
+                self.udp_server.close()
+                print("DNS server socket closed.")
+
+    async def _receive_from(self):
+        """Non-blocking wrapper for receiving data."""
         while True:
             try:
-                # Receive DNS query
-                data, addr = self.udp_server.recvfrom(512)
-                if data:
-                    print(f"DNS query received from {addr}")
-                    # Construct a response
-                    response = self.handle_dns_query(data)
-                    self.udp_server.sendto(response, addr)
-            except Exception as e:
-                print(f"Error in DNS server: {e}")
+                data, addr = self.udp_server.recvfrom(self.buffer_size)
+                return data, addr
+            except OSError as e:
+                if e.errno != 11:  # EAGAIN or EWOULDBLOCK
+                    raise
+                await asyncio.sleep(0)  # Yield to the event loop
+
+    async def _send_to(self, data, addr):
+        """Non-blocking wrapper for sending data."""
+        while True:
+            try:
+                self.udp_server.sendto(data, addr)
+                return
+            except OSError as e:
+                if e.errno != 11:  # EAGAIN or EWOULDBLOCK
+                    raise
+                await asyncio.sleep(0)  # Yield to the event loop
 
     def handle_dns_query(self, data):
         """Parses a DNS query and constructs a response to redirect to the portal."""
         # DNS packet structure
-        transaction_id = data[:2]  # Keep the transaction ID
+        transaction_id = data[:2]  # Transaction ID
         flags = b'\x81\x80'  # Standard DNS response, no error
-        question_count = data[4:6]  # Number of questions (keep the same)
-        answer_count = b'\x00\x01'  # One answer
+        question_count = data[4:6]
+        answer_count = b'\x00\x01'
         authority_rrs = b'\x00\x00'
         additional_rrs = b'\x00\x00'
 
-        # Question section
         query_section = data[12:]  # Skip the header
 
         # Answer section
-        answer_name = b'\xc0\x0c'  # Pointer to the domain name in the query
-        answer_type = b'\x00\x01'  # Type A (host address)
-        answer_class = b'\x00\x01'  # Class IN (Internet)
+        answer_name = b'\xc0\x0c'
+        answer_type = b'\x00\x01'  # Type A
+        answer_class = b'\x00\x01'  # Class IN
         ttl = b'\x00\x00\x00\x3c'  # Time-to-live: 60 seconds
-        data_length = b'\x00\x04'  # IPv4 address is 4 bytes
-        answer_ip = socket.inet_aton(self.dns_ip)  # Convert IP to bytes
+        data_length = b'\x00\x04'  # IPv4 address size
+        answer_ip = socket.inet_aton(self.dns_ip)
 
         # Build the response
         dns_response = (
