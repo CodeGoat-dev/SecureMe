@@ -72,6 +72,7 @@ keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 alarm_config_file = "alarm_config.txt"
 pushover_config_file = "pushover_config.txt"
 security_code_config_file = "security_config.txt"
+pir_warmup_time = 60
 sensor_timeout = 10
 pir_timeout = None
 tilt_timeout = None
@@ -1076,11 +1077,14 @@ async def system_startup():
 
         buzzer_volume = get_buzzer_volume()
 
-        for i in range(10, 0, -1):
+        for i in range(pir_warmup_time, 0, -1):
             print(f"warming up... {i}s remaining.")
             await play_dynamic_bell(250, buzzer_volume, 0.1, 1)
+
         print("PIR sensor ready!")
+
         await system_ready_indicator()
+
         print("System ready.")
     except Exception as e:
         print(f"Error in system_startup: {e}")
