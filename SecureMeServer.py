@@ -23,6 +23,7 @@ class SecureMeServer:
         self.server = None
 
         self.alarm_config_file = "alarm_config.txt"
+        self.buzzer_config_file = "buzzer_config.txt"
         self.pushover_config_file = "pushover_config.txt"
         self.security_code_config_file = "security_config.txt"
         self.network_config_file = "network_config.txt"
@@ -162,6 +163,8 @@ class SecureMeServer:
                     response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
                     if self.alarm_config_file in uos.listdir("/"):
                         uos.remove(f"/{self.alarm_config_file}")
+                    if self.buzzer_config_file in uos.listdir("/"):
+                        uos.remove(f"/{self.buzzer_config_file}")
                     if self.pushover_config_file in uos.listdir("/"):
                         uos.remove(f"/{self.pushover_config_file}")
                     if self.security_code_config_file in uos.listdir("/"):
