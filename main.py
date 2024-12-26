@@ -16,25 +16,16 @@ import time
 import utime
 import uasyncio as asyncio
 import uos
-
-# Check if running on a PicoW microcontroller
-def isPicoW():
-    try:
-        # Try to import the network module, which is only available on Pico W
-        import network
-        return True  # Pico W has Wi-Fi, so return True
-    except ImportError:
-        # If the network module is unavailable, it's a regular Pico
-        return False
+import utils
 
 # Conditional imports
-if isPicoW():
+if utils.isPicoW():
     import urequests
     from NetworkManager import NetworkManager
     from SecureMeServer import SecureMeServer
 
 # Pin constants
-if isPicoW():
+if utils.isPicoW():
     LED_PIN = "LED"
 else:
     LED_PIN = 25
@@ -50,9 +41,6 @@ VOLUME_UP_BUTTON_PIN = 16
 # Define the GPIO pins for keypad rows and columns
 keypad_row_pins = [7, 8, 9, 10]
 keypad_col_pins = [11, 12, 13, 14]
-
-# Initialize all pins
-NUM_PINS = 30
 
 # Configure required pins
 led = Pin(LED_PIN, Pin.OUT)
@@ -230,7 +218,7 @@ async def alarm(message):
         if buzzer_volume is None or buzzer_volume == 0:
             raise ValueError("Invalid buzzer volume.")
 
-        if isPicoW():
+        if utils.isPicoW():
             if silent_alarm:
                 await send_pushover_notification(message=message)
                 alarm_active = False
@@ -517,48 +505,6 @@ async def detect_keypad_keys():
     except Exception as e:
         print(f"Error in detect_keypad_keys: {e}")
 
-# Unused pin initialization function
-async def initialize_pins(skip_pins=None):
-    """
-    Initializes pins as outputs and sets them low, excluding specified pins.
-
-    Args:
-        skip_pins: List of pin numbers to skip during initialization (default: None).
-    """
-    print("Configuring unused GPIO pins...")
-
-    if skip_pins is None:
-        skip_pins = []
-
-    for pin_number in range(NUM_PINS):
-        if pin_number in skip_pins:
-            continue  # Skip pins in the exclusion list
-        try:
-            # Initialize the pin as output and set it low
-            pin = Pin(pin_number, Pin.OUT)
-            pin.value(0)  # Drive the pin low
-        except ValueError:
-            # Ignore invalid pin numbers or configuration errors
-            pass
-
-# Configure network interfaces on PicoW
-async def configure_network():
-    print("Initializing network interfaces...")
-
-    import network
-
-    ap = network.WLAN(network.AP_IF)
-    sta = network.WLAN(network.STA_IF)
-
-    try:
-        ap.deinit()
-        ap.config(essid="", password="")
-        ap.active(False)
-        sta.deinit()
-        sta.active(False)
-    except Exception as e:
-        print(f"Error in configure_network: {e}")
-
 # Configuration checker
 async def check_config():
     try:
@@ -578,6 +524,7 @@ async def check_config():
 
 # PIR sensor warmup
 async def warmup_pir_sensor():
+    """Waits for 60 seconds to let the PIR sensor warm up."""
     print("Warming up PIR sensor...")
 
     try:
@@ -625,7 +572,7 @@ async def increase_buzzer_volume():
     """Increase the buzzer volume by 10%, up to a maximum of 6144."""
     global buzzer_volume
     step = int(6144 * 0.1)  # Calculate 10% step
-    buzzer_volume = min(buzzer_volume + step, 4096)
+    buzzer_volume = min(buzzer_volume + step, 6144)
     await save_to_file(buzzer_config_file, buzzer_volume)
     print(f"Buzzer volume increased to: {buzzer_volume}")
     await buzzer_volume_indicator()
@@ -634,7 +581,7 @@ async def increase_buzzer_volume():
 async def decrease_buzzer_volume():
     """Decrease the buzzer volume by 10%, down to a minimum of 0."""
     global buzzer_volume
-    step = int(4096 * 0.1)  # Calculate 10% step
+    step = int(6144 * 0.1)  # Calculate 10% step
     buzzer_volume = max(buzzer_volume - step, 0)
     await save_to_file(buzzer_config_file, buzzer_volume)
     print(f"Buzzer volume decreased to: {buzzer_volume}")
@@ -663,15 +610,18 @@ def read_keypad_key():
         for i, row in enumerate(keypad_rows):
             row.low()
 
-# Minimal URL encoding function for MicroPython
-def urlencode(data):
-    """Encode a dictionary into a URL-encoded string."""
-    return "&".join(f"{key}={value}" for key, value in data.items())
-
 # Validate Pushover API key
 async def validate_pushover_api_key(timeout=5):
     """Validate the configured Pushover API key."""
     global pushover_api_key
+
+    if not utils.isPicoW():
+        print("Unsupported device.")
+        return False
+
+    if not utils.isNetworkConnected():
+        print("No internet connection available.")
+        return False
 
     key_is_valid = False
 
@@ -687,7 +637,7 @@ async def validate_pushover_api_key(timeout=5):
         "token": pushover_app_token,
         "user": pushover_api_key,
     }
-    data = urlencode(data_dict).encode("utf-8")
+    data = utils.urlencode(data_dict).encode("utf-8")
     
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
@@ -714,6 +664,14 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
     """Send push notifications using Pushover."""
     global pushover_api_key
 
+    if not utils.isPicoW():
+        print("Unsupported device.")
+        return
+
+    if not utils.isNetworkConnected():
+        print("No internet connection available.")
+        return
+
     url = "https://api.pushover.net/1/messages.json"
 
     pushover_api_key = await load_from_file(pushover_config_file)
@@ -730,7 +688,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         "priority": priority,
         "title": title
     }
-    data = urlencode(data_dict).encode("utf-8")
+    data = utils.urlencode(data_dict).encode("utf-8")
     
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
@@ -912,6 +870,16 @@ async def alarm_mode_switch():
     """Handle switching between alarm modes."""
     global silent_alarm, pushover_api_key
 
+    if not utils.isPicoW():
+        print("Unsupported device.")
+        await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+        return
+
+    if not utils.isNetworkConnected():
+        print("No internet connection available.")
+        await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+        return
+
     key_is_valid = None
 
     try:
@@ -1085,10 +1053,10 @@ async def system_startup():
     try:
         await system_startup_indicator()
 
-        if isPicoW():
-            await configure_network()
+        if utils.isPicoW():
+            await utils.configure_network()
 
-        await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
+        await utils.initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
 
         await check_config()
 
@@ -1113,7 +1081,7 @@ async def main():
     global buzzer_volume
 
     # Instantiate network specific features
-    if isPicoW():
+    if utils.isPicoW():
         web_server = SecureMeServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", sta_web_server=web_server)
 
@@ -1137,7 +1105,7 @@ async def main():
         detect_keypad_keys()
     ]
 
-    if isPicoW():
+    if utils.isPicoW():
         tasks.append(network_manager.run())
 
     # Run all tasks concurrently
