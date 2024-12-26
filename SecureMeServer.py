@@ -174,6 +174,8 @@ class SecureMeServer:
                         uos.remove(f"{self.config_directory}/{self.network_config_file}")
                     if self.password_config_file in uos.listdir(self.config_directory):
                         uos.remove(f"{self.config_directory}/{self.password_config_file}")
+                    if uos.listdir(config_directory):
+                        uos.rmdir(config_directory)
                     machine.reset()
             else:
                 response = "HTTP/1.1 404 Not Found\r\n\r\nNot Found"
