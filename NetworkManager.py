@@ -1,22 +1,25 @@
-# Goat - Captive Portal class
+# Goat - Network Manager class
 # Version 1.0.0
 # © (c) 2024 Goat Technologies
 # Description:
-# Provides captive portal and wireless connectivity for Goat device firmware.
+# Provides network management for Goat device firmware.
 # Responsible for maintaining network state and managing connection lifetime.
+# Includes access point mode with a captive portal as well as station mode.
 
 # Imports
 import network
 import uasyncio as asyncio
 import uos
 import utime
-from CaptivePortalDNS import CaptivePortalDNS
+from NetworkManagerDNS import NetworkManagerDNS
 
-# CaptivePortal class
-class CaptivePortal:
-    """Provides captive portal and wireless connectivity for Goat device firmware."""
+# NetworkManager class
+class NetworkManager:
+    """Provides network management for Goat device firmware.
+    Responsible for maintaining network state and managing connection lifetime.
+"""
     # Class constructor
-    def __init__(self, ssid="Goat - Captive Portal", password="securepassword", sta_web_server = None):
+    def __init__(self, ap_ssid="Goat - Captive Portal", ap_password="securepassword", sta_web_server = None):
         """Constructs the class and exposes properties."""
         # Network configuration
         self.config_directory = "/config"
@@ -29,9 +32,9 @@ class CaptivePortal:
         self.server = None
 
         # Access point settings
-        self.ssid = ssid
-        self.password = password
-        self.http_port = 80
+        self.ap_ssid = ap_ssid
+        self.ap_password = ap_password
+        self.captive_portal_http_port = 80
         self.network_connection_timeout = 10
 
         # Access point IP settings
@@ -41,7 +44,7 @@ class CaptivePortal:
         self.ap_dns = "192.168.4.1"
 
         # Captive portal DNS server
-        self.dns_server = CaptivePortalDNS(portal_ip=self.ap_ip_address)
+        self.dns_server = NetworkManagerDNS(portal_ip=self.ap_ip_address)
 
         # STA web server configuration
         self.sta_web_server = sta_web_server
@@ -104,12 +107,12 @@ class CaptivePortal:
         gateway = self.ap_gateway
         dns = self.ap_dns
 
-        if len(self.password) < 8:
+        if len(self.ap_password) < 8:
             print("Password must be at least 8 characters long.")
             return
 
         try:
-            self.ap_if.config(essid=self.ssid, password=self.password)
+            self.ap_if.config(essid=self.ap_ssid, password=self.ap_password)
             self.ap_if.active(True)
 
             # Configure access point IP settings
@@ -117,7 +120,7 @@ class CaptivePortal:
 
             self.ip_address = self.ap_if.ifconfig()[0]
 
-            print(f"Access point started. SSID: {self.ssid}, IP: {self.ip_address}")
+            print(f"Access point started. SSID: {self.ap_ssid}, IP: {self.ip_address}")
         except Exception as e:
             print(f"Error starting Access point: {e}")
 
@@ -284,22 +287,26 @@ class CaptivePortal:
         <p><a href='/scan'>Start Scan</a></p>"""
         return self.html_template("Goat - Captive Portal", body)
 
-    async def start_server(self):
+    async def start_captive_portal_server(self):
         """Starts the captive portal HTTP server asynchronously."""
+        if not self.ap_if.isconnected():
+            print("The access point is not currently enabled. Cannot start server.")
+            return
+
         if not self.ip_address:
             print("AP IP address not assigned. Cannot start server.")
             return
 
         try:
-            self.server = await asyncio.start_server(self.handle_request, self.ip_address, self.http_port)
-            print(f"Serving on {self.ip_address}:{self.http_port}")
+            self.server = await asyncio.start_server(self.handle_request, self.ip_address, self.captive_portal_http_port)
+            print(f"Serving on {self.ip_address}:{self.captive_portal_http_port}")
 
             while True:
                 await asyncio.sleep(1)  # Keep the server running
         except Exception as e:
-            print(f"Error starting server: {e}")
+            print(f"Error starting the captive portal server: {e}")
 
-    async def stop_server(self):
+    async def stop_captive_portal_server(self):
         """Stops the captive portal HTTP server."""
         try:
             if self.server:
@@ -311,7 +318,7 @@ class CaptivePortal:
             print(f"Error stopping server: {e}")
 
     async def run(self):
-        """Runs the captive portal initialization process and maintains connectivity."""
+        """Runs the network manager initialization process and maintains connectivity."""
         try:
             await self.load_config()  # Load and attempt to connect to saved configuration
 
@@ -323,7 +330,7 @@ class CaptivePortal:
                         # Start AP if STA fails to reconnect
                         print("Switching to AP mode...")
                         await self.start_ap()
-                        await self.start_server()
+                        await self.start_captive_portal_server()
                         await self.dns_server.start_dns()
 
                 # Check if both STA and AP are disconnected
@@ -334,7 +341,7 @@ class CaptivePortal:
 
                 await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"Error in captive portal: {e}")
+            print(f"Error in network manager: {e}")
         finally:
             print("Cleaning up resources...")
             try:
@@ -345,9 +352,9 @@ class CaptivePortal:
                     print("Disconnecting from WiFi...")
                     await self.disconnect_from_wifi()
                 if self.ap_if.isconnected():
-                    print("Stopping DNS and AP server...")
+                    print("Stopping DNS and captive portal server...")
                     await self.dns_server.stop_dns()
-                    await self.stop_server()
+                    await self.stop_captive_portal_server()
                     await self.stop_ap()
             except Exception as cleanup_error:
                 print(f"Error during cleanup: {cleanup_error}")

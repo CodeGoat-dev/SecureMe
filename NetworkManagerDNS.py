@@ -1,16 +1,16 @@
-# Goat - Captive Portal DNS server class
+# Goat - Network Manager DNS server class
 # Version 1.0.0
 # © (c) 2024 Goat Technologies
 # Description:
-# Provides DNS services for the captive portal.
+# Provides DNS services for the captive portal provided by the Goat - Network Manager.
 
 # Imports
 import socket
 import uasyncio as asyncio
 
-# CaptivePortalDNS class
-class CaptivePortalDNS:
-    """Provides DNS services for the captive portal."""
+# NetworkManagerDNS class
+class NetworkManagerDNS:
+    """Provides DNS services for the captive portal provided by the Goat - Network Manager."""
     # Class constructor
     def __init__(self, portal_ip="192.168.4.1"):
         """Constructs the class and exposes properties."""

@@ -30,7 +30,7 @@ def isPicoW():
 # Conditional imports
 if isPicoW():
     import urequests
-    from CaptivePortal import CaptivePortal
+    from NetworkManager import NetworkManager
     from SecureMeServer import SecureMeServer
 
 # Pin constants
@@ -1115,7 +1115,7 @@ async def main():
     # Instantiate network specific features
     if isPicoW():
         web_server = SecureMeServer()
-        portal = CaptivePortal(ssid="Goat - SecureMe", password="secureme", sta_web_server=web_server)
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", sta_web_server=web_server)
 
     buzzer_volume = await load_from_file(buzzer_config_file)
 
@@ -1138,7 +1138,7 @@ async def main():
     ]
 
     if isPicoW():
-        tasks.append(portal.run())
+        tasks.append(network_manager.run())
 
     # Run all tasks concurrently
     await asyncio.gather(*tasks)
