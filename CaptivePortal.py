@@ -50,7 +50,7 @@ class CaptivePortal:
         """Loads saved network configuration and connects to a saved network."""
         try:
             if self.config_file in uos.listdir(self.config_directory):
-                with open(f"{self.config_directory}/{self.config_file}, "r") as file:
+                with open(f"{self.config_directory}/{self.config_file}", "r") as file:
                     try:
                         ssid, password = file.read().strip().split("\n")
                     except ValueError:
