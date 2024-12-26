@@ -71,6 +71,7 @@ keypad_rows = [Pin(pin, Pin.OUT) for pin in keypad_row_pins]
 keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 
 # Global variables
+config_directory = "/config"
 alarm_config_file = "alarm_config.txt"
 buzzer_config_file = "buzzer_config.txt"
 pushover_config_file = "pushover_config.txt"
@@ -575,8 +576,8 @@ async def warmup_pir_sensor():
 async def load_from_file(filename):
     """Loads and interprets data from a specified file."""
     try:
-        if filename in uos.listdir("/"):
-            with open(filename, "r") as f:
+        if filename in uos.listdir(config_directory):
+            with open(f"{config_directory}/{filename}", "r") as f:
                 raw_data = f.read().strip()
                 
                 # Interpret the data type
@@ -597,7 +598,7 @@ async def save_to_file(filename, data):
     """Saves data to a specified file, converting to a string if necessary."""
     try:
         # Ensure data is saved as a string
-        with open(filename, "w") as f:
+        with open(f"{config_directory}/{filename}", "w") as f:
             f.write(str(data))
     except Exception as e:
         print(f"Error saving {filename}: {e}")

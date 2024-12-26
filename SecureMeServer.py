@@ -22,6 +22,7 @@ class SecureMeServer:
         self.http_port = http_port
         self.server = None
 
+        self.config_directory = "/config"
         self.alarm_config_file = "alarm_config.txt"
         self.buzzer_config_file = "buzzer_config.txt"
         self.pushover_config_file = "pushover_config.txt"
@@ -46,8 +47,8 @@ class SecureMeServer:
     async def load_from_file(self, filename):
         """Loads data from a specified file."""
         try:
-            if filename in uos.listdir("/"):
-                with open(filename, "r") as f:
+            if filename in uos.listdir(self.config_directory):
+                with open(f"{self.config_directory}/{filename}", "r") as f:
                     return f.read().strip()
             return None
         except Exception as e:
@@ -57,7 +58,7 @@ class SecureMeServer:
     async def save_to_file(self, filename, data):
         """Saves data to a specified file."""
         try:
-            with open(filename, "w") as f:
+            with open(f"{self.config_directory}/{filename}", "w") as f:
                 f.write(data)
         except Exception as e:
             print(f"Error saving {filename}: {e}")
@@ -161,18 +162,18 @@ class SecureMeServer:
                     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nReset confirmation mismatch."
                 else:
                     response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
-                    if self.alarm_config_file in uos.listdir("/"):
-                        uos.remove(f"/{self.alarm_config_file}")
-                    if self.buzzer_config_file in uos.listdir("/"):
-                        uos.remove(f"/{self.buzzer_config_file}")
-                    if self.pushover_config_file in uos.listdir("/"):
-                        uos.remove(f"/{self.pushover_config_file}")
-                    if self.security_code_config_file in uos.listdir("/"):
-                        uos.remove(f"/{self.security_code_config_file}")
-                    if self.network_config_file in uos.listdir("/"):
-                        uos.remove(f"/{self.network_config_file}")
-                    if self.password_config_file in uos.listdir("/"):
-                        uos.remove(f"/{self.password_config_file}")
+                    if self.alarm_config_file in uos.listdir(self.config_directory):
+                        uos.remove(f"{self.config_directory}/{self.alarm_config_file}")
+                    if self.buzzer_config_file in uos.listdir(self.config_directory):
+                        uos.remove(f"{self.config_directory}/{self.buzzer_config_file}")
+                    if self.pushover_config_file in uos.listdir(self.config_directory):
+                        uos.remove(f"{self.config_directory}/{self.pushover_config_file}")
+                    if self.security_code_config_file in uos.listdir(self.config_directory):
+                        uos.remove(f"{self.config_directory}/{self.security_code_config_file}")
+                    if self.network_config_file in uos.listdir(self.config_directory):
+                        uos.remove(f"{self.config_directory}/{self.network_config_file}")
+                    if self.password_config_file in uos.listdir(self.config_directory):
+                        uos.remove(f"{self.config_directory}/{self.password_config_file}")
                     machine.reset()
             else:
                 response = "HTTP/1.1 404 Not Found\r\n\r\nNot Found"

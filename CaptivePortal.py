@@ -19,6 +19,7 @@ class CaptivePortal:
     def __init__(self, ssid="Goat - Captive Portal", password="securepassword", sta_web_server = None):
         """Constructs the class and exposes properties."""
         # Network configuration
+        self.config_directory = "/config"
         self.config_file = "network_config.txt"
 
         # Interface configuration
@@ -48,8 +49,8 @@ class CaptivePortal:
     async def load_config(self):
         """Loads saved network configuration and connects to a saved network."""
         try:
-            if self.config_file in uos.listdir("/"):
-                with open(self.config_file, "r") as file:
+            if self.config_file in uos.listdir(self.config_directory):
+                with open(f"{self.config_directory}/{self.config_file}, "r") as file:
                     try:
                         ssid, password = file.read().strip().split("\n")
                     except ValueError:
@@ -90,7 +91,7 @@ class CaptivePortal:
     async def save_config(self, ssid, password):
         """Saves network connection configuration to a file."""
         try:
-            with open(self.config_file, "w") as file:
+            with open(f"{self.config_directory}/{self.config_file}", "w") as file:
                 file.write(f"{ssid}\n{password}")
             print("Network configuration saved.")
         except Exception as e:
