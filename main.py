@@ -559,6 +559,23 @@ async def configure_network():
     except Exception as e:
         print(f"Error in configure_network: {e}")
 
+# Configuration checker
+async def check_config():
+    try:
+        # Check if the configuration directory exists
+        uos.listdir(config_directory)
+        print("Configuration directory exists.")
+    except OSError as e:
+        print(f"Configuration directory does not exist. Error: {e}")
+        try:
+            print("Attempting to create configuration directory...")
+            uos.mkdir(config_directory)
+            print("Configuration directory created successfully.")
+        except OSError as e:
+            print(f"Failed to create configuration directory. Error: {e}")
+            print("Rebooting...")
+            machine.reset()
+
 # PIR sensor warmup
 async def warmup_pir_sensor():
     print("Warming up PIR sensor...")
@@ -1072,6 +1089,8 @@ async def system_startup():
             await configure_network()
 
         await initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
+
+        await check_config()
 
         await warmup_pir_sensor()
 
