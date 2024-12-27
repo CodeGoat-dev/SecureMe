@@ -45,21 +45,31 @@ class SecureMeServer:
         self.admin_password = await self.load_from_file(self.password_config_file) or self.admin_password
 
     async def load_from_file(self, filename):
-        """Loads data from a specified file."""
-        try:
-            if filename in uos.listdir(self.config_directory):
-                with open(f"{self.config_directory}/{filename}", "r") as f:
-                    return f.read().strip()
-            return None
-        except Exception as e:
-            print(f"Error loading {filename}: {e}")
-            return None
+    """Loads and interprets data from a specified file."""
+    try:
+        if filename in uos.listdir(config_directory):
+            with open(f"{config_directory}/{filename}", "r") as f:
+                raw_data = f.read().strip()
+                
+                # Interpret the data type
+                if raw_data.isdigit():  # Integer check
+                    return int(raw_data)
+                try:
+                    return float(raw_data)  # Float check
+                except ValueError:
+                    pass  # Not a float, continue
+                return raw_data  # Return as string if not numeric
+        return None
+    except Exception as e:
+        print(f"Error loading {filename}: {e}")
+        return None
 
     async def save_to_file(self, filename, data):
         """Saves data to a specified file."""
         try:
+            # Ensure data is saved as a string
             with open(f"{self.config_directory}/{filename}", "w") as f:
-                f.write(data)
+                f.write(str(data))
         except Exception as e:
             print(f"Error saving {filename}: {e}")
 
