@@ -284,6 +284,9 @@ async def handle_arming():
     try:
         security_code = await load_from_file(security_code_config_file)
 
+        if not security_code:
+            security_code = "0000"
+
         while True:
             if arm_button.value() == 1:  # Button pressed
                 if is_armed:
@@ -292,6 +295,8 @@ async def handle_arming():
                         alarm_active = False
                         buzzer.duty_u16(0)  # Stop the buzzer immediately
                     security_code = await load_from_file(security_code_config_file)
+                    if not security_code:
+                        security_code = "0000"
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -309,6 +314,8 @@ async def handle_arming():
                     await system_ready_indicator()
                 else:
                     security_code = await load_from_file(security_code_config_file)
+                    if not security_code:
+                        security_code = "0000"
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -339,7 +346,7 @@ async def handle_alarm_testing():
                 if alarm_active:
                     continue
                 print("Testing alarm...")
-                await alarm()
+                await alarm("Testing Alarm.")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_alarm_testing: {e}")
@@ -539,6 +546,8 @@ async def warmup_pir_sensor():
 # Configuration loader
 async def load_from_file(filename):
     """Loads and interprets data from a specified file."""
+    global config_directory
+
     try:
         if filename in uos.listdir(config_directory):
             with open(f"{config_directory}/{filename}", "r") as f:
@@ -560,6 +569,8 @@ async def load_from_file(filename):
 # Configuration saver
 async def save_to_file(filename, data):
     """Saves data to a specified file, converting to a string if necessary."""
+    global config_directory
+
     try:
         # Ensure data is saved as a string
         with open(f"{config_directory}/{filename}", "w") as f:
@@ -947,9 +958,9 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
             print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
             if attempts >= max_attempts:
                 print("Maximum attempts reached. Triggering alarm.")
-                await alarm()  # Trigger the alarm after too many attempts
+                await alarm("Invalid Security Code Provided.")  # Trigger the alarm after too many attempts
                 return False  # Return False to indicate max attempts exceeded
-            await alarm()
+            await alarm("Invalid Security Code Provided.")
             continue
 
         # Correct code
@@ -963,6 +974,8 @@ async def change_security_code():
 
     try:
         security_code = await load_from_file(security_code_config_file)
+        if not security_code:
+            security_code = "0000"
         if security_code:
             entering_security_code = True
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)

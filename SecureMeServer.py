@@ -42,27 +42,29 @@ class SecureMeServer:
         """Initializes the server by loading configuration files."""
         self.pushover_api_key = await self.load_from_file(self.pushover_config_file)
         self.security_code = await self.load_from_file(self.security_code_config_file)
+        if not self.security_code:
+            self.security_code = "0000"
         self.admin_password = await self.load_from_file(self.password_config_file) or self.admin_password
 
     async def load_from_file(self, filename):
-    """Loads and interprets data from a specified file."""
-    try:
-        if filename in uos.listdir(config_directory):
-            with open(f"{config_directory}/{filename}", "r") as f:
-                raw_data = f.read().strip()
-                
-                # Interpret the data type
-                if raw_data.isdigit():  # Integer check
-                    return int(raw_data)
-                try:
-                    return float(raw_data)  # Float check
-                except ValueError:
-                    pass  # Not a float, continue
-                return raw_data  # Return as string if not numeric
-        return None
-    except Exception as e:
-        print(f"Error loading {filename}: {e}")
-        return None
+        """Loads and interprets data from a specified file."""
+        try:
+            if filename in uos.listdir(self.config_directory):
+                with open(f"{self.config_directory}/{filename}", "r") as f:
+                    raw_data = f.read().strip()
+
+                    # Interpret the data type
+                    if raw_data.isdigit():  # Integer check
+                        return int(raw_data)
+                    try:
+                        return float(raw_data)  # Float check
+                    except ValueError:
+                        pass  # Not a float, continue
+                    return raw_data  # Return as string if not numeric
+            return None
+        except Exception as e:
+            print(f"Error loading {filename}: {e}")
+            return None
 
     async def save_to_file(self, filename, data):
         """Saves data to a specified file."""
