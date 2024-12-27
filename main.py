@@ -555,7 +555,9 @@ async def load_from_file(filename):
                 
                 # Interpret the data type
                 if raw_data.isdigit():  # Integer check
-                    return int(raw_data)
+                    if len(raw_data) < 4:  # Treat as integer only if less than 4 digits
+                        return int(raw_data)
+                    return raw_data  # Treat as string for 4 or more digits
                 try:
                     return float(raw_data)  # Float check
                 except ValueError:
