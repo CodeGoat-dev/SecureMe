@@ -244,7 +244,6 @@ class NetworkManager:
                     await self.stop_server()
                     if self.sta_web_server:
                         try:
-                            web_server = self.sta_web_server()
                             self.server = await web_server.run()
                         except Exception as e:
                             print(f"Error starting web server: {e}")
@@ -289,10 +288,6 @@ class NetworkManager:
 
     async def start_captive_portal_server(self):
         """Starts the captive portal HTTP server asynchronously."""
-        if not self.ap_if.isconnected():
-            print("The access point is not currently enabled. Cannot start server.")
-            return
-
         if not self.ip_address:
             print("AP IP address not assigned. Cannot start server.")
             return
