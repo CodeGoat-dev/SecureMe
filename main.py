@@ -1100,7 +1100,9 @@ async def main():
         web_server = SecureMeServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", sta_web_server=web_server)
 
-    buzzer_volume = await load_from_file(buzzer_config_file)
+    stored_buzzer_volume = await load_from_file(buzzer_config_file)
+    if stored_buzzer_volume:
+        buzzer_volume = int(stored_buzzer_volume)
 
     if not buzzer_volume:
         buzzer_volume = default_buzzer_volume
