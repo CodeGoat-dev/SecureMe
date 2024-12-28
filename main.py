@@ -62,6 +62,8 @@ keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 config_directory = "/config"
 alarm_config_file = "alarm_config.txt"
 buzzer_config_file = "buzzer_config.txt"
+network_config_file = "network_config.txt"
+password_config_file = "admin_password.txt"
 pushover_config_file = "pushover_config.txt"
 security_code_config_file = "security_config.txt"
 pir_warmup_time = 60
@@ -505,6 +507,9 @@ async def detect_keypad_keys():
                 elif key == "C":
                     print("Initiating change_security_code.")
                     await change_security_code()
+                elif key == "D":
+                    print("Initiating reset_firmware_config.")
+                    await reset_firmware_config()
                 else:
                     print(f"Unhandled key press detected: {key}")
 
@@ -527,7 +532,7 @@ async def check_config():
         except OSError as e:
             print(f"Failed to create configuration directory. Error: {e}")
             print("Rebooting...")
-            machine.reset()
+            reset()
 
 # PIR sensor warmup
 async def warmup_pir_sensor():
@@ -920,6 +925,77 @@ async def alarm_mode_switch():
             await alarm_mode_switch_indicator(silent_alarm)
     except Exception as e:
         print(f"Error in alarm_mode_switch: {e}")
+
+# Firmware reset
+async def reset_firmware_config():
+    """Resets the firmware configuration to factory defaults."""
+    global alarm_active, security_code, entering_security_code
+
+    try:
+        security_code = await load_from_file(security_code_config_file)
+
+        if not security_code:
+            security_code = "0000"
+
+        if alarm_active:
+            print("Stopping alarm...")
+            alarm_active = False
+            buzzer.duty_u16(0)
+
+        entering_security_code = True
+
+        await play_dynamic_bell(50, buzzer_volume, 0.05, 3)
+
+        print("Waiting for security code")
+
+        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
+
+        if result is None:  # User cancelled
+            entering_security_code = False
+            return
+        elif not result:  # Max attempts reached or incorrect
+            entering_security_code = False
+            return
+
+        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
+
+        print("Waiting for second security code")
+
+        final_result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
+
+        if final_result is None:  # User cancelled
+            entering_security_code = False
+            return
+        elif not final_result:  # Max attempts reached or incorrect
+            entering_security_code = False
+            return
+
+        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
+
+        print("Resetting firmware configuration...")
+
+        await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
+
+        if alarm_config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{alarm_config_file}")
+        if buzzer_config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{buzzer_config_file}")
+        if pushover_config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{pushover_config_file}")
+        if security_code_config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{security_code_config_file}")
+        if network_config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{network_config_file}")
+        if password_config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{password_config_file}")
+
+        uos.rmdir(config_directory)
+
+        reset()
+
+        entering_security_code = False
+    except Exception as e:
+        print(f"Error in reset_firmware_config: {e}")
 
 # Security code entry
 async def enter_security_code(security_code, max_attempts, min_length, max_length):
