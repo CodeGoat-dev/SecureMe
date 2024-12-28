@@ -502,7 +502,7 @@ async def detect_keypad_keys():
                 elif key == "B":
                     print("Initiating alarm_mode_switch.")
                     await alarm_mode_switch()
-                elif key == "D":
+                elif key == "C":
                     print("Initiating change_security_code.")
                     await change_security_code()
                 else:
