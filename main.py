@@ -60,12 +60,12 @@ keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 
 # Global variables
 config_directory = "/config"
-alarm_config_file = "alarm_config.txt"
-buzzer_config_file = "buzzer_config.txt"
-network_config_file = "network_config.txt"
-password_config_file = "admin_password.txt"
-pushover_config_file = "pushover_config.txt"
-security_code_config_file = "security_config.txt"
+alarm_config_file = "alarm_config.conf"
+buzzer_config_file = "buzzer_config.conf"
+network_config_file = "network_config.conf"
+password_config_file = "admin_password.conf"
+pushover_config_file = "pushover_config.conf"
+security_code_config_file = "security_config.conf"
 pir_warmup_time = 60
 sensor_timeout = 10
 pir_timeout = None

@@ -23,12 +23,12 @@ class SecureMeServer:
         self.server = None
 
         self.config_directory = "/config"
-        self.alarm_config_file = "alarm_config.txt"
-        self.buzzer_config_file = "buzzer_config.txt"
-        self.pushover_config_file = "pushover_config.txt"
-        self.security_code_config_file = "security_config.txt"
-        self.network_config_file = "network_config.txt"
-        self.password_config_file = "admin_password.txt"
+        self.alarm_config_file = "alarm_config.conf"
+        self.buzzer_config_file = "buzzer_config.conf"
+        self.pushover_config_file = "pushover_config.conf"
+        self.security_code_config_file = "security_config.conf"
+        self.network_config_file = "network_config.conf"
+        self.password_config_file = "admin_password.conf"
 
         self.pushover_api_key = None
         self.admin_password = "secureme"

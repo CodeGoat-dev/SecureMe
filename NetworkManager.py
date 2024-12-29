@@ -23,7 +23,7 @@ class NetworkManager:
         """Constructs the class and exposes properties."""
         # Network configuration
         self.config_directory = "/config"
-        self.config_file = "network_config.txt"
+        self.config_file = "network_config.conf"
 
         # Interface configuration
         self.sta_if = network.WLAN(network.STA_IF)
@@ -156,10 +156,10 @@ class NetworkManager:
             elif "GET /hotspot-detect.html" in request:  # macOS/iOS detection
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"
                 response += "<HTML><BODY><H1>Success</H1></BODY></HTML>"
-            elif "GET /success.txt" in request:  # Windows detection
+            elif "GET /success.conf" in request:  # Windows detection
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"
                 response += "Microsoft Connect Test"
-            elif "GET /ncsi.txt" in request:  # Windows NCSI detection
+            elif "GET /ncsi.conf" in request:  # Windows NCSI detection
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"
                 response += "Microsoft NCSI"
             elif "GET /scan" in request:  # Wireless network scan
