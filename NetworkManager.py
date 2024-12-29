@@ -239,14 +239,6 @@ class NetworkManager:
                     await asyncio.sleep(0.5)
 
                 if self.sta.isconnected():
-                    await self.save_config(ssid, password)
-                    await self.stop_ap()
-                    await self.stop_server()
-                    if self.sta_web_server:
-                        try:
-                            self.server = await web_server.run()
-                        except Exception as e:
-                            print(f"Error starting web server: {e}")
                     body = f"""<h2>Connected</h2>
                     <p>You successfully connected to {ssid}.</p>
                     <h2>Information</h2>
@@ -264,6 +256,26 @@ class NetworkManager:
             body = f"""<h2>Error</h2>
             <p>An error occurred: {e}</p>"""
             return self.html_template("Goat - Captive Portal", body)
+        finally:
+            if self.sta.isconnected():
+                try:
+                    await self.save_config(ssid, password)
+                except Exception as e:
+                    print(f"Error saving network configuration: {e}")
+
+                try:
+                    await self.stop_captive_portal_server()
+                    await self.dns_server.stop_dns()
+                    await self.stop_ap()
+                except Exception as e:
+                    print(f"Error stopping access point services: {e}")
+
+                # Start STA web server
+                if self.sta_web_server:
+                    try:
+                        self.server = await web_server.run()
+                    except Exception as e:
+                        print(f"Error starting station web server: {e}")
 
     async def disconnect_from_wifi(self):
         """Disconnects from the currently connected wireless network."""
