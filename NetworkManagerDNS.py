@@ -12,10 +12,11 @@ import uasyncio as asyncio
 class NetworkManagerDNS:
     """Provides DNS services for the captive portal provided by the Goat - Network Manager."""
     # Class constructor
-    def __init__(self, portal_ip="192.168.4.1"):
+    def __init__(self, portal_ip="192.168.4.1", dns_port=53):
         """Constructs the class and exposes properties."""
         self.dns_ip = portal_ip
-        self.dns_port = 53
+        self.dns_port = dns_port
+
         self.udp_server = None
         self.buffer_size = 512  # Default DNS packet size
 
@@ -24,8 +25,8 @@ class NetworkManagerDNS:
         try:
             self.udp_server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.udp_server.setblocking(False)  # Non-blocking mode
-            self.udp_server.bind(('', self.dns_port))
-            print(f"DNS server started on port {self.dns_port}.")
+            self.udp_server.bind((self.dns_ip, self.dns_port))
+            print(f"DNS server started listening on IP address {self.dns_ip} port {self.dns_port}.")
 
             while True:
                 try:
@@ -67,32 +68,49 @@ class NetworkManagerDNS:
 
     def handle_dns_query(self, data):
         """Parses a DNS query and constructs a response to redirect to the portal."""
-        # DNS packet structure
-        transaction_id = data[:2]  # Transaction ID
-        flags = b'\x81\x80'  # Standard DNS response, no error
-        question_count = data[4:6]
-        answer_count = b'\x00\x01'
-        authority_rrs = b'\x00\x00'
-        additional_rrs = b'\x00\x00'
+        try:
+            transaction_id = data[:2]  # Transaction ID
+            flags = b'\x81\x80'  # Standard DNS response, no error
+            question_count = data[4:6]
+            answer_count = b'\x00\x01'
+            authority_rrs = b'\x00\x00'
+            additional_rrs = b'\x00\x00'
 
-        query_section = data[12:]  # Skip the header
+            # Extract query section and domain name
+            query_section = data[12:]
+            domain_name = self._decode_domain_name(query_section)
+            print(f"Handling DNS query for domain: {domain_name}")
 
-        # Answer section
-        answer_name = b'\xc0\x0c'
-        answer_type = b'\x00\x01'  # Type A
-        answer_class = b'\x00\x01'  # Class IN
-        ttl = b'\x00\x00\x00\x3c'  # Time-to-live: 60 seconds
-        data_length = b'\x00\x04'  # IPv4 address size
-        answer_ip = socket.inet_aton(self.dns_ip)
+            # Answer section
+            answer_name = b'\xc0\x0c'  # Pointer to domain name in query
+            answer_type = b'\x00\x01'  # Type A
+            answer_class = b'\x00\x01'  # Class IN
+            ttl = b'\x00\x00\x00\x3c'  # Time-to-live: 60 seconds
+            data_length = b'\x00\x04'  # IPv4 address size
+            answer_ip = socket.inet_aton(self.dns_ip)
 
-        # Build the response
-        dns_response = (
-            transaction_id + flags + question_count + answer_count +
-            authority_rrs + additional_rrs + query_section +
-            answer_name + answer_type + answer_class + ttl +
-            data_length + answer_ip
-        )
-        return dns_response
+            # Build the response
+            dns_response = (
+                transaction_id + flags + question_count + answer_count +
+                authority_rrs + additional_rrs + query_section +
+                answer_name + answer_type + answer_class + ttl +
+                data_length + answer_ip
+            )
+            return dns_response
+        except Exception as e:
+            print(f"Error handling DNS query: {e}")
+            return b''
+
+    def _decode_domain_name(self, query_section):
+        """Decodes the domain name from the query section."""
+        domain_parts = []
+        i = 0
+        while query_section[i] != 0:
+            length = query_section[i]
+            i += 1
+            domain_parts.append(query_section[i:i+length].decode())
+            i += length
+        return '.'.join(domain_parts)
 
     async def stop_dns(self):
         """Stops the DNS server."""
