@@ -200,7 +200,7 @@ class NetworkManager:
     async def scan_networks(self):
         """Scans for available wireless networks and returns HTML."""
         self.sta_if.active(True)
-        html = "<p>Network scan complete.</p><h2>Available Wi-Fi Networks</h2><p>The following wi-fi networks were detected:"
+        html = "<h2>Network Scan</h2><p>Network scan complete.</p><h3>Available Wi-Fi Networks</h3><p>The following wi-fi networks were detected:"
         try:
             networks = self.sta_if.scan()
             for net in networks:
@@ -214,10 +214,13 @@ class NetworkManager:
                     </form><br>
                 """
         except Exception as e:
-            html += f"<h2>Error scanning networks: {e}</h2>"
+            html += f"<h2>Scan Error</h2><p>An error occurred while scanning Wi-Fi networks.<br>Error: {e}</p>"
         finally:
             self.sta_if.active(False)
-        html += "<a href='/'>Go Back</a>"
+        html += """<h3>Information</h3>
+        <p>If the network you want is not listed, click <a href="/scan">Rescan</a> to scan again.</p>
+        <p><a href='/'>Go Back</a></p>
+        """
         return self.html_template("Goat - Captive Portal", html)
 
     async def connect_to_wifi(self, request):
