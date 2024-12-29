@@ -164,6 +164,8 @@ class NetworkManager:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + await self.scan_networks()
             elif "POST /connect" in request:  # Wireless network connection
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + await self.connect_to_wifi(request)
+            elif "POST /reconnect" in request:  # Saved wireless network reconnection
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + await self.reconnect_to_wifi()
             else:
                 # Default response or index page
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
@@ -277,6 +279,40 @@ class NetworkManager:
                     except Exception as e:
                         print(f"Error starting station web server: {e}")
 
+    async def reconnect_to_wifi(self, request):
+        """Reconnects to a saved Wi-Fi network."""
+        try:
+            if self.config_file in uos.listdir(self.config_directory):
+                await self.load_config()
+
+                if self.sta.isconnected():
+                    body = """<h2>Reconnected</h2>
+                    <p>You successfully reconnected to your saved network.</p>
+                    <h2>Information</h2>
+                    <p>The access point has been shut down and you can now close this page.</p>"""
+                    return self.html_template("Goat - Captive Portal", body)
+                else:
+                    body = """<h2>Reconnection Failed</h2>
+                    <p>Failed to reconnect to your saved network.</p>"""
+                    return self.html_template("Goat - Captive Portal", body)
+            else:
+                body = """<h2>Configuration Error</h2>
+                <p>There was an error locating your network configuration.<br>
+                Please try manually reconnecting to the network.</p>"""
+                return self.html_template("Goat - Captive Portal", body)
+        except Exception as e:
+            body = f"""<h2>Error</h2>
+            <p>An error occurred: {e}</p>"""
+            return self.html_template("Goat - Captive Portal", body)
+        finally:
+            if self.sta.isconnected():
+                try:
+                    await self.stop_captive_portal_server()
+                    await self.dns_server.stop_dns()
+                    await self.stop_ap()
+                except Exception as e:
+                    print(f"Error stopping access point services: {e}")
+
     async def disconnect_from_wifi(self):
         """Disconnects from the currently connected wireless network."""
         if not self.sta.isconnected():
@@ -292,8 +328,17 @@ class NetworkManager:
     def serve_index(self):
         """Serves the captive portal index page."""
         body = """<p>Welcome to the Goat - Captive Portal.<br>
-        Use the portal to connect your Goat device to your wireless network.</p>
-        <h2>Connect To A Network</h2>
+        Use the portal to connect your Goat device to your wireless network.</p>"""
+
+        if self.config_file in uos.listdir(self.config_directory):
+            body += """<h2>Reconnect To Saved Network</h2>
+            <p>An existing saved wireless network connection is configured for this system.<br>
+            Click the 'Reconnect' button below to attempt to reconnect to your saved network.</p>
+            <p><form action="/reconnect" method="post">
+            <button type="submit">Reconnect</button>
+            </form></p>"""
+
+        body += """<h2>Connect To A Network</h2>
         <p>Click the link below to scan for networks:</p>
         <p><a href='/scan'>Start Scan</a></p>"""
         return self.html_template("Goat - Captive Portal", body)
