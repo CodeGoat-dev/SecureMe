@@ -26,7 +26,7 @@ class NetworkManager:
         self.config_file = "network_config.txt"
 
         # Interface configuration
-        self.sta = network.WLAN(network.STA_IF)
+        self.sta_if = network.WLAN(network.STA_IF)
         self.ap_if = network.WLAN(network.AP_IF)
         self.ip_address = None
         self.server = None
@@ -63,16 +63,16 @@ class NetworkManager:
                 attempts = 0
 
                 while attempts < 3:
-                    self.sta.active(True)
-                    self.sta.connect(ssid, password)
+                    self.sta_if.active(True)
+                    self.sta_if.connect(ssid, password)
                     print(f"Attempting to connect to {ssid}...")
 
                     timeout = utime.time() + self.network_connection_timeout
-                    while not self.sta.isconnected() and utime.time() < timeout:
+                    while not self.sta_if.isconnected() and utime.time() < timeout:
                         utime.sleep(0.5)
 
-                    if self.sta.isconnected():
-                        self.ip_address = self.sta.ifconfig()[0]
+                    if self.sta_if.isconnected():
+                        self.ip_address = self.sta_if.ifconfig()[0]
                         print(f"Connected to {ssid}. IP: {self.ip_address}")
                         if self.sta_web_server:
                             try:
@@ -84,7 +84,7 @@ class NetworkManager:
                         print(f"Attempt {attempts + 1}: Failed to connect to Wi-Fi.")
                         attempts += 1
 
-                if not self.sta.isconnected():
+                if not self.sta_if.isconnected():
                     print("All connection attempts failed.")
             else:
                 print("No saved network configuration found.")
@@ -134,6 +134,8 @@ class NetworkManager:
             self.ap_if.config(essid="", password="")
             self.ap_if.active(False)
             self.ap_if.deinit()
+
+            self.ip_address = None
 
             print("Access point stopped.")
         except Exception as e:
@@ -197,10 +199,10 @@ class NetworkManager:
 
     async def scan_networks(self):
         """Scans for available wireless networks and returns HTML."""
-        self.sta.active(True)
+        self.sta_if.active(True)
         html = "<p>Network scan complete.</p><h2>Available Wi-Fi Networks</h2><p>The following wi-fi networks were detected:"
         try:
-            networks = self.sta.scan()
+            networks = self.sta_if.scan()
             for net in networks:
                 ssid = net[0].decode()
                 html += f"""
@@ -214,7 +216,7 @@ class NetworkManager:
         except Exception as e:
             html += f"<h2>Error scanning networks: {e}</h2>"
         finally:
-            self.sta.active(False)
+            self.sta_if.active(False)
         html += "<a href='/'>Go Back</a>"
         return self.html_template("Goat - Captive Portal", html)
 
@@ -233,14 +235,15 @@ class NetworkManager:
             password = params.get("password", "")
 
             if ssid and password:
-                self.sta.active(True)
-                self.sta.connect(ssid, password)
+                self.sta_if.active(True)
+                self.sta_if.connect(ssid, password)
 
                 timeout = utime.time() + self.network_connection_timeout
-                while not self.sta.isconnected() and utime.time() < timeout:
+                while not self.sta_if.isconnected() and utime.time() < timeout:
                     await asyncio.sleep(0.5)
 
-                if self.sta.isconnected():
+                if self.sta_if.isconnected():
+                    self.ip_address = self.sta_if.ifconfig()[0]
                     body = f"""<h2>Connected</h2>
                     <p>You successfully connected to {ssid}.</p>
                     <h2>Information</h2>
@@ -259,7 +262,7 @@ class NetworkManager:
             <p>An error occurred: {e}</p>"""
             return self.html_template("Goat - Captive Portal", body)
         finally:
-            if self.sta.isconnected():
+            if self.sta_if.isconnected():
                 try:
                     await self.save_config(ssid, password)
                 except Exception as e:
@@ -285,7 +288,7 @@ class NetworkManager:
             if self.config_file in uos.listdir(self.config_directory):
                 await self.load_config()
 
-                if self.sta.isconnected():
+                if self.sta_if.isconnected():
                     body = """<h2>Reconnected</h2>
                     <p>You successfully reconnected to your saved network.</p>
                     <h2>Information</h2>
@@ -305,7 +308,7 @@ class NetworkManager:
             <p>An error occurred: {e}</p>"""
             return self.html_template("Goat - Captive Portal", body)
         finally:
-            if self.sta.isconnected():
+            if self.sta_if.isconnected():
                 try:
                     await self.stop_captive_portal_server()
                     await self.dns_server.stop_dns()
@@ -315,13 +318,14 @@ class NetworkManager:
 
     async def disconnect_from_wifi(self):
         """Disconnects from the currently connected wireless network."""
-        if not self.sta.isconnected():
+        if not self.sta_if.isconnected():
             print("The network is not connected.")
             return;
 
         try:
-            self.sta.active(False)
-            self.sta.deinit()
+            self.sta_if.active(False)
+            self.sta_if.deinit()
+            self.ip_address = None
         except Exception as e:
             print(f"Error disconnecting from wi-fi: {e}")
 
@@ -375,10 +379,10 @@ class NetworkManager:
             await self.load_config()  # Load and attempt to connect to saved configuration
 
             while True:
-                if not self.sta.isconnected():
+                if not self.sta_if.isconnected():
                     print("Station disconnected, attempting reconnection...")
                     await self.load_config()  # Reload saved configuration and reconnect
-                    if not self.sta.isconnected():
+                    if not self.sta_if.isconnected():
                         # Start AP if STA fails to reconnect
                         print("Switching to AP mode...")
                         await self.start_ap()
@@ -386,7 +390,7 @@ class NetworkManager:
                         await self.dns_server.start_dns()
 
                 # Check if both STA and AP are disconnected
-                if not self.sta.isconnected() and not self.ap_if.isconnected():
+                if not self.sta_if.isconnected() and not self.ap_if.isconnected():
                     print("No active connections. Rescanning...")
                     await asyncio.sleep(2)  # Pause before rescanning
                     continue
@@ -400,11 +404,11 @@ class NetworkManager:
                 if self.sta_web_server:
                     print("Stopping STA web server...")
                     await self.sta_web_server.stop_server()
-                if self.sta.isconnected():
+                if self.sta_if.isconnected():
                     print("Disconnecting from WiFi...")
                     await self.disconnect_from_wifi()
                 if self.ap_if.isconnected():
-                    print("Stopping DNS and captive portal server...")
+                    print("Stopping access point services...")
                     await self.dns_server.stop_dns()
                     await self.stop_captive_portal_server()
                     await self.stop_ap()
