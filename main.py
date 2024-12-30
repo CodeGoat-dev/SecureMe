@@ -623,32 +623,32 @@ async def validate_pushover_api_key(timeout=5):
     if not pushover_api_key:
         return key_is_valid
 
-    # Prepare data as a byte-encoded string
     data_dict = {
         "token": pushover_app_token,
         "user": pushover_api_key,
     }
     data = utils.urlencode(data_dict).encode("utf-8")
-    
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    try:
-        response = urequests.post(url, data=data, headers=headers, timeout=timeout)
-        
-        # Handle the response
-        if response.status_code == 200:
-            key_is_valid = True
-        else:
-            key_is_valid = False
+    for attempt in range(3):  # Retry up to 3 times
+        try:
+            print(f"Attempt {attempt + 1}: Validating API key...")
+            response = urequests.post(url, data=data, headers=headers, timeout=timeout)
 
-        return key_is_valid
-    except Exception as e:
-        return false
-    finally:
-        # Ensure response is closed to release resources
-        if 'response' in locals():
-            response.close()
-        await asyncio.sleep(0)  # Yield control back to the event loop
+            if response.status_code == 200:
+                key_is_valid = True
+                print("API key is valid.")
+                return key_is_valid
+            else:
+                print(f"Invalid API key. Status code: {response.status_code}")
+        except Exception as e:
+            print(f"Error validating API key (Attempt {attempt + 1}): {e}")
+        finally:
+            if 'response' in locals():
+                response.close()
+            await asyncio.sleep(0.5)  # Slight delay before retrying
+
+    return key_is_valid
 
 # Send push notifications using Pushover
 async def send_pushover_notification(title="Goat - SecureMe", message="Testing", priority=0, timeout=5):
@@ -671,7 +671,6 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         print("A Pushover API key is required to send push notifications.")
         return
 
-    # Prepare data as a byte-encoded string
     data_dict = {
         "token": pushover_app_token,
         "user": pushover_api_key,
@@ -680,28 +679,27 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         "title": title
     }
     data = utils.urlencode(data_dict).encode("utf-8")
-    
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    try:
-        # Perform the HTTP request directly in the coroutine
-        print("Sending notification...")
-        response = urequests.post(url, data=data, headers=headers, timeout=timeout)
-        
-        # Handle the response
-        if response.status_code == 200:
-            print("Notification sent successfully!")
-        else:
-            print(f"Failed to send notification. Status code: {response.status_code}")
-        print("Response:", response.text)
-        response.close()
-    except Exception as e:
-        print("Error sending notification:", e)
-    finally:
-        # Ensure response is closed to release resources
-        if 'response' in locals():
-            response.close()
-        await asyncio.sleep(0)  # Yield control back to the event loop
+    for attempt in range(3):  # Retry up to 3 times
+        try:
+            print(f"Attempt {attempt + 1}: Sending notification...")
+            response = urequests.post(url, data=data, headers=headers, timeout=timeout)
+
+            if response.status_code == 200:
+                print("Notification sent successfully!")
+                print("Response:", response.text)
+                return
+            else:
+                print(f"Failed to send notification. Status code: {response.status_code}")
+        except Exception as e:
+            print(f"Error sending notification (Attempt {attempt + 1}): {e}")
+        finally:
+            if 'response' in locals():
+                response.close()
+            await asyncio.sleep(0.5)  # Slight delay before retrying
+
+    print("All attempts to send notification failed.")
 
 # System startup indicator
 async def system_startup_indicator():
