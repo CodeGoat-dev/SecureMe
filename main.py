@@ -16,6 +16,7 @@ import time
 import utime
 import uasyncio as asyncio
 import uos
+from ConfigManager import ConfigManager
 import utils
 
 # Conditional imports
@@ -60,12 +61,9 @@ keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
 
 # Global variables
 config_directory = "/config"
-alarm_config_file = "alarm_config.conf"
-buzzer_config_file = "buzzer_config.conf"
+config_file = "secureme.conf"
 network_config_file = "network_config.conf"
-password_config_file = "admin_password.conf"
-pushover_config_file = "pushover_config.conf"
-security_code_config_file = "security_config.conf"
+
 pir_warmup_time = 60
 sensor_timeout = 10
 pir_timeout = None
@@ -212,10 +210,12 @@ async def alarm(message):
     alarm_active = True
 
     try:
-        alarm_sound = await load_from_file(alarm_config_file)
+        alarm_sound = config.get_entry("alarm", "alarm_sound")
 
         if not alarm_sound == 0 and not alarm_sound == 1 and not alarm_sound == 2 and not alarm_sound == 3:
             alarm_sound = 0
+            config.set_entry("alarm", "alarm_sound", alarm_sound)
+            await config.write_async()
 
         if buzzer_volume is None or buzzer_volume == 0:
             raise ValueError("Invalid buzzer volume.")
@@ -284,10 +284,12 @@ async def handle_arming():
     global is_armed, alarm_active, security_code, entering_security_code
 
     try:
-        security_code = await load_from_file(security_code_config_file)
+        security_code = config.get_entry("security", "security_code")
 
         if not security_code:
             security_code = "0000"
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
 
         while True:
             if arm_button.value() == 1:  # Button pressed
@@ -296,9 +298,11 @@ async def handle_arming():
                         print("Stopping alarm...")
                         alarm_active = False
                         buzzer.duty_u16(0)  # Stop the buzzer immediately
-                    security_code = await load_from_file(security_code_config_file)
+                    security_code = config.get_entry("security", "security_code")
                     if not security_code:
                         security_code = "0000"
+                        config.set_entry("security", "security_code", security_code)
+                        await config.write_async()
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -315,9 +319,11 @@ async def handle_arming():
                     await play_dynamic_bell(250, buzzer_volume)
                     await system_ready_indicator()
                 else:
-                    security_code = await load_from_file(security_code_config_file)
+                    security_code = config.get_entry("security", "security_code")
                     if not security_code:
                         security_code = "0000"
+                        config.set_entry("security", "security_code", security_code)
+                        await config.write_async()
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -360,7 +366,7 @@ async def handle_alarm_sound_switching():
 
     try:
         # Load the saved alarm sound value or default
-        alarm_sound = await load_from_file(alarm_config_file)
+        alarm_sound = config.get_entry("alarm", "alarm_sound")
 
         while True:
             if alarm_sound_button.value() == 1:  # Button pressed
@@ -378,8 +384,9 @@ async def handle_alarm_sound_switching():
                     alarm_sound = 0
                     await play_alarm("sweep", 500, 3000, 1)
 
-                # Save the updated alarm sound to the file
-                await save_to_file(alarm_config_file, alarm_sound)
+                # Save the updated alarm sound
+                config.set_entry("alarm", "alarm_sound", alarm_sound)
+                await config.write_async()
 
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
@@ -389,6 +396,7 @@ async def handle_alarm_sound_switching():
 async def handle_buzzer_volume():
     """Handle buzzer volume changes."""
     global buzzer_volume
+
     try:
         while True:
             if volume_down_button.value() == 1:  # Button pressed
@@ -548,50 +556,14 @@ async def warmup_pir_sensor():
     except Exception as e:
         print(f"Error in warmup_pir_sensor: {e}")
 
-# Configuration loader
-async def load_from_file(filename):
-    """Loads and interprets data from a specified file."""
-    global config_directory
-
-    try:
-        if filename in uos.listdir(config_directory):
-            with open(f"{config_directory}/{filename}", "r") as f:
-                raw_data = f.read().strip()
-                
-                # Interpret the data type
-                if raw_data.isdigit():  # Integer check
-                    if len(raw_data) < 4:  # Treat as integer only if less than 4 digits
-                        return int(raw_data)
-                    return raw_data  # Treat as string for 4 or more digits
-                try:
-                    return float(raw_data)  # Float check
-                except ValueError:
-                    pass  # Not a float, continue
-                return raw_data  # Return as string if not numeric
-        return None
-    except Exception as e:
-        print(f"Error loading {filename}: {e}")
-        return None
-
-# Configuration saver
-async def save_to_file(filename, data):
-    """Saves data to a specified file, converting to a string if necessary."""
-    global config_directory
-
-    try:
-        # Ensure data is saved as a string
-        with open(f"{config_directory}/{filename}", "w") as f:
-            f.write(str(data))
-    except Exception as e:
-        print(f"Error saving {filename}: {e}")
-
 # Method to increase buzzer volume by 10%
 async def increase_buzzer_volume():
     """Increase the buzzer volume by 10%, up to a maximum of 6144."""
     global buzzer_volume
     step = int(6144 * 0.1)  # Calculate 10% step
     buzzer_volume = min(buzzer_volume + step, 6144)
-    await save_to_file(buzzer_config_file, buzzer_volume)
+    config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
+    await config.write_async()
     print(f"Buzzer volume increased to: {buzzer_volume}")
     await buzzer_volume_indicator()
 
@@ -601,7 +573,8 @@ async def decrease_buzzer_volume():
     global buzzer_volume
     step = int(6144 * 0.1)  # Calculate 10% step
     buzzer_volume = max(buzzer_volume - step, 0)
-    await save_to_file(buzzer_config_file, buzzer_volume)
+    config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
+    await config.write_async()
     print(f"Buzzer volume decreased to: {buzzer_volume}")
     await buzzer_volume_indicator()
 
@@ -645,7 +618,7 @@ async def validate_pushover_api_key(timeout=5):
 
     url = "https://api.pushover.net/1/users/validate.json"
 
-    pushover_api_key = await load_from_file(pushover_config_file)
+    pushover_api_key = config.get_entry("pushover", "api_key")
 
     if not pushover_api_key:
         return key_is_valid
@@ -692,7 +665,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
 
     url = "https://api.pushover.net/1/messages.json"
 
-    pushover_api_key = await load_from_file(pushover_config_file)
+    pushover_api_key = config.get_entry("pushover", "api_key")
 
     if not pushover_api_key:
         print("A Pushover API key is required to send push notifications.")
@@ -901,7 +874,7 @@ async def alarm_mode_switch():
     key_is_valid = None
 
     try:
-        pushover_api_key = await load_from_file(pushover_config_file)
+        pushover_api_key = config.get_entry("pushover", "api_key")
 
         if not pushover_api_key:
             print("A Pushover API key is required for silent alarms.")
@@ -932,10 +905,12 @@ async def reset_firmware_config():
     global alarm_active, security_code, entering_security_code
 
     try:
-        security_code = await load_from_file(security_code_config_file)
+        security_code = config.get_entry("security", "security_code")
 
         if not security_code:
             security_code = "0000"
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
 
         if alarm_active:
             print("Stopping alarm...")
@@ -976,18 +951,10 @@ async def reset_firmware_config():
 
         await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
 
-        if alarm_config_file in uos.listdir(config_directory):
-            uos.remove(f"{config_directory}/{alarm_config_file}")
-        if buzzer_config_file in uos.listdir(config_directory):
-            uos.remove(f"{config_directory}/{buzzer_config_file}")
-        if pushover_config_file in uos.listdir(config_directory):
-            uos.remove(f"{config_directory}/{pushover_config_file}")
-        if security_code_config_file in uos.listdir(config_directory):
-            uos.remove(f"{config_directory}/{security_code_config_file}")
+        if config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{config_file}")
         if network_config_file in uos.listdir(config_directory):
             uos.remove(f"{config_directory}/{network_config_file}")
-        if password_config_file in uos.listdir(config_directory):
-            uos.remove(f"{config_directory}/{password_config_file}")
 
         uos.rmdir(config_directory)
 
@@ -1051,9 +1018,11 @@ async def change_security_code():
     global security_code, entering_security_code
 
     try:
-        security_code = await load_from_file(security_code_config_file)
+        security_code = config.get_entry("security", "security_code")
         if not security_code:
             security_code = "0000"
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
         if security_code:
             entering_security_code = True
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -1124,7 +1093,8 @@ async def change_security_code():
 
             # Update the security code
             security_code = new_code
-            await save_to_file(security_code_config_file, security_code)
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
             await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
             print(f"Security code updated. New code: {security_code}")
@@ -1149,8 +1119,6 @@ async def system_startup():
 
         await utils.initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
 
-        await check_config()
-
         await warmup_pir_sensor()
 
         await system_ready_indicator()
@@ -1169,20 +1137,28 @@ async def system_shutdown():
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
-    global buzzer_volume
+    global config, buzzer_volume
 
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = SecureMeServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", sta_web_server=web_server)
 
-    stored_buzzer_volume = await load_from_file(buzzer_config_file)
+        await check_config()
+
+        print("Loading firmware configuration...")
+
+        config = ConfigManager(config_directory, config_file)
+        await config.read_async()
+
+    stored_buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
     if stored_buzzer_volume:
-        buzzer_volume = int(stored_buzzer_volume)
+        buzzer_volume = stored_buzzer_volume
 
     if not buzzer_volume:
         buzzer_volume = default_buzzer_volume
-        await save_to_file(buzzer_config_file, buzzer_volume)
+        config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
+        await config.write_async()
 
     await system_startup()
 

@@ -11,6 +11,7 @@ import network
 import uasyncio as asyncio
 import uos
 import utime
+from ConfigManager import ConfigManager
 from NetworkManagerDNS import NetworkManagerDNS
 
 # NetworkManager class
@@ -53,12 +54,15 @@ class NetworkManager:
         """Loads saved network configuration and connects to a saved network."""
         try:
             if self.config_file in uos.listdir(self.config_directory):
-                with open(f"{self.config_directory}/{self.config_file}", "r") as file:
-                    try:
-                        ssid, password = file.read().strip().split("\n")
-                    except ValueError:
-                        print("Error: Invalid format in config file.")
-                        return
+                config = ConfigManager(self.config_directory, self.config_file)
+                await config.read_async()
+
+                ssid = config.get_entry("network", "ssid")
+                password = config.get_entry("network", "password")
+
+                if not ssid:
+                    print("No SSID provided in configuration. Cannot connect to a network.")
+                    return
 
                 attempts = 0
 
@@ -94,8 +98,14 @@ class NetworkManager:
     async def save_config(self, ssid, password):
         """Saves network connection configuration to a file."""
         try:
-            with open(f"{self.config_directory}/{self.config_file}", "w") as file:
-                file.write(f"{ssid}\n{password}")
+            config = ConfigManager(self.config_directory, self.config_file)
+            await config.read_async()
+
+            config.set_entry("network", "ssid", ssid)
+            config.set_entry("network", "password", password)
+
+            await config.write_async()
+
             print("Network configuration saved.")
         except Exception as e:
             print(f"Error saving configuration: {e}")
@@ -281,7 +291,7 @@ class NetworkManager:
                 # Start STA web server
                 if self.sta_web_server:
                     try:
-                        self.server = await web_server.run()
+                        self.server = await self.sta_web_server.run()
                     except Exception as e:
                         print(f"Error starting station web server: {e}")
 

@@ -11,6 +11,7 @@ import uasyncio as asyncio
 import uos
 import utime
 import ubinascii
+from ConfigManager import ConfigManager
 
 # SecureMeServer class
 class SecureMeServer:
@@ -23,12 +24,8 @@ class SecureMeServer:
         self.server = None
 
         self.config_directory = "/config"
-        self.alarm_config_file = "alarm_config.conf"
-        self.buzzer_config_file = "buzzer_config.conf"
-        self.pushover_config_file = "pushover_config.conf"
-        self.security_code_config_file = "security_config.conf"
+        self.config_file = "secureme.conf"
         self.network_config_file = "network_config.conf"
-        self.password_config_file = "admin_password.conf"
 
         self.pushover_api_key = None
         self.admin_password = "secureme"
@@ -39,43 +36,17 @@ class SecureMeServer:
         self.alert_text = None
 
     async def initialize(self):
-        """Initializes the server by loading configuration files."""
-        self.pushover_api_key = await self.load_from_file(self.pushover_config_file)
-        self.security_code = await self.load_from_file(self.security_code_config_file)
+        """Initializes the server by loading configuration data."""
+        self.config = ConfigManager(self.config_directory, self.config_file)
+        await self.config.read_async()
+
+        self.pushover_api_key = self.config.get_entry("pushover", "api_key")
+        self.security_code = self.config.get_entry("security", "security_code")
         if not self.security_code:
             self.security_code = "0000"
-        self.admin_password = await self.load_from_file(self.password_config_file) or self.admin_password
-
-    async def load_from_file(self, filename):
-        """Loads and interprets data from a specified file."""
-        try:
-            if filename in uos.listdir(self.config_directory):
-                with open(f"{self.config_directory}/{filename}", "r") as f:
-                    raw_data = f.read().strip()
-
-                    # Interpret the data type
-                    if raw_data.isdigit():  # Integer check
-                        if len(raw_data) < 4:  # Treat as integer only if less than 4 digits
-                            return int(raw_data)
-                        return raw_data  # Treat as string for 4 or more digits
-                    try:
-                        return float(raw_data)  # Float check
-                    except ValueError:
-                        pass  # Not a float, continue
-                    return raw_data  # Return as string if not numeric
-            return None
-        except Exception as e:
-            print(f"Error loading {filename}: {e}")
-            return None
-
-    async def save_to_file(self, filename, data):
-        """Saves data to a specified file."""
-        try:
-            # Ensure data is saved as a string
-            with open(f"{self.config_directory}/{filename}", "w") as f:
-                f.write(str(data))
-        except Exception as e:
-            print(f"Error saving {filename}: {e}")
+            self.config.set_entry("security", "security_code", self.security_code)
+            await self.config.write_async()
+        self.admin_password = self.config.get_entry("server", "admin_password") or self.admin_password
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
@@ -151,21 +122,24 @@ class SecureMeServer:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.pushover_api_key = post_data.get('pushover_key', None)
-                await self.save_to_file(self.pushover_config_file, self.pushover_api_key)
+                self.config.set_entry("pushover", "api_key", self.pushover_api_key)
+                await self.config.write_async()
                 self.alert_text = "Pushover API key updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_security_code" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.security_code = post_data.get('security_code', None)
-                await self.save_to_file(self.security_code_config_file, self.security_code)
+                self.config.set_entry("security", "security_code", self.security_code)
+                await self.config.write_async()
                 self.alert_text = "System security code updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_password" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.admin_password = post_data.get('password', None)
-                await self.save_to_file(self.password_config_file, self.admin_password)
+                self.config.set_entry("server", "admin_password", self.admin_password)
+                await self.config.write_async()
                 self.alert_text = "Web administration password updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /reset_firmware" in request:
@@ -176,18 +150,10 @@ class SecureMeServer:
                     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nReset confirmation mismatch."
                 else:
                     response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
-                    if self.alarm_config_file in uos.listdir(self.config_directory):
-                        uos.remove(f"{self.config_directory}/{self.alarm_config_file}")
-                    if self.buzzer_config_file in uos.listdir(self.config_directory):
-                        uos.remove(f"{self.config_directory}/{self.buzzer_config_file}")
-                    if self.pushover_config_file in uos.listdir(self.config_directory):
-                        uos.remove(f"{self.config_directory}/{self.pushover_config_file}")
-                    if self.security_code_config_file in uos.listdir(self.config_directory):
-                        uos.remove(f"{self.config_directory}/{self.security_code_config_file}")
+                    if self.config_file in uos.listdir(self.config_directory):
+                        uos.remove(f"{self.config_directory}/{self.config_file}")
                     if self.network_config_file in uos.listdir(self.config_directory):
                         uos.remove(f"{self.config_directory}/{self.network_config_file}")
-                    if self.password_config_file in uos.listdir(self.config_directory):
-                        uos.remove(f"{self.config_directory}/{self.password_config_file}")
                     uos.rmdir(self.config_directory)
                     machine.reset()
             else:
