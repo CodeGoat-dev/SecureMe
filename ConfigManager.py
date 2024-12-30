@@ -209,3 +209,29 @@ class ConfigManager:
         except ValueError:
             print("Error setting value. Provide a tuple ('section', 'key') for the configuration key.")
             raise
+
+    async def start_watching(self, check_interval=3):
+        """
+        Start watching the configuration file for changes.
+
+        Args:
+            check_interval (int): Time in seconds between checks.
+        """
+        last_modified = self.get_last_modified_time()
+
+        while True:
+            await asyncio.sleep(check_interval)  # Yield control to other tasks
+            current_modified = self.get_last_modified_time()
+
+            if current_modified and current_modified != last_modified:
+                print(f"Configuration file {self.filename} has changed. Reloading...")
+                last_modified = current_modified
+                await self.reload_async()
+
+    def get_last_modified_time(self):
+        """Get the last modified time of the configuration file."""
+        try:
+            return uos.stat(self.filename)[8]  # Index 8 is the modification time
+        except OSError:
+            # Log file not found but do not crash
+            return None
