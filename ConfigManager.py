@@ -43,7 +43,7 @@ class ConfigManager:
                 entry_re = re.compile(r'(.*?)=(.*)')
                 string_re = re.compile(r'^"(.*)"$')
                 int_re = re.compile(r'^\d+$')
-                bool_re = re.compile(r'^(true|false)$', re.IGNORECASE)
+                bool_re = re.compile(r'^(true|false)$')
                 comment_re = re.compile(r'^#.*')
 
                 current_section = None
@@ -62,7 +62,7 @@ class ConfigManager:
                         value = entry.group(2).strip()
                         if string_re.match(value):
                             value = string_re.match(value).group(1)
-                        elif bool_re.match(value):
+                        elif bool_re.match(value.lower()):
                             value = value.lower() == "true"
                         elif int_re.match(value):
                             value = int(value)
@@ -78,7 +78,7 @@ class ConfigManager:
         """Reload the configuration file."""
         await self.read_async()
 
-    async def write(self, config=None, filename=None):
+    async def write_async(self, config=None, filename=None):
         """Write the configuration to the file."""
         if config is None:
             config = self.config
