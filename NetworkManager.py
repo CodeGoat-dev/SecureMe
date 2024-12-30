@@ -379,7 +379,8 @@ class NetworkManager:
         """Stops the captive portal HTTP server."""
         try:
             if self.server:
-                await self.server.await_closed()
+                self.server.close()
+                await self.server.wait_closed()
                 print("Server stopped.")
             else:
                 print("Server already stopped.")
