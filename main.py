@@ -64,24 +64,32 @@ config_directory = "/config"
 config_file = "secureme.conf"
 network_config_file = "network_config.conf"
 
+tasks = []
+
 pir_warmup_time = 60
 sensor_timeout = 10
 pir_timeout = None
 tilt_timeout = None
+
 is_armed = True
 alarm_active = False
 alarm_sound = 0
 silent_alarm = False
+
 default_buzzer_volume = 3072
 buzzer_volume = 3072
+
 security_code = "0000"
 entering_security_code = False
 security_code_max_entry_attempts = 3
 security_code_min_length = 4
 security_code_max_length = 8
+
 pushover_app_token = "ahptofxmi4fg8mhadwpebbb559vovo"
 pushover_api_key = None
+
 keypad_locked = True
+
 keypad_characters = [
     ["1", "2", "3", "A"],
     ["4", "5", "6", "B"],
@@ -1127,15 +1135,18 @@ async def system_startup():
 
 async def system_shutdown():
     """System firmware shutdown."""
+    global tasks
+
     print("Shutting down...")
-    for task in asyncio.all_tasks():
+
+    for task in tasks:
         task.cancel()
     await asyncio.sleep(0)  # Allow tasks to finish cleanup
 
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
-    global config, buzzer_volume
+    global config, tasks, buzzer_volume
 
     # Instantiate network specific features
     if utils.isPicoW():
@@ -1162,19 +1173,19 @@ async def main():
 
     # Create task list
     tasks = [
-        config.start_watching(),
-        handle_arming(),
-        handle_arming_indicator(),
-        handle_alarm_testing(),
-        handle_alarm_sound_switching(),
-        handle_buzzer_volume(),
-        detect_motion(),
-        detect_tilt(),
-        detect_keypad_keys()
+        asyncio.create_task(config.start_watching()),
+        asyncio.create_task(handle_arming()),
+        asyncio.create_task(handle_arming_indicator()),
+        asyncio.create_task(handle_alarm_testing()),
+        asyncio.create_task(handle_alarm_sound_switching()),
+        asyncio.create_task(handle_buzzer_volume()),
+        asyncio.create_task(detect_motion()),
+        asyncio.create_task(detect_tilt()),
+        asyncio.create_task(detect_keypad_keys())
     ]
 
     if utils.isPicoW():
-        tasks.append(network_manager.run())
+        tasks.append(asyncio.create_task(network_manager.run()))
 
     # Run all tasks concurrently
     await asyncio.gather(*tasks)
@@ -1187,5 +1198,5 @@ except KeyboardInterrupt:
 finally:
     buzzer.duty_u16(0)
     led.value(0)
-    system_shutdown()
+    asyncio.run(system_shutdown())
     print("Firmware shutdown complete.")
