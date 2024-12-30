@@ -43,6 +43,7 @@ class ConfigManager:
                 entry_re = re.compile(r'(.*?)=(.*)')
                 string_re = re.compile(r'^"(.*)"$')
                 int_re = re.compile(r'^\d+$')
+                bool_re = re.compile(r'^(true|false)$', re.IGNORECASE)
                 comment_re = re.compile(r'^#.*')
 
                 current_section = None
@@ -61,6 +62,8 @@ class ConfigManager:
                         value = entry.group(2).strip()
                         if string_re.match(value):
                             value = string_re.match(value).group(1)
+                        elif bool_re.match(value):
+                            value = value.lower() == "true"
                         elif int_re.match(value):
                             value = int(value)
                         elif value.startswith('!'):
@@ -93,6 +96,8 @@ class ConfigManager:
                             value = f'"{value}"'
                         elif isinstance(value, list):
                             value = f"!{','.join(map(str, value))}"
+                        elif isinstance(value, bool):
+                            value = "true" if value else "false"
                         configfile.write(f'{key}={value}\n')
                     configfile.write('\n')
 
