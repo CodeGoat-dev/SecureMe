@@ -1164,6 +1164,7 @@ async def main():
 
     # Create task list
     tasks = [
+        config.start_watching(),
         handle_arming(),
         handle_arming_indicator(),
         handle_alarm_testing(),
