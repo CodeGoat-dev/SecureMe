@@ -48,6 +48,8 @@ class SecureMeServer:
             await self.config.write_async()
         self.admin_password = self.config.get_entry("server", "admin_password") or self.admin_password
 
+        self.config_watcher = asyncio.create_task(self.config.start_watching())
+
     def html_template(self, title, body):
         """Generates an HTML page template."""
         template = f"""<html>
@@ -286,6 +288,8 @@ class SecureMeServer:
                 print("Server already stopped.")
         except Exception as e:
             print(f"Error stopping server: {e}")
+        finally:
+            self.config_watcher.cancel()
 
     async def run(self):
         """Runs the SecureMe web server initialization process."""
