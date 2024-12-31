@@ -29,6 +29,8 @@ class SecureMeServer:
 
         self.detect_motion = None
         self.detect_tilt = None
+        self.sensor_cooldown = 10
+        self.default_sensor_cooldown = 10
         self.pushover_api_key = None
         self.admin_password = "secureme"
         self.security_code = "0000"
@@ -51,6 +53,11 @@ class SecureMeServer:
         if not isinstance(self.detect_tilt, bool):
             self.detect_tilt = True
             config.set_entry("security", "detect_tilt", self.detect_tilt)
+            await config.write_async()
+        self.sensor_cooldown = self.config.get_entry("security", "sensor_cooldown")
+        if not isinstance(self.sensor_cooldown, int):
+            self.sensor_cooldown = self.default_sensor_cooldown
+            config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
             await config.write_async()
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
         self.security_code = self.config.get_entry("security", "security_code")
@@ -141,10 +148,13 @@ class SecureMeServer:
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 detect_motion = 'detect_motion' in post_data
                 detect_tilt = 'detect_tilt' in post_data
+                sensor_cooldown = 'sensor_cooldown' in post_data
                 self.detect_motion = detect_motion
                 self.detect_tilt = detect_tilt
+                self.sensor_cooldown = sensor_cooldown
                 self.config.set_entry("security", "detect_motion", self.detect_motion)
                 self.config.set_entry("security", "detect_tilt", self.detect_tilt)
+                self.config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
                 await self.config.write_async()
                 self.alert_text = "Detection settings updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
@@ -253,6 +263,8 @@ class SecureMeServer:
             <input type="checkbox" id="detect_motion" name="detect_motion" {detect_motion_checked}><br>
             <label for="detect_tilt">Enable Tilt Detection</label>
             <input type="checkbox" id="detect_tilt" name="detect_tilt" {detect_tilt_checked}><br>
+            <label for="sensor_cooldown">Sensor Cooldown Time (Sec):</label>
+            <input type="number" id="sensor_cooldown" name="sensor_cooldown" minlength=1 maxlength=2 value="{self.sensor_cooldown}" required><br>
             <input type="submit" value="Save Settings">
         </form></p>
         """
@@ -265,7 +277,7 @@ class SecureMeServer:
         <p>To change the administrator password, enter a new password below.</p>
         <p><form method="POST" action="/update_password">
             <label for="password">New Admin Password:</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" name="password" required><br>
             <input type="submit" value="Update Password">
         </form></p>
         """
@@ -280,7 +292,7 @@ class SecureMeServer:
         Sign up for an account and register a device to obtain a key.</p>
         <p><form method="POST" action="/update_pushover">
             <label for="pushover_key">New Pushover API Key:</label>
-            <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required>
+            <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required><br>
             <input type="submit" value="Update Pushover Key">
         </form></p>
         """
@@ -293,7 +305,7 @@ class SecureMeServer:
         You should change this from the default value of "0000".</p>
         <p><form method="POST" action="/update_security_code">
             <label for="security_code">New Security Code:</label>
-            <input type="number" id="security_code" name="security_code" minlength={self.security_code_min_length} maxlength={self.security_code_max_length} value="{self.security_code}" required>
+            <input type="number" id="security_code" name="security_code" minlength={self.security_code_min_length} maxlength={self.security_code_max_length} value="{self.security_code}" required><br>
             <input type="submit" value="Update Security Code">
         </form></p>
         """
@@ -319,7 +331,7 @@ class SecureMeServer:
         <p>To reset the device, type "secureme" in the box below.</p>
         <p><form method="POST" action="/reset_firmware">
             <label for="reset_confirmation">Reset Confirmation:</label>
-            <input type="text" id="reset_confirmation" name="reset_confirmation" required>
+            <input type="text" id="reset_confirmation" name="reset_confirmation" required><br>
             <input type="submit" value="Reset Device">
         </form></p>
         """

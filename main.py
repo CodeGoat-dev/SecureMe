@@ -67,12 +67,14 @@ network_config_file = "network_config.conf"
 tasks = []
 
 pir_warmup_time = 60
-sensor_timeout = 10
+
 pir_timeout = None
 tilt_timeout = None
 
 enable_detect_motion = True
 enable_detect_tilt = True
+sensor_cooldown = 10
+default_sensor_cooldown = 10
 
 is_armed = True
 alarm_active = False
@@ -436,6 +438,7 @@ async def detect_motion():
 
         while True:
             enable_detect_motion = config.get_entry("security", "detect_motion")
+            sensor_cooldown = config.get_entry("security", "sensor_cooldown")
 
             if not enable_detect_motion:
                 await asyncio.sleep(0.5)
@@ -452,7 +455,7 @@ async def detect_motion():
                     continue
                 print("Movement Detected.")
                 await alarm("Movement Detected.")
-                pir_timeout = utime.time() + sensor_timeout
+                pir_timeout = utime.time() + sensor_cooldown
                 print("Detecting movement...")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
@@ -468,6 +471,7 @@ async def detect_tilt():
 
         while True:
             enable_detect_tilt = config.get_entry("security", "detect_tilt")
+            sensor_cooldown = config.get_entry("security", "sensor_cooldown")
 
             if not enable_detect_tilt:
                 await asyncio.sleep(0.5)
@@ -484,7 +488,7 @@ async def detect_tilt():
                     continue
                 print("Tilt Detected.")
                 await alarm("Tilt Detected")
-                tilt_timeout = utime.time() + sensor_timeout
+                tilt_timeout = utime.time() + sensor_cooldown
                 print("Detecting tilt...")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
@@ -547,37 +551,6 @@ async def detect_keypad_keys():
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in detect_keypad_keys: {e}")
-
-# Configuration checker
-async def check_config():
-    try:
-        # Check if the configuration directory exists
-        uos.listdir(config_directory)
-        print("Configuration directory exists.")
-    except OSError as e:
-        print(f"Configuration directory does not exist. Error: {e}")
-        try:
-            print("Attempting to create configuration directory...")
-            uos.mkdir(config_directory)
-            print("Configuration directory created successfully.")
-        except OSError as e:
-            print(f"Failed to create configuration directory. Error: {e}")
-            print("Rebooting...")
-            reset()
-
-# PIR sensor warmup
-async def warmup_pir_sensor():
-    """Waits for 60 seconds to let the PIR sensor warm up."""
-    print("Warming up PIR sensor...")
-
-    try:
-        for i in range(pir_warmup_time, 0, -1):
-            print(f"warming up... {i}s remaining.")
-            await play_dynamic_bell(250, buzzer_volume, 0.1, 1)
-
-        print("PIR sensor ready!")
-    except Exception as e:
-        print(f"Error in warmup_pir_sensor: {e}")
 
 # Method to increase buzzer volume by 10%
 async def increase_buzzer_volume():
@@ -1126,6 +1099,23 @@ async def change_security_code():
     finally:
         entering_security_code = False
 
+# Configuration checker
+async def check_config():
+    try:
+        # Check if the configuration directory exists
+        uos.listdir(config_directory)
+        print("Configuration directory exists.")
+    except OSError as e:
+        print(f"Configuration directory does not exist. Error: {e}")
+        try:
+            print("Attempting to create configuration directory...")
+            uos.mkdir(config_directory)
+            print("Configuration directory created successfully.")
+        except OSError as e:
+            print(f"Failed to create configuration directory. Error: {e}")
+            print("Rebooting...")
+            reset()
+
 # System start-up
 async def system_startup():
     """System firmware initialization."""
@@ -1148,6 +1138,20 @@ async def system_startup():
     except Exception as e:
         print(f"Error in system_startup: {e}")
 
+# PIR sensor warmup
+async def warmup_pir_sensor():
+    """Waits for 60 seconds to let the PIR sensor warm up."""
+    print("Warming up PIR sensor...")
+
+    try:
+        for i in range(pir_warmup_time, 0, -1):
+            print(f"warming up... {i}s remaining.")
+            await play_dynamic_bell(250, buzzer_volume, 0.1, 1)
+
+        print("PIR sensor ready!")
+    except Exception as e:
+        print(f"Error in warmup_pir_sensor: {e}")
+
 async def system_shutdown():
     """System firmware shutdown."""
     global tasks
@@ -1161,7 +1165,7 @@ async def system_shutdown():
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
-    global config, tasks, enable_detect_motion, enable_detect_tilt, buzzer_volume
+    global config, tasks, enable_detect_motion, enable_detect_tilt, sensor_cooldown, buzzer_volume
 
     # Instantiate network specific features
     if utils.isPicoW():
@@ -1189,9 +1193,16 @@ async def main():
             config.set_entry("security", "detect_tilt", enable_detect_tilt)
             await config.write_async()
 
+        sensor_cooldown = config.get_entry("security", "sensor_cooldown")
+
+        if not isinstance(sensor_cooldown, int):
+            sensor_cooldown = default_sensor_cooldown
+            config.set_entry("security", "sensor_cooldown", sensor_cooldown)
+            await config.write_async()
+
     buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
 
-    if not buzzer_volume:
+    if not isinstance(buzzer_volume, int):
         buzzer_volume = default_buzzer_volume
         config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
         await config.write_async()
