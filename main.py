@@ -1119,9 +1119,6 @@ async def check_config():
 # System start-up
 async def system_startup():
     """System firmware initialization."""
-
-    print("Initializing firmware...")
-
     try:
         await system_startup_indicator()
 
@@ -1166,6 +1163,8 @@ async def system_shutdown():
 async def main():
     """Main coroutine to handle firmware services"""
     global config, tasks, enable_detect_motion, enable_detect_tilt, sensor_cooldown, buzzer_volume
+
+    print("Initializing firmware...")
 
     # Instantiate network specific features
     if utils.isPicoW():
