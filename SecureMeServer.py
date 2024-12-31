@@ -132,6 +132,8 @@ class SecureMeServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_security_code_form()
             elif "GET /reset_firmware" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reset_firmware_form()
+            elif "GET /reboot_device" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reboot_device_form()
             elif "GET /" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
             elif "POST /update_detection_settings" in request:
@@ -170,6 +172,10 @@ class SecureMeServer:
                 await self.config.write_async()
                 self.alert_text = "Web administration password updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+            elif "POST /reboot_device" in request:
+                content = request.split("\r\n\r\n")[1]
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+                machine.reset()
             elif "POST /reset_firmware" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
@@ -227,6 +233,7 @@ class SecureMeServer:
         <li><a href="/change_password">Change Admin Password</a><br></li>
         <li><a href="/change_pushover">Change Pushover API Key</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
+        <li><a href="/reboot_device">Reboot Device</a></li>
         <li><a href="/reset_firmware">Reset Firmware</a></li>
         </ul></p>
         <h2>About SecureMe</h2>
@@ -291,6 +298,18 @@ class SecureMeServer:
         </form></p>
         """
         return self.html_template("Change System Security Code", form)
+
+    def serve_reboot_device_form(self):
+        """Serves the reboot device form.""" 
+        form = f"""<h2>Reboot Device</h2>
+        <p>If you recently made configuration changes and want to restart the SecureMe system, you can do so here.<br>
+        Rebooting the system will not affect any configuration settings.</p>
+        <p>To reboot the SecureMe system, click "Reboot" below.</p>
+        <p><form method="POST" action="/reboot_device">
+            <input type="submit" value="Reboot Device">
+        </form></p>
+        """
+        return self.html_template("Reboot Device", form)
 
     def serve_reset_firmware_form(self):
         """Serves the reset firmware form with the current key pre-populated.""" 
