@@ -71,6 +71,9 @@ sensor_timeout = 10
 pir_timeout = None
 tilt_timeout = None
 
+enable_detect_motion = True
+enable_detect_tilt = True
+
 is_armed = True
 alarm_active = False
 alarm_sound = 0
@@ -426,12 +429,18 @@ async def handle_buzzer_volume():
 # Motion detection
 async def detect_motion():
     """Detect motion using the PIR sensor."""
-    global is_armed, entering_security_code, pir_timeout
+    global enable_detect_motion, is_armed, entering_security_code, pir_timeout
 
     try:
         print("Detecting movement...")
 
         while True:
+            enable_detect_motion = config.get_entry("security", "detect_motion")
+
+            if not enable_detect_motion:
+                await asyncio.sleep(0.5)
+                continue
+
             if pir_timeout:
                 if utime.time() < pir_timeout:
                     await asyncio.sleep(0.5)
@@ -452,12 +461,18 @@ async def detect_motion():
 # Tilt detection
 async def detect_tilt():
     """Detect tilting using the tilt switch sensor."""
-    global is_armed, entering_security_code, tilt_timeout
+    global enable_detect_tilt, is_armed, entering_security_code, tilt_timeout
 
     try:
         print("Detecting tilt...")
 
         while True:
+            enable_detect_tilt = config.get_entry("security", "detect_tilt")
+
+            if not enable_detect_tilt:
+                await asyncio.sleep(0.5)
+                continue
+
             if tilt_timeout:
                 if utime.time() < tilt_timeout:
                     await asyncio.sleep(0.5)
@@ -1146,7 +1161,7 @@ async def system_shutdown():
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
-    global config, tasks, buzzer_volume
+    global config, tasks, enable_detect_motion, enable_detect_tilt, buzzer_volume
 
     # Instantiate network specific features
     if utils.isPicoW():
@@ -1160,9 +1175,21 @@ async def main():
         config = ConfigManager(config_directory, config_file)
         await config.read_async()
 
-    stored_buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
-    if stored_buzzer_volume:
-        buzzer_volume = stored_buzzer_volume
+        enable_detect_motion = config.get_entry("security", "detect_motion")
+
+        if not isinstance(enable_detect_motion, bool):
+            enable_detect_motion = True
+            config.set_entry("security", "detect_motion", enable_detect_motion)
+            await config.write_async()
+
+        enable_detect_tilt = config.get_entry("security", "detect_tilt")
+
+        if not isinstance(enable_detect_motion, bool):
+            enable_detect_tilt = True
+            config.set_entry("security", "detect_tilt", enable_detect_tilt)
+            await config.write_async()
+
+    buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
 
     if not buzzer_volume:
         buzzer_volume = default_buzzer_volume

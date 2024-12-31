@@ -27,6 +27,8 @@ class SecureMeServer:
         self.config_file = "secureme.conf"
         self.network_config_file = "network_config.conf"
 
+        self.detect_motion = None
+        self.detect_tilt = None
         self.pushover_api_key = None
         self.admin_password = "secureme"
         self.security_code = "0000"
@@ -40,6 +42,16 @@ class SecureMeServer:
         self.config = ConfigManager(self.config_directory, self.config_file)
         await self.config.read_async()
 
+        self.detect_motion = self.config.get_entry("security", "detect_motion")
+        if not isinstance(self.detect_motion, bool):
+            self.detect_motion = True
+            config.set_entry("security", "detect_motion", self.detect_motion)
+            await config.write_async()
+        self.detect_tilt = self.config.get_entry("security", "detect_tilt")
+        if not isinstance(self.detect_tilt, bool):
+            self.detect_tilt = True
+            config.set_entry("security", "detect_tilt", self.detect_tilt)
+            await config.write_async()
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
         self.security_code = self.config.get_entry("security", "security_code")
         if not self.security_code:
@@ -110,7 +122,9 @@ class SecureMeServer:
                 return
 
             # Serve the appropriate pages based on the request
-            if "GET /change_password" in request:
+            if "GET /detection_settings" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_detection_settings_form()
+            elif "GET /change_password" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_password_form()
             elif "GET /change_pushover" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_pushover_form()
@@ -120,6 +134,18 @@ class SecureMeServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reset_firmware_form()
             elif "GET /" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
+            elif "POST /update_detection_settings" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                detect_motion = 'detect_motion' in post_data
+                detect_tilt = 'detect_tilt' in post_data
+                self.detect_motion = detect_motion
+                self.detect_tilt = detect_tilt
+                self.config.set_entry("security", "detect_motion", self.detect_motion)
+                self.config.set_entry("security", "detect_tilt", self.detect_tilt)
+                await self.config.write_async()
+                self.alert_text = "Detection settings updated."
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_pushover" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
@@ -197,6 +223,7 @@ class SecureMeServer:
         <h2>System Settings</h2>
         <p>Select a setting from the list below.<br>
         <ul>
+        <li><a href="detection_settings">Detection Settings</a></li>
         <li><a href="/change_password">Change Admin Password</a><br></li>
         <li><a href="/change_pushover">Change Pushover API Key</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
@@ -206,6 +233,24 @@ class SecureMeServer:
         <p>SecureMe is a portable, configurable security system designed for simplicity and effectiveness.</p>
         """
         return self.html_template("Welcome", body)
+
+    def serve_detection_settings_form(self):
+        """Serves the detection settings form with the current settings pre-populated."""
+        detect_motion_checked = 'checked' if self.detect_motion else ''
+        detect_tilt_checked = 'checked' if self.detect_tilt else ''
+    
+        form = f"""<h2>Detection Settings</h2>
+        <p>The settings below control how the SecureMe system detects movement.</p>
+        <p><form method="POST" action="/update_detection_settings">
+            <label for="detect_motion">Enable Motion Detection</label>
+            <input type="checkbox" id="detect_motion" name="detect_motion" {detect_motion_checked}><br>
+            <label for="detect_tilt">Enable Tilt Detection</label>
+            <input type="checkbox" id="detect_tilt" name="detect_tilt" {detect_tilt_checked}><br>
+            <input type="submit" value="Save Settings">
+        </form></p>
+        """
+
+        return self.html_template("Detection Settings", form)
 
     def serve_change_password_form(self):
         """Serves the change password form with the current password pre-populated.""" 
