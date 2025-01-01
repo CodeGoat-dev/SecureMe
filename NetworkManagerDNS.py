@@ -1,6 +1,6 @@
 # Goat - Network Manager DNS server class
 # Version 1.0.0
-# © (c) 2024 Goat Technologies
+# © (c) 2024-2025 Goat Technologies
 # Description:
 # Provides DNS services for the captive portal provided by the Goat - Network Manager.
 

@@ -1,6 +1,6 @@
 # Goat - Network Manager class
 # Version 1.0.0
-# © (c) 2024 Goat Technologies
+# © (c) 2024-2025 Goat Technologies
 # Description:
 # Provides network management for Goat device firmware.
 # Responsible for maintaining network state and managing connection lifetime.

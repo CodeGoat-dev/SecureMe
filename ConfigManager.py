@@ -1,6 +1,6 @@
 # Goat - Configuration Manager
 # Version 1.0.0
-# © (c) 2024 Goat Technologies
+# © (c) 2024-2025 Goat Technologies
 # Description:
 # A lightweight configuration manager library for MicroPython.
 # Provides INI-style configuration file support for Goat firmware.
