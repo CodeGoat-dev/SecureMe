@@ -88,7 +88,7 @@ class SecureMeServer:
         template += f"""{body}
         <h1>Information</h1>
         <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
-        <p>© (c) 2024 Goat Technologies</p>
+        <p>© (c) 2024-2025 Goat Technologies</p>
         </body>
         </html>"""
 
