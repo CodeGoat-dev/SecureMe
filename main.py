@@ -1131,6 +1131,8 @@ async def system_startup():
 
         await utils.initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
 
+        await validate_config()
+
         await warmup_pir_sensor()
 
         await system_ready_indicator()
@@ -1138,6 +1140,58 @@ async def system_startup():
         print("System ready.")
     except Exception as e:
         print(f"Error in system_startup: {e}")
+
+# Configuration validation
+async def validate_config():
+    """Validates the firmware configuration."""
+    global enable_detect_motion, enable_detect_tilt, sensor_cooldown, buzzer_volume, security_code, admin_password
+
+    print("Validating firmware configuration...")
+
+    try:
+        enable_detect_motion = config.get_entry("security", "detect_motion")
+
+        if not isinstance(enable_detect_motion, bool):
+            enable_detect_motion = True
+            config.set_entry("security", "detect_motion", enable_detect_motion)
+            await config.write_async()
+
+        enable_detect_tilt = config.get_entry("security", "detect_tilt")
+
+        if not isinstance(enable_detect_motion, bool):
+            enable_detect_tilt = True
+            config.set_entry("security", "detect_tilt", enable_detect_tilt)
+            await config.write_async()
+
+        sensor_cooldown = config.get_entry("security", "sensor_cooldown")
+
+        if not isinstance(sensor_cooldown, int):
+            sensor_cooldown = default_sensor_cooldown
+            config.set_entry("security", "sensor_cooldown", sensor_cooldown)
+            await config.write_async()
+
+        buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
+
+        if not isinstance(buzzer_volume, int):
+            buzzer_volume = default_buzzer_volume
+            config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
+            await config.write_async()
+
+        security_code = config.get_entry("security", "security_code")
+
+        if not isinstance(security_code, str):
+            security_code = default_security_code
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
+
+        admin_password = config.get_entry("server", "admin_password")
+
+        if not isinstance(admin_password, str):
+            admin_password = default_admin_password
+            config.set_entry("server", "admin_password", admin_password)
+            await config.write_async()
+    except Exception as e:
+        print(f"Error in validate_config: {e}")
 
 # PIR sensor warmup
 async def warmup_pir_sensor():
@@ -1166,63 +1220,21 @@ async def system_shutdown():
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
-    global config, tasks, enable_detect_motion, enable_detect_tilt, sensor_cooldown, buzzer_volume, security_code, admin_password
+    global config, tasks
 
     print("Initializing firmware...")
+
+    await check_config()
+
+    print("Loading firmware configuration...")
+
+    config = ConfigManager(config_directory, config_file)
+    await config.read_async()
 
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = SecureMeServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", sta_web_server=web_server)
-
-        await check_config()
-
-        print("Loading firmware configuration...")
-
-        config = ConfigManager(config_directory, config_file)
-        await config.read_async()
-
-        enable_detect_motion = config.get_entry("security", "detect_motion")
-
-        if not isinstance(enable_detect_motion, bool):
-            enable_detect_motion = True
-            config.set_entry("security", "detect_motion", enable_detect_motion)
-            await config.write_async()
-
-        enable_detect_tilt = config.get_entry("security", "detect_tilt")
-
-        if not isinstance(enable_detect_motion, bool):
-            enable_detect_tilt = True
-            config.set_entry("security", "detect_tilt", enable_detect_tilt)
-            await config.write_async()
-
-        sensor_cooldown = config.get_entry("security", "sensor_cooldown")
-
-        if not isinstance(sensor_cooldown, int):
-            sensor_cooldown = default_sensor_cooldown
-            config.set_entry("security", "sensor_cooldown", sensor_cooldown)
-            await config.write_async()
-
-    buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
-
-    if not isinstance(buzzer_volume, int):
-        buzzer_volume = default_buzzer_volume
-        config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
-        await config.write_async()
-
-        security_code = config.get_entry("security", "security_code")
-
-        if not isinstance(security_code, str)
-            security_code = default_security_code
-            config.set_entry("security", "security_code", security_code)
-            await config.write_async()
-
-        admin_password = config.get_entry("server", "admin_password")
-
-        if not isinstance(admin_password, str):
-            admin_password = default_admin_password
-            config.set_entry("server", "admin_password", admin_password)
-            await config.write_async()
 
     await system_startup()
 
