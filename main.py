@@ -84,7 +84,11 @@ silent_alarm = False
 default_buzzer_volume = 3072
 buzzer_volume = 3072
 
+admin_password = "secureme"
+default_admin_password = "secureme"
+
 security_code = "0000"
+default_security_code = "0000"
 entering_security_code = False
 security_code_max_entry_attempts = 3
 security_code_min_length = 4
@@ -1162,7 +1166,7 @@ async def system_shutdown():
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
-    global config, tasks, enable_detect_motion, enable_detect_tilt, sensor_cooldown, buzzer_volume
+    global config, tasks, enable_detect_motion, enable_detect_tilt, sensor_cooldown, buzzer_volume, security_code, admin_password
 
     print("Initializing firmware...")
 
@@ -1205,6 +1209,20 @@ async def main():
         buzzer_volume = default_buzzer_volume
         config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
         await config.write_async()
+
+        security_code = config.get_entry("security", "security_code")
+
+        if not isinstance(security_code, str)
+            security_code = default_security_code
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
+
+        admin_password = config.get_entry("server", "admin_password")
+
+        if not isinstance(admin_password, str):
+            admin_password = default_admin_password
+            config.set_entry("server", "admin_password", admin_password)
+            await config.write_async()
 
     await system_startup()
 

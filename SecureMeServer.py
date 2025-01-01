@@ -33,7 +33,9 @@ class SecureMeServer:
         self.default_sensor_cooldown = 10
         self.pushover_api_key = None
         self.admin_password = "secureme"
+        self.default_admin_password = "secureme"
         self.security_code = "0000"
+        self.default_security_code = "0000"
         self.security_code_min_length = 4
         self.security_code_max_length = 8
 
@@ -61,11 +63,15 @@ class SecureMeServer:
             await config.write_async()
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
         self.security_code = self.config.get_entry("security", "security_code")
-        if not self.security_code:
-            self.security_code = "0000"
+        if not isinstance(self.security_code, str):
+            self.security_code = self.default_security_code
             self.config.set_entry("security", "security_code", self.security_code)
             await self.config.write_async()
-        self.admin_password = self.config.get_entry("server", "admin_password") or self.admin_password
+        self.admin_password = self.config.get_entry("server", "admin_password")
+        if not isinstance(self.admin_password, str):
+            self.admin_password = self.default_admin_password
+            self.config.set_entry("server", "admin_password", self.admin_password)
+            await self.config.write_async()
 
         self.config_watcher = asyncio.create_task(self.config.start_watching())
 
@@ -88,7 +94,7 @@ class SecureMeServer:
         template += f"""{body}
         <h1>Information</h1>
         <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
-        <p>© (c) 2024-2025 Goat Technologies</p>
+        <p><b>© (c) 2024-2025 Goat Technologies</b></p>
         </body>
         </html>"""
 
