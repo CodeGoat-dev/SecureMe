@@ -897,120 +897,6 @@ async def alarm_mode_switch():
     except Exception as e:
         print(f"Error in alarm_mode_switch: {e}")
 
-# Firmware reset
-async def reset_firmware_config():
-    """Resets the firmware configuration to factory defaults."""
-    global alarm_active, security_code, entering_security_code
-
-    try:
-        security_code = config.get_entry("security", "security_code")
-
-        if not security_code:
-            security_code = "0000"
-            config.set_entry("security", "security_code", security_code)
-            await config.write_async()
-
-        if alarm_active:
-            print("Stopping alarm...")
-            alarm_active = False
-            buzzer.duty_u16(0)
-
-        entering_security_code = True
-
-        await play_dynamic_bell(50, buzzer_volume, 0.05, 3)
-
-        print("Waiting for security code")
-
-        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
-
-        if result is None:  # User cancelled
-            entering_security_code = False
-            return
-        elif not result:  # Max attempts reached or incorrect
-            entering_security_code = False
-            return
-
-        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
-
-        print("Waiting for second security code")
-
-        final_result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
-
-        if final_result is None:  # User cancelled
-            entering_security_code = False
-            return
-        elif not final_result:  # Max attempts reached or incorrect
-            entering_security_code = False
-            return
-
-        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
-
-        print("Resetting firmware configuration...")
-
-        await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
-
-        if config_file in uos.listdir(config_directory):
-            uos.remove(f"{config_directory}/{config_file}")
-        if network_config_file in uos.listdir(config_directory):
-            uos.remove(f"{config_directory}/{network_config_file}")
-
-        uos.rmdir(config_directory)
-
-        reset()
-
-        entering_security_code = False
-    except Exception as e:
-        print(f"Error in reset_firmware_config: {e}")
-
-# Security code entry
-async def enter_security_code(security_code, max_attempts, min_length, max_length):
-    """Handle security code entry with cancellation support."""
-    attempts = 0
-    while attempts < max_attempts:
-        code = ""
-        while len(code) < max_length:
-            key = read_keypad_key()
-            if key:
-                if key == "#":  # Submit code
-                    if len(code) < min_length:
-                        print(f"Code too short: {code}")
-                        return None  # Cancellation
-                    print(f"Code entered: {code}")
-                    break
-                elif key == "*":  # Cancel or clear code
-                    if len(code) == 0:
-                        print("Code entry cancelled.")
-                        return None  # Cancellation
-                    print("Code cleared!")
-                    code = ""  # Reset
-                else:
-                    code += key
-                    print(f"Key pressed: {key}")
-            await asyncio.sleep(0.1)  # Slight delay to avoid multiple detections
-
-        if len(code) == 0:  # Code entry cancelled
-            print("Code entry cancelled.")
-            return None
-
-        if len(code) < min_length:  # Code too short
-            print(f"Code too short: {code}")
-            return None
-
-        if code != security_code:  # Incorrect code
-            attempts += 1
-            print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
-            if attempts >= max_attempts:
-                print("Maximum attempts reached. Triggering alarm.")
-                await alarm("Invalid Security Code Provided.")  # Trigger the alarm after too many attempts
-                return False  # Return False to indicate max attempts exceeded
-            await alarm("Invalid Security Code Provided.")
-            continue
-
-        # Correct code
-        print("Access granted.")
-        return True  # Success
-    return False  # Max attempts exceeded
-
 # Change security code
 async def change_security_code():
     global security_code, entering_security_code
@@ -1102,6 +988,124 @@ async def change_security_code():
         print(f"Error in change_security_code: {e}")
     finally:
         entering_security_code = False
+
+# Firmware reset
+async def reset_firmware_config():
+    """Resets the firmware configuration to factory defaults."""
+    global alarm_active, security_code, entering_security_code
+
+    try:
+        security_code = config.get_entry("security", "security_code")
+
+        if not security_code:
+            security_code = "0000"
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
+
+        if alarm_active:
+            print("Stopping alarm...")
+            alarm_active = False
+            buzzer.duty_u16(0)
+
+        entering_security_code = True
+
+        await play_dynamic_bell(50, buzzer_volume, 0.05, 3)
+
+        print("Waiting for security code")
+
+        result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
+
+        if result is None:  # User cancelled
+            entering_security_code = False
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+            return
+        elif not result:  # Max attempts reached or incorrect
+            entering_security_code = False
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+            return
+
+        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
+
+        print("Waiting for second security code")
+
+        final_result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
+
+        if final_result is None:  # User cancelled
+            entering_security_code = False
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+            return
+        elif not final_result:  # Max attempts reached or incorrect
+            entering_security_code = False
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+            return
+
+        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
+
+        print("Resetting firmware configuration...")
+
+        await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
+
+        if config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{config_file}")
+        if network_config_file in uos.listdir(config_directory):
+            uos.remove(f"{config_directory}/{network_config_file}")
+
+        uos.rmdir(config_directory)
+
+        reset()
+
+        entering_security_code = False
+    except Exception as e:
+        print(f"Error in reset_firmware_config: {e}")
+
+# Security code entry
+async def enter_security_code(security_code, max_attempts, min_length, max_length):
+    """Handle security code entry with cancellation support."""
+    attempts = 0
+    while attempts < max_attempts:
+        code = ""
+        while len(code) < max_length:
+            key = read_keypad_key()
+            if key:
+                if key == "#":  # Submit code
+                    if len(code) < min_length:
+                        print(f"Code too short: {code}")
+                        return None  # Cancellation
+                    print(f"Code entered: {code}")
+                    break
+                elif key == "*":  # Cancel or clear code
+                    if len(code) == 0:
+                        print("Code entry cancelled.")
+                        return None  # Cancellation
+                    print("Code cleared!")
+                    code = ""  # Reset
+                else:
+                    code += key
+                    print(f"Key pressed: {key}")
+            await asyncio.sleep(0.1)  # Slight delay to avoid multiple detections
+
+        if len(code) == 0:  # Code entry cancelled
+            print("Code entry cancelled.")
+            return None
+
+        if len(code) < min_length:  # Code too short
+            print(f"Code too short: {code}")
+            return None
+
+        if code != security_code:  # Incorrect code
+            attempts += 1
+            print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
+            if attempts >= max_attempts:
+                print("Maximum attempts reached. Triggering alarm.")
+                await alarm("Invalid Security Code Provided.")  # Trigger the alarm after too many attempts
+                return False  # Return False to indicate max attempts exceeded
+            await alarm("Invalid Security Code Provided.")
+            continue
+
+        # Correct code
+        print("Access granted.")
+        return True  # Success
+    return False  # Max attempts exceeded
 
 # Configuration checker
 async def check_config():
