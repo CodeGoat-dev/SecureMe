@@ -56,6 +56,30 @@ async def initialize_pins(skip_pins=None):
             # Ignore invalid pin numbers or configuration errors
             pass
 
+# Pin de-initialization function
+async def deinitialize_pins(skip_pins=None):
+    """
+    Deinitializes pins, excluding specified pins.
+
+    Args:
+        skip_pins: List of pin numbers to skip during de-initialization (default: None).
+    """
+    print("De-initializing GPIO pins...")
+
+    if skip_pins is None:
+        skip_pins = []
+
+    for pin_number in range(NUM_PINS):
+        if pin_number in skip_pins:
+            continue  # Skip pins in the exclusion list
+        try:
+            pin = Pin(pin_number)
+            pin.init(Pin.OUT)  # Re-initialize the pin as an output
+            pin.value(0)  # Drive the pin low
+        except ValueError:
+            # Ignore invalid pin numbers or configuration errors
+            pass
+
 # Configure network interfaces on PicoW
 async def configure_network():
     print("Initializing network interfaces...")

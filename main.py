@@ -1221,6 +1221,8 @@ async def system_shutdown():
         task.cancel()
     await asyncio.sleep(0)  # Allow tasks to finish cleanup
 
+    await utils.deinitialize_pins()
+
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
@@ -1265,7 +1267,7 @@ async def main():
 try:
     asyncio.run(main())
 except KeyboardInterrupt:
-    print("Shutting down firmware...")
+    print("Keyboard interupt detected.")
 finally:
     buzzer.duty_u16(0)
     led.value(0)
