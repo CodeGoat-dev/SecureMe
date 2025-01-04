@@ -75,6 +75,8 @@ enable_detect_motion = True
 enable_detect_tilt = True
 sensor_cooldown = 10
 default_sensor_cooldown = 10
+arming_cooldown = 10
+default_arming_cooldown = 10
 
 is_armed = True
 alarm_active = False
@@ -107,14 +109,14 @@ keypad_characters = [
 ]
 
 # Dynamic bell player
-async def play_dynamic_bell(frequency, initial_volume, loop_delay=0.1, times=5):
+async def play_dynamic_bell(frequency, initial_volume, loop_delay=0.05, times=5):
     """
     Plays a dynamic bell sound using a buzzer with decreasing volume.
 
     Args:
     - frequency: Frequency of the tone in Hz
     - initial_volume: Initial volume (range 0-65535 for duty cycle)
-    - loop_delay: Delay between loops in seconds (default 0.1s)
+    - loop_delay: Delay between loops in seconds (default 0.05s)
     - times: Number of times to play (default 5)
     """
     # Number of steps to decrease volume and the duration per step
@@ -298,28 +300,41 @@ async def alarm(message):
 # Arming handler
 async def handle_arming():
     """Handle the arming and disarming of the system."""
-    global is_armed, alarm_active, security_code, entering_security_code
+    global is_armed, alarm_active, security_code, entering_security_code, arming_cooldown
 
     try:
         security_code = config.get_entry("security", "security_code")
 
         if not security_code:
-            security_code = "0000"
+            security_code = default_security_code
             config.set_entry("security", "security_code", security_code)
+            await config.write_async()
+
+        arming_cooldown = config.get_entry("security", "arming_cooldown")
+
+        if not arming_cooldown:
+            arming_cooldown = default_arming_cooldown
+            config.set_entry("security", "arming_cooldown", arming_cooldown)
             await config.write_async()
 
         while True:
             if arm_button.value() == 1:  # Button pressed
+                if alarm_active:
+                    print("Stopping alarm...")
+                    alarm_active = False
+                    buzzer.duty_u16(0)  # Stop the buzzer immediately
+                security_code = config.get_entry("security", "security_code")
+                if not security_code:
+                    security_code = default_security_code
+                    config.set_entry("security", "security_code", security_code)
+                    await config.write_async()
+                arming_cooldown = config.get_entry("security", "arming_cooldown")
+                if not arming_cooldown:
+                    arming_cooldown = default_arming_cooldown
+                    config.set_entry("security", "arming_cooldown", arming_cooldown)
+                    await config.write_async()
+
                 if is_armed:
-                    if alarm_active:
-                        print("Stopping alarm...")
-                        alarm_active = False
-                        buzzer.duty_u16(0)  # Stop the buzzer immediately
-                    security_code = config.get_entry("security", "security_code")
-                    if not security_code:
-                        security_code = "0000"
-                        config.set_entry("security", "security_code", security_code)
-                        await config.write_async()
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -332,15 +347,10 @@ async def handle_arming():
                             continue
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Disarming")
-                    await play_dynamic_bell(250, buzzer_volume)
                     is_armed = False
+                    await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     await system_ready_indicator(is_armed)
                 else:
-                    security_code = config.get_entry("security", "security_code")
-                    if not security_code:
-                        security_code = "0000"
-                        config.set_entry("security", "security_code", security_code)
-                        await config.write_async()
                     if security_code:
                         entering_security_code = True
                         await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -353,7 +363,7 @@ async def handle_arming():
                             continue
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Arming")
-                    await play_dynamic_bell(250, buzzer_volume)
+                    await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     is_armed = True
                     await system_ready_indicator(is_armed)
             await asyncio.sleep(0.05)  # Polling interval
@@ -728,7 +738,7 @@ async def system_ready_indicator(armed=True):
     """Play the system ready indicator based on the current system state."""
     try:
         buzzer.duty_u16(buzzer_volume)
-            led.value(1)
+        led.value(1)
 
         if armed:
             buzzer.freq(1000)
@@ -1140,6 +1150,8 @@ async def check_config():
 async def system_startup():
     """System firmware initialization."""
     try:
+        await validate_config()
+
         await system_startup_indicator()
 
         if utils.isPicoW():
@@ -1147,7 +1159,6 @@ async def system_startup():
 
         await utils.initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
 
-        await validate_config()
 
         await warmup_pir_sensor()
 
@@ -1160,7 +1171,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, sensor_cooldown, buzzer_volume, security_code, admin_password
+    global enable_detect_motion, enable_detect_tilt, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, admin_password
 
     print("Validating firmware configuration...")
 
@@ -1185,6 +1196,14 @@ async def validate_config():
             sensor_cooldown = default_sensor_cooldown
             config.set_entry("security", "sensor_cooldown", sensor_cooldown)
             await config.write_async()
+
+        arming_cooldown = config.get_entry("security", "arming_cooldown")
+
+        if not isinstance(arming_cooldown, int):
+            arming_cooldown = default_arming_cooldown
+            config.set_entry("security", "arming_cooldown", arming_cooldown)
+            await config.write_async()
+
 
         buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
 

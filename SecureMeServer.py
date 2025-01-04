@@ -31,6 +31,8 @@ class SecureMeServer:
         self.detect_tilt = None
         self.sensor_cooldown = 10
         self.default_sensor_cooldown = 10
+        self.arming_cooldown = 10
+        self.default_arming_cooldown = 10
         self.pushover_api_key = None
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
@@ -60,6 +62,11 @@ class SecureMeServer:
         if not isinstance(self.sensor_cooldown, int):
             self.sensor_cooldown = self.default_sensor_cooldown
             config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
+            await config.write_async()
+        self.arming_cooldown = self.config.get_entry("security", "arming_cooldown")
+        if not isinstance(self.arming_cooldown, int):
+            self.arming_cooldown = self.default_arming_cooldown
+            config.set_entry("security", "arming_cooldown", self.arming_cooldown)
             await config.write_async()
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
         self.security_code = self.config.get_entry("security", "security_code")
@@ -155,12 +162,15 @@ class SecureMeServer:
                 detect_motion = 'detect_motion' in post_data
                 detect_tilt = 'detect_tilt' in post_data
                 sensor_cooldown = 'sensor_cooldown' in post_data
+                arming_cooldown = 'arming_cooldown' in post_data
                 self.detect_motion = detect_motion
                 self.detect_tilt = detect_tilt
                 self.sensor_cooldown = sensor_cooldown
+                self.arming_cooldown = sensor_cooldown
                 self.config.set_entry("security", "detect_motion", self.detect_motion)
                 self.config.set_entry("security", "detect_tilt", self.detect_tilt)
                 self.config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
+                self.config.set_entry("security", "arming_cooldown", self.sensor_cooldown)
                 await self.config.write_async()
                 self.alert_text = "Detection settings updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
@@ -265,12 +275,21 @@ class SecureMeServer:
         form = f"""<h2>Detection Settings</h2>
         <p>The settings below control how the SecureMe system detects movement.</p>
         <p><form method="POST" action="/update_detection_settings">
+            <p>Select the types of motion you want to detect."</p>
             <label for="detect_motion">Enable Motion Detection</label>
             <input type="checkbox" id="detect_motion" name="detect_motion" {detect_motion_checked}><br>
             <label for="detect_tilt">Enable Tilt Detection</label>
             <input type="checkbox" id="detect_tilt" name="detect_tilt" {detect_tilt_checked}><br>
+            <p>After detecting motion, the system will cool down for a specified time before detecting again.<br>
+            The cooldown is applied separately per sensor.<br>
+            Specify how long in seconds the cooldown should last.</p>
             <label for="sensor_cooldown">Sensor Cooldown Time (Sec):</label>
             <input type="number" id="sensor_cooldown" name="sensor_cooldown" minlength=1 maxlength=2 value="{self.sensor_cooldown}" required><br>
+            <p>When arming and disarming the system, a cooldown is applied to give you time to prepare.<br>
+            For example, you might want time to secure the room after arming.<br>
+            Specify how long in seconds the cooldown should last.</p>
+            <label for="arming_cooldown">Arming Cooldown Time (Sec):</label>
+            <input type="number" id="arming_cooldown" name="arming_cooldown" minlength=1 maxlength=2 value="{self.arming_cooldown}" required><br>
             <input type="submit" value="Save Settings">
         </form></p>
         """
@@ -278,7 +297,7 @@ class SecureMeServer:
         return self.html_template("Detection Settings", form)
 
     def serve_change_password_form(self):
-        """Serves the change password form with the current password pre-populated.""" 
+        """Serves the change password form.""" 
         form = f"""<h2>Change Administrator Password</h2>
         <p>To change the administrator password, enter a new password below.</p>
         <p><form method="POST" action="/update_password">
@@ -321,7 +340,7 @@ class SecureMeServer:
         """Serves the reboot device form.""" 
         form = f"""<h2>Reboot Device</h2>
         <p>If you recently made configuration changes and want to restart the SecureMe system, you can do so here.<br>
-        Rebooting the system will not affect any configuration settings.</p>
+        Restarting the system will not affect any configuration settings.</p>
         <p>To reboot the SecureMe system, click "Reboot" below.</p>
         <p><form method="POST" action="/reboot_device">
             <input type="submit" value="Reboot Device">
