@@ -110,7 +110,7 @@ keypad_characters = [
 async def play_dynamic_bell(frequency, initial_volume, loop_delay=0.1, times=5):
     """
     Plays a dynamic bell sound using a buzzer with decreasing volume.
-    
+
     Args:
     - frequency: Frequency of the tone in Hz
     - initial_volume: Initial volume (range 0-65535 for duty cycle)
@@ -332,9 +332,9 @@ async def handle_arming():
                             continue
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Disarming")
-                    is_armed = False
                     await play_dynamic_bell(250, buzzer_volume)
-                    await system_ready_indicator()
+                    is_armed = False
+                    await system_ready_indicator(is_armed)
                 else:
                     security_code = config.get_entry("security", "security_code")
                     if not security_code:
@@ -354,8 +354,8 @@ async def handle_arming():
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Arming")
                     await play_dynamic_bell(250, buzzer_volume)
-                    await system_ready_indicator()
                     is_armed = True
+                    await system_ready_indicator(is_armed)
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_arming: {e}")
@@ -724,15 +724,27 @@ async def system_startup_indicator():
         led.value(0)
 
 # System ready indicator
-async def system_ready_indicator():
-    """Play the system ready indicator."""
+async def system_ready_indicator(armed=True):
+    """Play the system ready indicator based on the current system state."""
     try:
         buzzer.duty_u16(buzzer_volume)
-        buzzer.freq(1000)
-        led.value(1)
-        await asyncio.sleep(0.1)
-        buzzer.freq(1500)
-        await asyncio.sleep(0.1)
+            led.value(1)
+
+        if armed:
+            buzzer.freq(1000)
+            await asyncio.sleep(0.1)
+            buzzer.freq(1500)
+            await asyncio.sleep(0.1)
+            buzzer.freq(2000)
+            await asyncio.sleep(0.1)
+        else:
+            buzzer.freq(2000)
+            await asyncio.sleep(0.1)
+            buzzer.freq(1500)
+            await asyncio.sleep(0.1)
+            buzzer.freq(1000)
+            await asyncio.sleep(0.1)
+
         buzzer.duty_u16(0)
         led.value(0)
     except Exception as e:
@@ -1139,7 +1151,7 @@ async def system_startup():
 
         await warmup_pir_sensor()
 
-        await system_ready_indicator()
+        await system_ready_indicator(is_armed)
 
         print("System ready.")
     except Exception as e:
