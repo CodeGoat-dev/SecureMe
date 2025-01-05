@@ -215,7 +215,11 @@ async def play_alarm(alarm_type="sweep", start_freq=500, end_freq=3000, cycles=1
 
 # Alarm method
 async def alarm(message):
-    """Run the alarm when a sensor detects motion."""
+    """Run the alarm when a sensor detects motion.
+
+        Args:
+        - message: The message to associate with the alarm.
+        """
     global alarm_active, alarm_sound, entering_security_code
 
     if not message:
@@ -512,8 +516,6 @@ async def detect_tilt():
 # Arming indicator handler
 async def handle_arming_indicator():
     """Handle blinking the LED to show when the system is armed."""
-    global is_armed, alarm_active, entering_security_code
-
     try:
         while True:
             if is_armed and not alarm_active:
@@ -533,8 +535,6 @@ async def handle_arming_indicator():
 # Keypad key detection
 async def detect_keypad_keys():
     """Detect matrix keypad key commands."""
-    global is_armed, silent_alarm, keypad_locked, entering_security_code
-
     try:
         print("Detecting keypad keys...")
 
@@ -571,6 +571,7 @@ async def detect_keypad_keys():
 async def increase_buzzer_volume():
     """Increase the buzzer volume by 10%, up to a maximum of 6144."""
     global buzzer_volume
+
     step = int(6144 * 0.1)  # Calculate 10% step
     buzzer_volume = min(buzzer_volume + step, 6144)
     config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
@@ -582,6 +583,7 @@ async def increase_buzzer_volume():
 async def decrease_buzzer_volume():
     """Decrease the buzzer volume by 10%, down to a minimum of 0."""
     global buzzer_volume
+
     step = int(6144 * 0.1)  # Calculate 10% step
     buzzer_volume = max(buzzer_volume - step, 0)
     config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
@@ -592,8 +594,6 @@ async def decrease_buzzer_volume():
 # Read a single key from the keypad
 def read_keypad_key():
     """Read a key press from the matrix keypad."""
-    global entering_security_code
-
     try:
         for i, row in enumerate(keypad_rows):
             row.high()
@@ -614,7 +614,11 @@ def read_keypad_key():
 
 # Validate Pushover API key
 async def validate_pushover_api_key(timeout=5):
-    """Validate the configured Pushover API key."""
+    """Validate the configured Pushover API key.
+
+        Args:
+        - timeout: The request timeout in seconds.
+        """
     global pushover_api_key
 
     if not utils.isPicoW():
@@ -663,7 +667,15 @@ async def validate_pushover_api_key(timeout=5):
 
 # Send push notifications using Pushover
 async def send_pushover_notification(title="Goat - SecureMe", message="Testing", priority=0, timeout=5):
-    """Send push notifications using Pushover."""
+    """Send push notifications using Pushover.
+
+        Args:
+        - title: The title for the notification.
+        - message: The message to send.
+        - priority: The notification priority (0-2).
+        - timeout: The request timeout in seconds.
+        """
+
     global pushover_api_key
 
     if not utils.isPicoW():
@@ -1161,7 +1173,6 @@ async def system_startup():
             await utils.configure_network()
 
         await utils.initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
-
 
         await warmup_pir_sensor()
 
