@@ -25,6 +25,9 @@ if utils.isPicoW():
     from NetworkManager import NetworkManager
     from SecureMeServer import SecureMeServer
 
+# Constants
+VERSION = "1.0.0"
+
 # Pin constants
 if utils.isPicoW():
     LED_PIN = "LED"
@@ -1272,6 +1275,8 @@ async def system_shutdown():
 async def main():
     """Main coroutine to handle firmware services"""
     global config, tasks
+
+    print(f"Welcome to Goat - SecureMe version {VERSION}.")
 
     print("Initializing firmware...")
 
