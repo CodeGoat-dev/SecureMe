@@ -734,10 +734,11 @@ async def system_startup_indicator():
         led.value(0)
 
 # System ready indicator
-async def system_ready_indicator(armed=True):
+async def system_ready_indicator(armed = True):
     """Play the system ready indicator based on the current system state."""
     try:
         buzzer.duty_u16(buzzer_volume)
+
         led.value(1)
 
         if armed:
@@ -756,6 +757,7 @@ async def system_ready_indicator(armed=True):
             await asyncio.sleep(0.1)
 
         buzzer.duty_u16(0)
+
         led.value(0)
     except Exception as e:
         print(f"Error in system_ready_indicator: {e}")
