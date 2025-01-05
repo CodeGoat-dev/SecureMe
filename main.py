@@ -129,6 +129,7 @@ async def play_dynamic_bell(frequency, initial_volume, loop_delay=0.05, times=5)
         buzzer.freq(frequency)
 
         for _ in range(times):
+            buzzer.freq(frequency)
             led.value(1)
 
             for step in range(steps):
