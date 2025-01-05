@@ -19,6 +19,12 @@ class SecureMeServer:
     
     def __init__(self, ip_address="0.0.0.0", http_port=8000):
         """Constructs the class and exposes properties."""
+        # Constants
+        self.VERSION = "1.0.0"
+
+        self.default_ip_address = "0.0.0.0"
+        self.default_http_port = 8000
+
         self.ip_address = ip_address
         self.http_port = http_port
         self.server = None
@@ -88,6 +94,7 @@ class SecureMeServer:
         <head><title>{title}</title></head>
         <body>
         <h1>{title}</h1>
+        <p>Welcome to Goat - SecureMe.</p>
         <p><a href="/">Home</a></p>
         """
 
@@ -101,7 +108,8 @@ class SecureMeServer:
         template += f"""{body}
         <h1>Information</h1>
         <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
-        <p><b>© (c) 2024-2025 Goat Technologies</b></p>
+        <p><b>Version {self.VERSION}</b><br>
+        <b>© (c) 2024-2025 Goat Technologies</b></p>
         </body>
         </html>"""
 
@@ -365,11 +373,16 @@ class SecureMeServer:
     async def start_server(self):
         """Starts the SecureMe HTTP server asynchronously."""
         if not self.ip_address:
-            print("IP address not assigned. Cannot start server.")
-            return
+            self.ip_address = self.default_ip_address
+
+        if not self.http_port:
+            self.http_port = self.default_http_port
 
         try:
+            print("Starting SecureMe Web Interface...")
+
             self.server = await asyncio.start_server(self.handle_request, self.ip_address, self.http_port)
+
             print(f"Serving on {self.ip_address}:{self.http_port}")
 
             while True:
@@ -381,6 +394,8 @@ class SecureMeServer:
     async def stop_server(self):
         """Stops the SecureMe HTTP server."""
         try:
+            print("Stopping SecureMe Web Interface...")
+
             if self.server:
                 self.server.close()
                 await self.server.wait_closed()
