@@ -27,6 +27,9 @@ class NetworkManager:
         self.config_directory = "/config"
         self.config_file = "network_config.conf"
 
+        # Constants
+       self.VERSION = "1.0.0"
+
         # Interface configuration
         self.sta_if = network.WLAN(network.STA_IF)
         self.ap_if = network.WLAN(network.AP_IF)
@@ -199,11 +202,13 @@ class NetworkManager:
         <head><title>{title}</title></head>
         <body>
             <h1>{title}</h1>
+            <p>Welcome to the Goat - Captive Portal.</p>
             <p><a href="/">Home</a></p>
             {body}
             <h1>Information</h1>
             <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
-            <p><b>© (c) 2024-2025 Goat Technologies</b></p>
+            <p><b>Version {self.VERSION}</b><br>
+            <b>© (c) 2024-2025 Goat Technologies</b></p>
         </body>
         </html>
         """
@@ -391,6 +396,8 @@ class NetworkManager:
     async def run(self):
         """Runs the network manager initialization process and maintains connectivity."""
         try:
+            print(f"Goat - Network Manager Version {self.VERSION}")
+
             await self.load_config()  # Load and attempt to connect to saved configuration
 
             while True:
