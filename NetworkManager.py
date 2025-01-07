@@ -28,7 +28,7 @@ class NetworkManager:
         self.config_file = "network_config.conf"
 
         # Constants
-       self.VERSION = "1.0.0"
+        self.VERSION = "1.0.0"
 
         # Interface configuration
         self.sta_if = network.WLAN(network.STA_IF)
