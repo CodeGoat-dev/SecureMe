@@ -350,8 +350,10 @@ async def handle_arming():
                         result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
                         entering_security_code = False
                         if result is None:  # User cancelled
+                            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                             continue
                         elif not result:  # Max attempts reached or incorrect
+                            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                             continue
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Disarming")
@@ -897,7 +899,7 @@ async def keypad_lock():
 # Alarm mode switch
 async def alarm_mode_switch():
     """Handle switching between alarm modes."""
-    global silent_alarm, pushover_api_key
+    global silent_alarm, pushover_api_key, alarm_active, security_code, entering_security_code
 
     if not utils.isPicoW():
         print("Unsupported device.")
@@ -909,6 +911,13 @@ async def alarm_mode_switch():
         await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
         return
 
+        security_code = config.get_entry("security", "security_code")
+
+        if not security_code:
+            security_code = default_security_code
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
+
     key_is_valid = None
 
     try:
@@ -918,6 +927,31 @@ async def alarm_mode_switch():
             print("A Pushover API key is required for silent alarms.")
             await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
             return
+
+        if alarm_active:
+            print("Stopping alarm...")
+            alarm_active = False
+            buzzer.duty_u16(0)  # Stop the buzzer immediately
+
+        security_code = config.get_entry("security", "security_code")
+        if not security_code:
+            security_code = default_security_code
+            config.set_entry("security", "security_code", security_code)
+            await config.write_async()
+
+        if security_code:
+            entering_security_code = True
+            await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
+            print("Waiting for security code")
+            result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
+            entering_security_code = False
+            if result is None:  # User cancelled
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+                return
+            elif not result:  # Max attempts reached or incorrect
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+                return
+        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
 
         if not silent_alarm:
             key_is_valid = await validate_pushover_api_key()
