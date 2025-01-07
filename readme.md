@@ -71,6 +71,7 @@ To build and deploy Goat - SecureMe, you will need:
 1. **Hardware Setup**:
    - Place the power supply in the top of your breadboard.
    - Place the microcontroller just under the power supply (making sure to leave room for USB).
+   - Connect VSYS on the Pico to VCC and then connect GND.
    - Place the tilt switch sensor just beneath the microcontroller.
    - Place the passive buzzer beneath the tilt switch sensor.
    - Mount two small buttons for volume control on one side of the board beside the buzzer.
