@@ -911,6 +911,9 @@ async def alarm_mode_switch():
         await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
         return
 
+    key_is_valid = None
+
+    try:
         security_code = config.get_entry("security", "security_code")
 
         if not security_code:
@@ -918,9 +921,6 @@ async def alarm_mode_switch():
             config.set_entry("security", "security_code", security_code)
             await config.write_async()
 
-    key_is_valid = None
-
-    try:
         pushover_api_key = config.get_entry("pushover", "api_key")
 
         if not pushover_api_key:
@@ -933,12 +933,6 @@ async def alarm_mode_switch():
             alarm_active = False
             buzzer.duty_u16(0)  # Stop the buzzer immediately
 
-        security_code = config.get_entry("security", "security_code")
-        if not security_code:
-            security_code = default_security_code
-            config.set_entry("security", "security_code", security_code)
-            await config.write_async()
-
         if security_code:
             entering_security_code = True
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
@@ -946,12 +940,12 @@ async def alarm_mode_switch():
             result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
             entering_security_code = False
             if result is None:  # User cancelled
-            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                 return
             elif not result:  # Max attempts reached or incorrect
-            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+                await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                 return
-        await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
+            await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
 
         if not silent_alarm:
             key_is_valid = await validate_pushover_api_key()
@@ -977,10 +971,12 @@ async def change_security_code():
 
     try:
         security_code = config.get_entry("security", "security_code")
+
         if not security_code:
             security_code = "0000"
             config.set_entry("security", "security_code", security_code)
             await config.write_async()
+
         if security_code:
             entering_security_code = True
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
