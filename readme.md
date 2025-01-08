@@ -70,6 +70,7 @@ To build and deploy Goat - SecureMe, you will need:
 
 1. **Hardware Setup**:
    - Place the power supply in the top of your breadboard.
+   - Configure the power supply using the jumper caps to set one set of rails to 3.3V and the other to 5V+.
    - Place the microcontroller just under the power supply (making sure to leave room for USB).
    - Connect VSYS on the Pico to VCC and then connect GND.
    - Place the tilt switch sensor just beneath the microcontroller.
@@ -89,14 +90,73 @@ To build and deploy Goat - SecureMe, you will need:
    - Flash the microcontroller with MicroPython/CircuitPython firmware.
    - Upload the SecureMe source code and dependencies to the microcontroller.
 
-3. **Network Configuration**:
+3. **Starting The System**
+   - Connect the SecureMe system to power using the breadboard power supply.
+   - After a second or so, you will hear the start-up sound and then a bell will begin to chime.
+   - Wait for 60 sec for the PIR sensor to warm up. The bell will stop chiming and the system ready indicator will sound.
+
+4. **Network Configuration**:
    - Connect to the device's hotspot to access the captive portal.
    - Note that the password ***secureme*** is required for the hotspot.
    - Connect to the captive portal. If not automatically redirected, visit [http://192.168.4.1](http://192.168.4.1).
    - Scan for wireless networks and enter your Wi-Fi credentials to establish network connectivity.
 
-4. **Web Interface**:
+5. **Web Interface**:
    - Access the web interface using the device's IP address to configure and customize settings.
+
+---
+
+## Usage
+The SecureMe system is simple to use.
+
+On the breadboard, starting from the bottom you have the arming button, the alarm test button and the alarm sound switch button.
+
+The only other buttons on the board are the buzzer volume buttons.
+
+1. **Arming And Disarming**
+   - Press the arm button at the bottom of the breadboard. You will hear a bell.
+   - Type the default security code **0000** using the matrix keypad and press **hash**.
+   - A bell will sound for 10 sec and the system will be armed or disarmed.
+   - You can tell if the system was armed or disarmed via the indicator after the bell.
+   - The armed indicator will flash the system LED every second to indicate that the system is armed.
+
+2. **Testing The Alarm**
+   - You can test the alarm using the middle button in the vertical row on the breadboard.
+
+3. **Changing Alarm Sound**
+   - Press the top button in the vertical row to change the alarm sound.
+   - The alarm sound setting is automatically saved when the alarm sound changes.
+
+4. **Locking And Unlocking The Keypad**
+   - Press the **A** key on the matrix keypad to lock and unlock the keypad.
+   - The keypad locked indicator will sound with different tones when the keypad is locked and unlocked.
+
+5. **Switching Alarm Modes**
+   - You can switch alarm modes if you have registered a **Pushover** API key via the web interface.
+   - Press the **A** key to unlock the keypad.
+   - Press the **B** key to switch alarm modes.
+   - Type your security code **default 0000** and press **hash**.
+   - The Pushover API key will be validated and the alarm mode will switch between active and silent.
+   - Press the **A** key to lock the keypad again.
+
+6. **Changing The Security Code**
+   - You should change the security code **default 0000** to keep the system secure.
+   - Press the **A** key to unlock the keypad.
+   - Press the **C** key to change the security code.
+   - Type your current security code **default 0000** and press **hash**.
+   - Type a new security code between 4 and 8 digits and press **hash** if the code is less than 8 digits.
+   - Confirm the new security code and press **hash** if the code is less than 8 digits.
+   - The security code will now be changed.
+   - Press the **A** key to lock the keypad again.
+
+7. **Resetting The Configuration**
+   - Resetting the configuration will return all settings to factory defaults.
+   - Press the **A** key to unlock the keypad.
+   - Press the **D** key to reset the configuration.
+   - Type your security code **default 0000** and press **hash**.
+   - Retype your security code and press **hash**.
+   - The configuration will reset after 10 seconds, indicated by a low pitch bell.
+   - The system will restart to complete the configuration reset.
 
 ---
 
