@@ -8,6 +8,8 @@ A portable, movable security system designed for versatility and ease of use.
 
 With features like motion detection, network connectivity, and a web interface, SecureMe ensures you can monitor and manage your system effortlessly. Whether you’re protecting a room, a bag, or any valuable item, SecureMe is your portable guardian.
 
+With it's open source nature, SecureMe can be adapted to your specific needs. Whether you want to adjust pin assignment or support a new sensor, the power is in your hands.
+
 ---
 
 ## Features
