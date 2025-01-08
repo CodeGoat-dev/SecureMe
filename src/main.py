@@ -1,5 +1,5 @@
 # Goat SecureMe
-# Portable Security System
+# Lightweight, portable, Security System
 # Version 1.0.0
 # © (c) 2024-2025 Goat Technologies
 # Description:
@@ -7,6 +7,7 @@
 # Includes PIR sensing and tilt sensing
 # Provides button configurable settings to control arming and alarm sound
 # Includes security code support facilitated by matrix keypad
+# Includes a web interface for Wi-Fi enabled boards.
 # Designed for Raspberry Pi Pico based microcontrollers.
 
 # Imports
@@ -1201,7 +1202,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
 
 # Configuration checker
 async def check_config():
-    ""Check the configuration directory."""
+    """Check the configuration directory."""
     try:
         # Check if the configuration directory exists
         uos.listdir(config_directory)
