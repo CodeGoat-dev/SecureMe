@@ -368,8 +368,10 @@ async def handle_arming():
                         result = await enter_security_code(security_code, security_code_max_entry_attempts, security_code_min_length, security_code_max_length)
                         entering_security_code = False
                         if result is None:  # User cancelled
+                            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                             continue
                         elif not result:  # Max attempts reached or incorrect
+                            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
                             continue
                     await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
                     print("Arming")
