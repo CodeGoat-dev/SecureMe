@@ -755,7 +755,11 @@ async def system_startup_indicator():
 
 # System ready indicator
 async def system_ready_indicator(armed = True):
-    """Play the system ready indicator based on the current system state."""
+    """Play the system ready indicator based on the current system state.
+
+    Args:
+    - armed: Boolean flag to indicate state.
+    """
     try:
         buzzer.duty_u16(buzzer_volume)
 
@@ -819,7 +823,11 @@ def keypad_entry_indicator():
 
 # Keypad lock indicator
 async def keypad_lock_indicator(locked = True):
-    """Play the keypad lock indicator."""
+    """Play the keypad lock indicator.
+
+    Args:
+    - locked: Boolean flag to indicate state.
+    """
     try:
         buzzer.duty_u16(buzzer_volume)
 
@@ -851,7 +859,11 @@ async def keypad_lock_indicator(locked = True):
 
 # Alarm mode switch indicator
 async def alarm_mode_switch_indicator(silent = True):
-    """Play the alarm mode switch indicator."""
+    """Play the alarm mode switch indicator.
+
+    Args:
+    - silent: Boolean flag to indicate state.
+    """
     try:
         buzzer.duty_u16(buzzer_volume)
 
@@ -969,6 +981,7 @@ async def alarm_mode_switch():
 
 # Change security code
 async def change_security_code():
+    """Change the system security code."""
     global security_code, entering_security_code
 
     try:
@@ -1132,7 +1145,14 @@ async def reset_firmware_config():
 
 # Security code entry
 async def enter_security_code(security_code, max_attempts, min_length, max_length):
-    """Handle security code entry with cancellation support."""
+    """Handle security code entry with cancellation support.
+
+    Args:
+    - security_code: Expected security code.
+    - max_attempts: Maximum attempts to allow.
+    - min_length: Minimum code length to allow.
+    - max_length: Maximum code length to allow.
+    """
     attempts = 0
     while attempts < max_attempts:
         code = ""
@@ -1181,6 +1201,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
 
 # Configuration checker
 async def check_config():
+    ""Check the configuration directory."""
     try:
         # Check if the configuration directory exists
         uos.listdir(config_directory)
