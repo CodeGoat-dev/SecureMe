@@ -106,7 +106,9 @@ To build and deploy Goat - SecureMe, you will need:
    - Scan for wireless networks and enter your Wi-Fi credentials to establish network connectivity.
 
 5. **Web Interface**:
+   - Use a network scanner to locate the new device on your network and make a note of the IP address.
    - Access the web interface using the device's IP address to configure and customize settings.
+   - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
 
 ---
 
