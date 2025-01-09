@@ -21,7 +21,7 @@ class NetworkManager:
     Responsible for maintaining network state and managing connection lifetime.
 """
     # Class constructor
-    def __init__(self, ap_ssid="Goat - Captive Portal", ap_password="securepassword", sta_web_server = None):
+    def __init__(self, ap_ssid="Goat - Captive Portal", ap_password="securepassword", hostname = "SecureMe", sta_web_server = None):
         """Constructs the class and exposes properties."""
         # Network configuration
         self.config_directory = "/config"
@@ -48,6 +48,9 @@ class NetworkManager:
         self.ap_gateway = "192.168.4.1"
         self.ap_dns = "192.168.4.1"
 
+        # DHCP settings
+        self.hostname = hostname
+
         # Captive portal DNS server
         self.dns_server = NetworkManagerDNS(portal_ip=self.ap_ip_address)
 
@@ -72,6 +75,8 @@ class NetworkManager:
 
                 while attempts < 3:
                     self.sta_if.active(True)
+                    # Set the hostname
+                    self.sta_if.config(dhcp_hostname=self.hostname)
                     self.sta_if.connect(ssid, password)
                     print(f"Attempting to connect to {ssid}...")
 
@@ -93,10 +98,12 @@ class NetworkManager:
                         attempts += 1
 
                 if not self.sta_if.isconnected():
+                    self.sta_if.active(False)
                     print("All connection attempts failed.")
             else:
                 print("No saved network configuration found.")
         except Exception as e:
+            self.sta_if.active(False)
             print(f"Error loading network configuration: {e}")
 
     async def save_config(self, ssid, password):
@@ -255,6 +262,8 @@ class NetworkManager:
 
             if ssid and password:
                 self.sta_if.active(True)
+                # Set the hostname
+                self.sta_if.config(dhcp_hostname=self.hostname)
                 self.sta_if.connect(ssid, password)
 
                 timeout = utime.time() + self.network_connection_timeout
@@ -269,14 +278,17 @@ class NetworkManager:
                     <p>The access point has been shut down and you can now close this page.</p>"""
                     return self.html_template("Goat - Captive Portal", body)
                 else:
+                    self.sta_if.active(False)
                     body = f"""<h2>Connection Failed</h2>
                     <p>Failed to connect to {ssid}.</p>"""
                     return self.html_template("Goat - Captive Portal", body)
             else:
+                self.sta_if.active(False)
                 body = """<h2>Connection Error</h2>
                 <p>The SSID or password for the wi-fi network was not provided.</p>"""
                 return self.html_template("Goat - Captive Portal", body)
         except Exception as e:
+            self.sta_if.active(False)
             body = f"""<h2>Error</h2>
             <p>An error occurred: {e}</p>"""
             return self.html_template("Goat - Captive Portal", body)
