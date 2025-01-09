@@ -75,8 +75,6 @@ class NetworkManager:
 
                 while attempts < 3:
                     self.sta_if.active(True)
-                    # Set the hostname
-                    self.sta_if.config(dhcp_hostname=self.hostname)
                     self.sta_if.connect(ssid, password)
                     print(f"Attempting to connect to {ssid}...")
 
@@ -262,8 +260,6 @@ class NetworkManager:
 
             if ssid and password:
                 self.sta_if.active(True)
-                # Set the hostname
-                self.sta_if.config(dhcp_hostname=self.hostname)
                 self.sta_if.connect(ssid, password)
 
                 timeout = utime.time() + self.network_connection_timeout
@@ -409,6 +405,9 @@ class NetworkManager:
         """Runs the network manager initialization process and maintains connectivity."""
         try:
             print(f"Goat - Network Manager Version {self.VERSION}")
+
+            # Set the hostname for the device
+            network.hostname(self.hostname)
 
             await self.load_config()  # Load and attempt to connect to saved configuration
 
