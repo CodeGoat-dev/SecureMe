@@ -10,7 +10,7 @@ A portable, movable security system designed for versatility and ease of use.
 
 With features like motion detection, network connectivity, and a web interface, SecureMe ensures you can monitor and manage your system effortlessly. Whether you’re protecting a room, a bag, or any valuable item, SecureMe is your portable guardian.
 
-With it's open source nature, SecureMe can be adapted to your specific needs. Whether you want to adjust pin assignment or support a new sensor, the power is in your hands.
+With its open source nature, SecureMe can be adapted to your specific needs. Whether you want to adjust pin assignment or support a new sensor, the power is in your hands.
 
 ---
 
@@ -101,7 +101,7 @@ To build and deploy Goat - SecureMe, you will need:
 
 4. **Network Configuration**:
    - Connect to the device's hotspot to access the captive portal.
-   - Note that the password ***secureme*** is required for the hotspot.
+   - Note: The password is ***"secureme"***.
    - Connect to the captive portal. If not automatically redirected, visit [http://192.168.4.1](http://192.168.4.1).
    - Scan for wireless networks and enter your Wi-Fi credentials to establish network connectivity.
 
