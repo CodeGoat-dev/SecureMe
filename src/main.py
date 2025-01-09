@@ -2,6 +2,7 @@
 # Lightweight, portable, Security System
 # Version 1.0.0
 # © (c) 2024-2025 Goat Technologies
+# https://github.com/CodeGoat-dev/SecureMe
 # Description:
 # A portable, movable mini security system for personal property protection.
 # Includes PIR sensing and tilt sensing
