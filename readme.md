@@ -2,6 +2,8 @@
 
 A portable, movable security system designed for versatility and ease of use.
 
+[https://github.com/CodeGoat-dev/SecureMe](View On GitHub)
+
 ## Overview
 
 **Goat - SecureMe** is a DIY security system that offers advanced functionality using simple and affordable hardware. Perfect for hobbyists and beginners, it provides a customizable solution for personal or property security.
@@ -176,5 +178,11 @@ The project roadmap includes:
 - Enhanced notification options (SMS, email alerts).
 - Support for additional sensors (e.g., ultrasonic).
 - Integration with third-party automation systems.
+
+---
+
+## Contributing
+
+You can contribute to the **SecureMe** project on [https://github.com/CodeGoat-dev/SecureMe](GitHub).
 
 ---
