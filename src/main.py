@@ -1,6 +1,6 @@
 # Goat SecureMe
 # Lightweight, portable, Security System
-# Version 1.0.0
+# Version 1.0.1
 # © (c) 2024-2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -28,7 +28,7 @@ if utils.isPicoW():
     from SecureMeServer import SecureMeServer
 
 # Constants
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 # Pin constants
 if utils.isPicoW():
@@ -1164,6 +1164,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
                 if key == "#":  # Submit code
                     if len(code) < min_length:
                         print(f"Code too short: {code}")
+                        await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
                         return None  # Cancellation
                     print(f"Code entered: {code}")
                     break
@@ -1184,11 +1185,13 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
 
         if len(code) < min_length:  # Code too short
             print(f"Code too short: {code}")
+            await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
             return None
 
         if code != security_code:  # Incorrect code
             attempts += 1
             print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
+            await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
             if attempts >= max_attempts:
                 print("Maximum attempts reached. Triggering alarm.")
                 await alarm("Invalid Security Code Provided.")  # Trigger the alarm after too many attempts
