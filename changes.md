@@ -6,7 +6,15 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### New Features
 
+#### Security
+
    - Security code errors now have an indicator.
+
+### Bug Fixes
+
+#### Web Interface
+
+   - The **Arming Cooldown** setting would incorrectly take the value of the **Sensor Cooldown** setting.
 
 ## V1.0.0
 
