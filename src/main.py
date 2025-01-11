@@ -1,6 +1,6 @@
 # Goat SecureMe
 # Lightweight, portable, Security System
-# Version 1.0.1
+# Version 1.1.0
 # © (c) 2024-2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -28,7 +28,7 @@ if utils.isPicoW():
     from SecureMeServer import SecureMeServer
 
 # Constants
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 
 # Pin constants
 if utils.isPicoW():
