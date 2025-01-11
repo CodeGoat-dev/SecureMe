@@ -175,11 +175,11 @@ class SecureMeServer:
                 self.detect_motion = detect_motion
                 self.detect_tilt = detect_tilt
                 self.sensor_cooldown = sensor_cooldown
-                self.arming_cooldown = sensor_cooldown
+                self.arming_cooldown = arming_cooldown
                 self.config.set_entry("security", "detect_motion", self.detect_motion)
                 self.config.set_entry("security", "detect_tilt", self.detect_tilt)
                 self.config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
-                self.config.set_entry("security", "arming_cooldown", self.sensor_cooldown)
+                self.config.set_entry("security", "arming_cooldown", self.arming_cooldown)
                 await self.config.write_async()
                 self.alert_text = "Detection settings updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
