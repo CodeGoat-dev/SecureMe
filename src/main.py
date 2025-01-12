@@ -25,7 +25,7 @@ import utils
 if utils.isPicoW():
     import urequests
     from NetworkManager import NetworkManager
-    from SecureMeServer import SecureMeServer
+    from WebServer import WebServer
 
 # Constants
 VERSION = "1.1.0"
@@ -1347,7 +1347,7 @@ async def main():
 
     # Instantiate network specific features
     if utils.isPicoW():
-        web_server = SecureMeServer()
+        web_server = WebServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", sta_web_server=web_server)
 
     await system_startup()

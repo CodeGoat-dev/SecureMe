@@ -1,4 +1,4 @@
-# Goat - SecureMe Server class
+# Goat - SecureMe WebServer class
 # Version 1.1.0
 # © (c) 2024-2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
@@ -14,8 +14,8 @@ import utime
 import ubinascii
 from ConfigManager import ConfigManager
 
-# SecureMeServer class
-class SecureMeServer:
+# WebServer class
+class WebServer:
     """Provides the web server for the Goat - SecureMe firmware."""
     
     def __init__(self, ip_address="0.0.0.0", http_port=8000):
