@@ -58,23 +58,23 @@ class SecureMeServer:
         self.detect_motion = self.config.get_entry("security", "detect_motion")
         if not isinstance(self.detect_motion, bool):
             self.detect_motion = True
-            config.set_entry("security", "detect_motion", self.detect_motion)
-            await config.write_async()
+            self.config.set_entry("security", "detect_motion", self.detect_motion)
+            await self.config.write_async()
         self.detect_tilt = self.config.get_entry("security", "detect_tilt")
         if not isinstance(self.detect_tilt, bool):
             self.detect_tilt = True
-            config.set_entry("security", "detect_tilt", self.detect_tilt)
-            await config.write_async()
+            self.config.set_entry("security", "detect_tilt", self.detect_tilt)
+            await self.config.write_async()
         self.sensor_cooldown = self.config.get_entry("security", "sensor_cooldown")
         if not isinstance(self.sensor_cooldown, int):
             self.sensor_cooldown = self.default_sensor_cooldown
-            config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
-            await config.write_async()
+            self.config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
+            await self.config.write_async()
         self.arming_cooldown = self.config.get_entry("security", "arming_cooldown")
         if not isinstance(self.arming_cooldown, int):
             self.arming_cooldown = self.default_arming_cooldown
-            config.set_entry("security", "arming_cooldown", self.arming_cooldown)
-            await config.write_async()
+            self.config.set_entry("security", "arming_cooldown", self.arming_cooldown)
+            await self.config.write_async()
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
         self.security_code = self.config.get_entry("security", "security_code")
         if not isinstance(self.security_code, str):
