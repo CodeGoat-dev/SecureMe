@@ -10,6 +10,12 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
    - Missing configuration values could not be written on initialization.
 
+### Changes
+
+#### Web Server
+
+   - The **SecureMeServer** class has been renamed to **WebServer**.
+
 ## V1.0.1
 
 ### New Features
