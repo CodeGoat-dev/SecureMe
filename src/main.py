@@ -1298,7 +1298,7 @@ async def validate_config():
 
         enable_detect_tilt = config.get_entry("security", "detect_tilt")
 
-        if not isinstance(enable_detect_motion, bool):
+        if not isinstance(enable_detect_tilt, bool):
             enable_detect_tilt = True
             config.set_entry("security", "detect_tilt", enable_detect_tilt)
             await config.write_async()
