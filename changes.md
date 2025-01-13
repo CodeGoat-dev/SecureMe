@@ -12,13 +12,17 @@ Implemented support for sound detection.
 
 ### Bug Fixes
 
+#### Initialization
+
+Tilt sensor configuration was incorrectly validated against the motion detection setting.
+
 #### Web Interface
 
    - Missing configuration values could not be written on initialization.
 
 ### Changes
 
-#### Web Server
+#### Web Interface
 
    - The **SecureMeServer** class has been renamed to **WebServer**.
 
