@@ -2,7 +2,7 @@
 
 A portable, movable security system designed for versatility and ease of use.
 
-[https://github.com/CodeGoat-dev/SecureMe](View On GitHub)
+[View On GitHub](https://github.com/CodeGoat-dev/SecureMe)
 
 ## Overview
 
@@ -188,6 +188,6 @@ The project roadmap includes:
 
 ## Contributing
 
-You can contribute to the **SecureMe** project on [https://github.com/CodeGoat-dev/SecureMe](GitHub).
+You can contribute to the **SecureMe** project on [GitHub](https://github.com/CodeGoat-dev/SecureMe].
 
 ---
