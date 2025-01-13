@@ -5,7 +5,7 @@
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
 # A portable, movable mini security system for personal property protection.
-# Includes PIR sensing and tilt sensing
+# Includes PIR sensing, tilt sensing and sound sensing
 # Provides button configurable settings to control arming and alarm sound
 # Includes security code support facilitated by matrix keypad
 # Includes a web interface for Wi-Fi enabled boards.
@@ -38,6 +38,8 @@ else:
 BUZZER_PIN = 1
 PIR_PIN = 2
 TILT_SWITCH_PIN = 3
+MICROPHONE_SENSOR_DIGITAL_PIN = 17
+MICROPHONE_SENSOR_ANALOG_PIN = 26
 ARM_BUTTON_PIN = 4
 ALARM_TEST_BUTTON_PIN = 5
 ALARM_SOUND_BUTTON_PIN = 6
@@ -58,6 +60,7 @@ volume_down_button = Pin(VOLUME_DOWN_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
 volume_up_button = Pin(VOLUME_UP_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
 pir = Pin(PIR_PIN, Pin.IN, Pin.PULL_DOWN)
 tilt = Pin(TILT_SWITCH_PIN, Pin.IN, Pin.PULL_UP)
+mic = Pin(MICROPHONE_SENSOR_DIGITAL_PIN, Pin.IN, Pin.PULL_DOWN)
 
 # Initialize keypad row pins as outputs
 keypad_rows = [Pin(pin, Pin.OUT) for pin in keypad_row_pins]
@@ -75,9 +78,11 @@ pir_warmup_time = 60
 
 pir_timeout = None
 tilt_timeout = None
+mic_timeout = None
 
 enable_detect_motion = True
 enable_detect_tilt = True
+enable_detect_sound = True
 sensor_cooldown = 10
 default_sensor_cooldown = 10
 arming_cooldown = 10
@@ -521,6 +526,39 @@ async def detect_tilt():
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in detect_tilt: {e}")
+
+# Sound detection
+async def detect_sound():
+    """Detect sound using the high sensitivity microphone sensor."""
+    global enable_detect_sound, is_armed, entering_security_code, mic_timeout
+
+    try:
+        print("Detecting sound...")
+
+        while True:
+            enable_detect_sound = config.get_entry("security", "detect_sound")
+            sensor_cooldown = config.get_entry("security", "sensor_cooldown")
+
+            if not enable_detect_sound:
+                await asyncio.sleep(0.5)
+                continue
+
+            if mic_timeout:
+                if utime.time() < mic_timeout:
+                    await asyncio.sleep(0.5)
+                    continue
+
+            if is_armed and mic.value() == 1:
+                if entering_security_code:
+                    await asyncio.sleep(0.05)
+                    continue
+                print("Sound Detected.")
+                await alarm("Sound Detected.")
+                mic_timeout = utime.time() + sensor_cooldown
+                print("Detecting sound...")
+            await asyncio.sleep(0.05)  # Polling interval
+    except Exception as e:
+        print(f"Error in detect_sound: {e}")
 
 # Arming indicator handler
 async def handle_arming_indicator():
@@ -1233,7 +1271,7 @@ async def system_startup():
         if utils.isPicoW():
             await utils.configure_network()
 
-        await utils.initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
+        await utils.initialize_pins(skip_pins=[BUZZER_PIN, PIR_PIN, TILT_SWITCH_PIN, MICROPHONE_DIGITAL_PIN, MICROPHONE_ANALOG_PIN, ARM_BUTTON_PIN, ALARM_TEST_BUTTON_PIN, ALARM_SOUND_BUTTON_PIN, keypad_row_pins[0], keypad_row_pins[1], keypad_row_pins[2], keypad_row_pins[3], keypad_col_pins[0], keypad_col_pins[1], keypad_col_pins[2], keypad_col_pins[3], VOLUME_DOWN_BUTTON_PIN, VOLUME_UP_BUTTON_PIN])
 
         await warmup_pir_sensor()
 
@@ -1265,6 +1303,13 @@ async def validate_config():
             config.set_entry("security", "detect_tilt", enable_detect_tilt)
             await config.write_async()
 
+        enable_detect_sound = config.get_entry("security", "detect_sound")
+
+        if not isinstance(enable_detect_sound, bool):
+            enable_detect_sound = True
+            config.set_entry("security", "detect_sound", enable_detect_sound)
+            await config.write_async()
+
         sensor_cooldown = config.get_entry("security", "sensor_cooldown")
 
         if not isinstance(sensor_cooldown, int):
@@ -1278,7 +1323,6 @@ async def validate_config():
             arming_cooldown = default_arming_cooldown
             config.set_entry("security", "arming_cooldown", arming_cooldown)
             await config.write_async()
-
 
         buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
 
@@ -1362,6 +1406,7 @@ async def main():
         asyncio.create_task(handle_buzzer_volume()),
         asyncio.create_task(detect_motion()),
         asyncio.create_task(detect_tilt()),
+        asyncio.create_task(detect_sound()),
         asyncio.create_task(detect_keypad_keys())
     ]
 

@@ -36,6 +36,7 @@ class WebServer:
 
         self.detect_motion = None
         self.detect_tilt = None
+        self.detect_sound = None
         self.sensor_cooldown = 10
         self.default_sensor_cooldown = 10
         self.arming_cooldown = 10
@@ -64,6 +65,11 @@ class WebServer:
         if not isinstance(self.detect_tilt, bool):
             self.detect_tilt = True
             self.config.set_entry("security", "detect_tilt", self.detect_tilt)
+            await self.config.write_async()
+        self.detect_sound = self.config.get_entry("security", "detect_sound")
+        if not isinstance(self.detect_sound, bool):
+            self.detect_sound = True
+            self.config.set_entry("security", "detect_sound", self.detect_sound)
             await self.config.write_async()
         self.sensor_cooldown = self.config.get_entry("security", "sensor_cooldown")
         if not isinstance(self.sensor_cooldown, int):
@@ -170,14 +176,17 @@ class WebServer:
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 detect_motion = 'detect_motion' in post_data
                 detect_tilt = 'detect_tilt' in post_data
+                detect_sound = 'detect_sound' in post_data
                 sensor_cooldown = 'sensor_cooldown' in post_data
                 arming_cooldown = 'arming_cooldown' in post_data
                 self.detect_motion = detect_motion
                 self.detect_tilt = detect_tilt
+                self.detect_sound = detect_sound
                 self.sensor_cooldown = sensor_cooldown
                 self.arming_cooldown = arming_cooldown
                 self.config.set_entry("security", "detect_motion", self.detect_motion)
                 self.config.set_entry("security", "detect_tilt", self.detect_tilt)
+                self.config.set_entry("security", "detect_sound", self.detect_sound)
                 self.config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
                 self.config.set_entry("security", "arming_cooldown", self.arming_cooldown)
                 await self.config.write_async()
@@ -280,6 +289,7 @@ class WebServer:
         """Serves the detection settings form with the current settings pre-populated."""
         detect_motion_checked = 'checked' if self.detect_motion else ''
         detect_tilt_checked = 'checked' if self.detect_tilt else ''
+        detect_sound_checked = 'checked' if self.detect_motion else ''
     
         form = f"""<h2>Detection Settings</h2>
         <p>The settings below control how the SecureMe system detects movement.</p>
@@ -289,6 +299,8 @@ class WebServer:
             <input type="checkbox" id="detect_motion" name="detect_motion" {detect_motion_checked}><br>
             <label for="detect_tilt">Enable Tilt Detection</label>
             <input type="checkbox" id="detect_tilt" name="detect_tilt" {detect_tilt_checked}><br>
+            <label for="detect_sound">Enable Sound Detection</label>
+            <input type="checkbox" id="detect_sound" name="detect_sound" {detect_sound_checked}><br>
             <p>After detecting motion, the system will cool down for a specified time before detecting again.<br>
             The cooldown is applied separately per sensor.<br>
             Specify how long in seconds the cooldown should last.</p>
