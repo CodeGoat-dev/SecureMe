@@ -289,7 +289,7 @@ class WebServer:
         """Serves the detection settings form with the current settings pre-populated."""
         detect_motion_checked = 'checked' if self.detect_motion else ''
         detect_tilt_checked = 'checked' if self.detect_tilt else ''
-        detect_sound_checked = 'checked' if self.detect_motion else ''
+        detect_sound_checked = 'checked' if self.detect_sound else ''
     
         form = f"""<h2>Detection Settings</h2>
         <p>The settings below control how the SecureMe system detects movement.</p>
