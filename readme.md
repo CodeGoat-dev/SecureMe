@@ -24,7 +24,7 @@ A portable, movable security system designed for versatility and ease of use.
 
 **Goat - SecureMe** is a DIY security system that offers advanced functionality using simple and affordable hardware. Perfect for hobbyists and beginners, it provides a customizable solution for personal or property security.
 
-With features like motion detection, network connectivity, and a web interface, SecureMe ensures you can monitor and manage your system effortlessly. Whether you’re protecting a room, a bag, or any valuable item, SecureMe is your portable guardian.
+With features like motion detection, sound detection, network connectivity, and a web interface, SecureMe ensures you can monitor and manage your system effortlessly. Whether you’re protecting a room, a bag, or any valuable item, SecureMe is your portable guardian.
 
 With its open source nature, SecureMe can be adapted to your specific needs. Whether you want to adjust pin assignment or support a new sensor, the power is in your hands.
 
@@ -39,6 +39,9 @@ SecureMe comes packed with the following features:
 
 - **Tilt Detection**  
   Monitor tilt or movement of the device itself using a tilt sensor.
+
+- **Sound Detection**  
+  Detect sound near the system using a high intensity microphone sensor.
 
 - **Alarm Sounds**  
   Choose between various alarm sounds emitted by the onboard buzzer to suit your environment.
@@ -76,6 +79,7 @@ To build and deploy Goat - SecureMe, you will need:
    - Microcontroller (e.g., Raspberry Pi Pico or Pico W for wireless connectivity)
    - PIR motion sensor
    - Tilt sensor
+   - High intensity microphone sensor **HW484, KY-037 or similar**
    - Passive buzzer
    - Matrix keypad (4x4)
    - System LED is used
@@ -100,6 +104,7 @@ To build and deploy Goat - SecureMe, you will need:
    - Place the passive buzzer beneath the tilt switch sensor.
    - Mount two small buttons for volume control on one side of the board beside the buzzer.
    - Mount three larger buttons vertically down the middle of the board.
+   - Mount the high intensity microphone sensor to the side of the bottom two vertical buttons.
    - Connect one leg of the buzzer to the GND rail and the other leg to GPIO1.
    - Connect the left leg of the PIR sensor to the 5V power rail and the right leg to GND, then connect the middle leg to GPIO2.
    - Connect one leg of the tilt switch to VCC and the other leg to GPIO3.
@@ -107,6 +112,7 @@ To build and deploy Goat - SecureMe, you will need:
    - Connect the four pins on the right side of the matrix keypad to GPIO7, 8, 9, and 10 starting from the leftmost pin.
    - Connect the four pins on the left side of the matrix keypad to GPIO11, 12, 13, and 14 starting from the leftmost pin.
    - Connect the two volume buttons to VCC and GPIO15 and 16.
+   - Connect VCC on the microphone sensor to 5V and connect GND, then connect AO to GPIO26 and DO to GPIO17.
    - Ensure all connections are secure and components are powered.
 
 2. **Software Setup**:
