@@ -4,6 +4,22 @@ A portable, movable security system designed for versatility and ease of use.
 
 [View On GitHub](https://github.com/CodeGoat-dev/SecureMe)
 
+## Table of Contents
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Getting Started](#getting-started)
+   - [Hardware Setup](#hardware-setup)
+   - [Software Setup](#software-setup)
+   - [Starting the System](#starting-the-system)
+4. [Usage](#usage)
+5. [Usage Scenarios](#usage-scenarios)
+6. [Future Enhancements](#future-enhancements)
+7. [Contributing](#contributing)
+8. [License](#license)
+9. [Support](#support)
+
+---
+
 ## Overview
 
 **Goat - SecureMe** is a DIY security system that offers advanced functionality using simple and affordable hardware. Perfect for hobbyists and beginners, it provides a customizable solution for personal or property security.
@@ -188,6 +204,18 @@ The project roadmap includes:
 
 ## Contributing
 
-You can contribute to the **SecureMe** project on [GitHub](https://github.com/CodeGoat-dev/SecureMe].
+We welcome contributions! Visit the [GitHub Repository](https://github.com/CodeGoat-dev/SecureMe) to report issues, suggest features, or submit pull requests.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT). See the LICENSE file for details.
+
+---
+
+## Support
+
+For questions or support, please create an issue in the [GitHub Repository](https://github.com/CodeGoat-dev/SecureMe).
 
 ---
