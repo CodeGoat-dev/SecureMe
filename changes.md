@@ -4,6 +4,12 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ## V1.1.0
 
+### New Features
+
+#### Detection
+
+Implemented support for sound detection.
+
 ### Bug Fixes
 
 #### Web Interface
