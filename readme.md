@@ -78,11 +78,11 @@ To build and deploy Goat - SecureMe, you will need:
 
 1. **Hardware Components**:
    - Microcontroller (e.g., Raspberry Pi Pico or Pico W for wireless connectivity)
-   - PIR motion sensor
+   - PIR motion sensor **With Adjustable Sensitivity**
    - Tilt sensor
    - High intensity microphone sensor **HW484, KY-037 or similar**
    - Passive buzzer
-   - Matrix keypad (4x4)
+   - Matrix keypad **4x4**
    - System LED is used
    - Breadboard or prototyping PCB
    - Power supply or battery pack
@@ -114,13 +114,15 @@ To build and deploy Goat - SecureMe, you will need:
    - Connect the four pins on the left side of the matrix keypad to GPIO11, 12, 13, and 14 starting from the leftmost pin.
    - Connect the two volume buttons to VCC and GPIO15 and 16.
    - Connect VCC on the microphone sensor to 5V and connect GND, then connect AO to GPIO26 and DO to GPIO17.
+   - Adjust the sensitivity and range of the PIR motion sensor as required.
+   - Adjust the sensitivity of the high intensity microphone sensor as required.
    - Ensure all connections are secure and components are powered.
 
 2. **Software Setup**:
    - Flash the microcontroller with MicroPython/CircuitPython firmware.
    - Upload the SecureMe source code and dependencies to the microcontroller.
 
-3. **Starting The System**
+3. **Starting The System**:
    - Connect the SecureMe system to power using the breadboard power supply.
    - After a second or so, you will hear the start-up sound and then a bell will begin to chime.
    - Wait for 60 sec for the PIR sensor to warm up. The bell will stop chiming and the system ready indicator will sound.
@@ -135,6 +137,7 @@ To build and deploy Goat - SecureMe, you will need:
    - Use a network scanner to locate the new device on your network and make a note of the IP address.
    - Access the web interface using the device's IP address to configure and customize settings.
    - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
+   - Login with the username **admin** and password **secureme** and change the password.
 
 ---
 
