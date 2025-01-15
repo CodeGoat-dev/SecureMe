@@ -11,6 +11,8 @@ A portable, movable security system designed for versatility and ease of use.
    - [Hardware Setup](#hardware-setup)
    - [Software Setup](#software-setup)
    - [Starting the System](#starting-the-system)
+   - [Network Configuration](#network-configuration)
+   - [Web Interface](#web-interface)
 4. [Usage](#usage)
 5. [Security Considerations](#security-considerations)
 6. [Usage Scenarios](#usage-scenarios)
