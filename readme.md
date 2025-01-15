@@ -217,9 +217,9 @@ You should change the web interface administrative password from the default **"
 ## Future Enhancements
 
 The project roadmap includes:
-- Enhanced notification options (SMS, email alerts).
+- Enhanced notification options (Push notifications for more events).
 - Support for additional sensors (e.g., ultrasonic).
-- Integration with third-party automation systems.
+- Support for remote logging
 
 ---
 
