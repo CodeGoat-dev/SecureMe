@@ -1392,7 +1392,7 @@ async def main():
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = WebServer()
-        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", sta_web_server=web_server)
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", hostname="SecureMe", sta_web_server=web_server)
 
     await system_startup()
 
