@@ -12,11 +12,12 @@ A portable, movable security system designed for versatility and ease of use.
    - [Software Setup](#software-setup)
    - [Starting the System](#starting-the-system)
 4. [Usage](#usage)
-5. [Usage Scenarios](#usage-scenarios)
-6. [Future Enhancements](#future-enhancements)
-7. [Contributing](#contributing)
-8. [License](#license)
-9. [Support](#support)
+5. [Security Considerations](#security-considerations)
+6. [Usage Scenarios](#usage-scenarios)
+7. [Future Enhancements](#future-enhancements)
+8. [Contributing](#contributing)
+9. [License](#license)
+10. [Support](#support)
 
 ---
 
@@ -188,6 +189,13 @@ The only other buttons on the board are the buzzer volume buttons.
    - Retype your security code and press **hash**.
    - The configuration will reset after 10 seconds, indicated by a low pitch bell.
    - The system will restart to complete the configuration reset.
+
+---
+
+## Security Considerations
+You should change the security code from the default **"0000"** to ensure your system is secure.
+
+You should change the web interface administrative password from the default **"secureme"** to prevent access by unauthorised users.
 
 ---
 
