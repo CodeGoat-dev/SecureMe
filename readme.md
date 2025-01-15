@@ -98,48 +98,50 @@ To build and deploy Goat - SecureMe, you will need:
 
 ## Setup Instructions
 
-1. **Hardware Setup**:
-   - Place the power supply in the top of your breadboard.
-   - Configure the power supply using the jumper caps to set one set of rails to 3.3V and the other to 5V+.
-   - Place the microcontroller just under the power supply (making sure to leave room for USB).
-   - Connect VSYS on the Pico to VCC and then connect GND.
-   - Place the tilt switch sensor just beneath the microcontroller.
-   - Place the passive buzzer beneath the tilt switch sensor.
-   - Mount two small buttons for volume control on one side of the board beside the buzzer.
-   - Mount three larger buttons vertically down the middle of the board.
-   - Mount the high intensity microphone sensor to the side of the bottom two vertical buttons.
-   - Connect one leg of the buzzer to the GND rail and the other leg to GPIO1.
-   - Connect the left leg of the PIR sensor to the 5V power rail and the right leg to GND, then connect the middle leg to GPIO2.
-   - Connect one leg of the tilt switch to VCC and the other leg to GPIO3.
-   - Connect the vertical buttons starting from the bottom to VCC and GPIO4, 5, and 6.
-   - Connect the four pins on the right side of the matrix keypad to GPIO7, 8, 9, and 10 starting from the leftmost pin.
-   - Connect the four pins on the left side of the matrix keypad to GPIO11, 12, 13, and 14 starting from the leftmost pin.
-   - Connect the two volume buttons to VCC and GPIO15 and 16.
-   - Connect VCC on the microphone sensor to 5V and connect GND, then connect AO to GPIO26 and DO to GPIO17.
-   - Adjust the sensitivity and range of the PIR motion sensor as required.
-   - Adjust the sensitivity of the high intensity microphone sensor as required.
-   - Ensure all connections are secure and components are powered.
+If you want to build the **SecureMe** system yourself, follow the instructions provided below.
 
-2. **Software Setup**:
-   - Flash the microcontroller with MicroPython/CircuitPython firmware.
-   - Upload the SecureMe source code and dependencies to the microcontroller.
+### Hardware Setup
+- Place the power supply in the top of your breadboard.
+- Configure the power supply using the jumper caps to set one set of rails to 3.3V and the other to 5V+.
+- Place the microcontroller just under the power supply (making sure to leave room for USB).
+- Connect VSYS on the Pico to VCC and then connect GND.
+- Place the tilt switch sensor just beneath the microcontroller.
+- Place the passive buzzer beneath the tilt switch sensor.
+- Mount two small buttons for volume control on one side of the board beside the buzzer.
+- Mount three larger buttons vertically down the middle of the board.
+- Mount the high intensity microphone sensor to the side of the bottom two vertical buttons.
+- Connect one leg of the buzzer to the GND rail and the other leg to GPIO1.
+- Connect the left leg of the PIR sensor to the 5V power rail and the right leg to GND, then connect the middle leg to GPIO2.
+- Connect one leg of the tilt switch to VCC and the other leg to GPIO3.
+- Connect the vertical buttons starting from the bottom to VCC and GPIO4, 5, and 6.
+- Connect the four pins on the right side of the matrix keypad to GPIO7, 8, 9, and 10 starting from the leftmost pin.
+- Connect the four pins on the left side of the matrix keypad to GPIO11, 12, 13, and 14 starting from the leftmost pin.
+- Connect the two volume buttons to VCC and GPIO15 and 16.
+- Connect VCC on the microphone sensor to 5V and connect GND, then connect AO to GPIO26 and DO to GPIO17.
+- Adjust the sensitivity and range of the PIR motion sensor as required.
+- Adjust the sensitivity of the high intensity microphone sensor as required.
+- Ensure all connections are secure and components are powered.
 
-3. **Starting The System**:
-   - Connect the SecureMe system to power using the breadboard power supply.
-   - After a second or so, you will hear the start-up sound and then a bell will begin to chime.
-   - Wait for 60 sec for the PIR sensor to warm up. The bell will stop chiming and the system ready indicator will sound.
+### Software Setup
+- Flash the microcontroller with MicroPython/CircuitPython firmware.
+- Upload the SecureMe source code and dependencies to the microcontroller.
 
-4. **Network Configuration**:
+### Starting The System
+- Connect the SecureMe system to power using the breadboard power supply.
+- After a second or so, you will hear the start-up sound and then a bell will begin to chime.
+- Wait for 60 sec for the PIR sensor to warm up. The bell will stop chiming and the system ready indicator will sound.
+
+### Network Configuration
    - Connect to the device's hotspot to access the captive portal.
    - Note: The password is ***"secureme"***.
    - Connect to the captive portal. If not automatically redirected, visit [http://192.168.4.1](http://192.168.4.1).
    - Scan for wireless networks and enter your Wi-Fi credentials to establish network connectivity.
 
-5. **Web Interface**:
-   - Use a network scanner to locate the new device on your network and make a note of the IP address.
-   - Access the web interface using the device's IP address to configure and customize settings.
-   - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
-   - Login with the username **admin** and password **secureme** and change the password.
+### Web Interface
+- Use a network scanner to locate the new device on your network and make a note of the IP address.
+- Access the web interface using the device's IP address to configure and customize settings.
+- If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
+- Login with the username **admin** and password **secureme** and change the password.
 
 ---
 
