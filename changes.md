@@ -8,7 +8,7 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 #### Detection
 
-Implemented support for sound detection.
+Implemented support for sound detection using a high intensity microphone sensor.
 
 ### Bug Fixes
 
