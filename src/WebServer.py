@@ -41,6 +41,7 @@ class WebServer:
         self.default_sensor_cooldown = 10
         self.arming_cooldown = 10
         self.default_arming_cooldown = 10
+        self.pushover_app_token = None
         self.pushover_api_key = None
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
@@ -81,6 +82,7 @@ class WebServer:
             self.arming_cooldown = self.default_arming_cooldown
             self.config.set_entry("security", "arming_cooldown", self.arming_cooldown)
             await self.config.write_async()
+        self.pushover_app_token = self.config.get_entry("pushover", "app_token")
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
         self.security_code = self.config.get_entry("security", "security_code")
         if not isinstance(self.security_code, str):
@@ -195,7 +197,9 @@ class WebServer:
             elif "POST /update_pushover" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
+                self.pushover_app_token = post_data.get('pushover_token', None)
                 self.pushover_api_key = post_data.get('pushover_key', None)
+                self.config.set_entry("pushover", "app_token", self.pushover_app_token)
                 self.config.set_entry("pushover", "api_key", self.pushover_api_key)
                 await self.config.write_async()
                 self.alert_text = "Pushover API key updated."
@@ -275,7 +279,7 @@ class WebServer:
         <ul>
         <li><a href="detection_settings">Detection Settings</a></li>
         <li><a href="/change_password">Change Admin Password</a><br></li>
-        <li><a href="/change_pushover">Change Pushover API Key</a></li>
+        <li><a href="/change_pushover">Change Pushover API Credentials</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
         <li><a href="/reboot_device">Reboot Device</a></li>
         <li><a href="/reset_firmware">Reset Firmware</a></li>
@@ -330,14 +334,17 @@ class WebServer:
         return self.html_template("Change Admin Password", form)
 
     def serve_change_pushover_form(self):
-        """Serves the change Pushover API key form with the current key pre-populated.""" 
-        form = f"""<h2>Change Pushover API Key</h2>
-        <p>In order to use the silent alarm feature, you must specify a Pushover API key.<br>
+        """Serves the change Pushover API credentials form with the current credentials pre-populated."""
+        form = f"""<h2>Change Pushover API Credentials</h2>
+        <p>In order to use the silent alarm feature, you must specify Pushover API credentials.<br>
+        The Pushover app token identifies your application with Pushover.<br>
         The Pushover API key enables the SecureMe firmware to send push notifications when the alarm is triggered.</p>
-        <p>To obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
-        Sign up for an account and register a device to obtain a key.</p>
+        <p>To register an application and obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
+        Sign up for an account and register an application to obtain a token, and a device to obtain a key.</p>
         <p><form method="POST" action="/update_pushover">
-            <label for="pushover_key">New Pushover API Key:</label>
+            <label for="pushover_token">Pushover App Token:</label>
+            <input type="text" id="pushover_token" name="pushover_token" value="{self.pushover_app_token}" required><br>
+            <label for="pushover_key">Pushover API Key:</label>
             <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required><br>
             <input type="submit" value="Update Pushover Key">
         </form></p>

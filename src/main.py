@@ -106,7 +106,7 @@ security_code_max_entry_attempts = 3
 security_code_min_length = 4
 security_code_max_length = 8
 
-pushover_app_token = "ahptofxmi4fg8mhadwpebbb559vovo"
+pushover_app_token = None
 pushover_api_key = None
 
 keypad_locked = True
@@ -666,7 +666,7 @@ async def validate_pushover_api_key(timeout=5):
         Args:
         - timeout: The request timeout in seconds.
         """
-    global pushover_api_key
+    global pushover_app_token, pushover_api_key
 
     if not utils.isPicoW():
         print("Unsupported device.")
@@ -679,6 +679,11 @@ async def validate_pushover_api_key(timeout=5):
     key_is_valid = False
 
     url = "https://api.pushover.net/1/users/validate.json"
+
+    pushover_app_token = config.get_entry("pushover", "app_token")
+
+    if not pushover_app_token:
+        return key_is_valid
 
     pushover_api_key = config.get_entry("pushover", "api_key")
 
@@ -723,7 +728,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         - timeout: The request timeout in seconds.
         """
 
-    global pushover_api_key
+    global pushover_app_token, pushover_api_key
 
     if not utils.isPicoW():
         print("Unsupported device.")
@@ -734,6 +739,12 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         return
 
     url = "https://api.pushover.net/1/messages.json"
+
+    pushover_app_token = config.get_entry("pushover", "app_token")
+
+    if not pushover_app_token:
+        print("A Pushover app token is required to send push notifications.")
+        return
 
     pushover_api_key = config.get_entry("pushover", "api_key")
 
