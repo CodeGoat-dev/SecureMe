@@ -202,7 +202,7 @@ class WebServer:
                 self.config.set_entry("pushover", "app_token", self.pushover_app_token)
                 self.config.set_entry("pushover", "api_key", self.pushover_api_key)
                 await self.config.write_async()
-                self.alert_text = "Pushover API key updated."
+                self.alert_text = "Pushover API credentials updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_security_code" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -346,7 +346,7 @@ class WebServer:
             <input type="text" id="pushover_token" name="pushover_token" value="{self.pushover_app_token}" required><br>
             <label for="pushover_key">Pushover API Key:</label>
             <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required><br>
-            <input type="submit" value="Update Pushover Key">
+            <input type="submit" value="Save">
         </form></p>
         """
         return self.html_template("Change Pushover API Key", form)
