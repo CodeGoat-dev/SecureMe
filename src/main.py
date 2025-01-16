@@ -1284,7 +1284,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, admin_password
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, admin_password
 
     print("Validating firmware configuration...")
 
