@@ -10,6 +10,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 Implemented support for sound detection using a high intensity microphone sensor.
 
+#### Pushover Notifications
+
+You must now register your own Pushover application and specify your application token in the SecureMe web interface to receive push notifications.
+
 ### Bug Fixes
 
 #### Initialization
