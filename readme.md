@@ -142,6 +142,7 @@ If you want to build the **SecureMe** system yourself, follow the instructions p
 - Access the web interface using the device's IP address to configure and customize settings.
 - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
 - Login with the username **admin** and password **secureme** and change the password.
+- You can configure detection settings as well as Pushover API credentials for notifications.
 
 ---
 
@@ -171,7 +172,7 @@ The only other buttons on the board are the buzzer volume buttons.
    - The keypad locked indicator will sound with different tones when the keypad is locked and unlocked.
 
 5. **Switching Alarm Modes**
-   - You can switch alarm modes if you have registered a **Pushover** API key via the web interface.
+   - You can switch alarm modes if you have registered a **Pushover** app token and API key via the web interface.
    - Press the **A** key to unlock the keypad.
    - Press the **B** key to switch alarm modes.
    - Type your security code **default 0000** and press **hash**.
