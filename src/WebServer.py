@@ -1,5 +1,5 @@
 # Goat - SecureMe WebServer class
-# Version 1.1.1
+# Version 1.1.2
 # © (c) 2024-2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -21,7 +21,7 @@ class WebServer:
     def __init__(self, ip_address="0.0.0.0", http_port=8000):
         """Constructs the class and exposes properties."""
         # Constants
-        self.VERSION = "1.1.1"
+        self.VERSION = "1.1.2"
 
         self.default_ip_address = "0.0.0.0"
         self.default_http_port = 8000
