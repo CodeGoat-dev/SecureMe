@@ -14,6 +14,10 @@ Implemented support for sound detection using a high intensity microphone sensor
 
 You must now register your own Pushover application and specify your application token in the SecureMe web interface to receive push notifications.
 
+#### Automatic Update
+
+SecureMe is now automatically updated when new releases become available.
+
 ### Bug Fixes
 
 #### Initialization
