@@ -22,6 +22,7 @@ class WebServer:
         """Constructs the class and exposes properties."""
         # Constants
         self.VERSION = "1.1.2"
+        self.REPO_URL = "https://github.com/CodeGoat-dev/SecureMe"
 
         self.default_ip_address = "0.0.0.0"
         self.default_http_port = 8000
@@ -114,9 +115,11 @@ class WebServer:
             """
             self.alert_text = None
 
-        template += f"""{body}
-        <h1>Information</h1>
+        template += body
+
+        template += f"""<h1>Information</h1>
         <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
+        <p>Contribute to <b>SecureMe</b> on <a href="{self.REPO_URL}">GitHub</a></p>
         <p><b>Version {self.VERSION}</b><br>
         <b>© (c) 2024-2025 Goat Technologies</b></p>
         </body>
