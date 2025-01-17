@@ -10,6 +10,8 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 The automatic updater now checks the network connection before attempting to update.
 
+Added a network request timeout to ensure the system doesn't hang when unable to download files.
+
 Improved verbosity for debugging.
 
 ## V1.1.2
