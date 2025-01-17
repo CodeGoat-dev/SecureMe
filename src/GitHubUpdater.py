@@ -24,6 +24,7 @@ class GitHubUpdater:
         self.latest_version = None
         self.latest_release_url = None
         self.files_to_download = []
+        self.temp_dir = "/temp_update"  # Temporary directory for updates
 
     def isNetworkConnected(self):
         """Check if the network interface is connected."""
@@ -73,22 +74,48 @@ class GitHubUpdater:
             print(f"Error fetching directory contents: {e}")
         return files
 
+    def create_temp_dir(self):
+        """Create a temporary directory for downloads."""
+        try:
+            if not self.temp_dir in uos.listdir("/"):
+                uos.mkdir(self.temp_dir)
+            print(f"Temporary directory '{self.temp_dir}' created.")
+        except Exception as e:
+            print(f"Error creating temporary directory: {e}")
+
+    def move_files_to_root(self):
+        """Move files from the temporary directory to the root."""
+        try:
+            for file_name in uos.listdir(self.temp_dir):
+                temp_file_path = f"{self.temp_dir}/{file_name}"
+                root_file_path = f"/{file_name}"
+                uos.rename(temp_file_path, root_file_path)
+                print(f"Moved {file_name} to root directory.")
+            # Remove the temporary directory after moving files
+            uos.rmdir(self.temp_dir)
+            print("Temporary directory removed.")
+        except Exception as e:
+            print(f"Error moving files to root: {e}")
+
     async def download_update(self):
-        """Downloads the latest firmware version files from GitHub."""
+        """Downloads the latest firmware version files to a temporary directory."""
         if self.files_to_download:
             print(f"Downloading {len(self.files_to_download)} files...")
+            self.create_temp_dir()
             try:
                 for file_url in self.files_to_download:
                     response = urequests.get(file_url, timeout=10)
                     if response.status_code == 200:
-                        # Determine the file path and save it
+                        # Save the file in the temporary directory
                         file_name = file_url.split('/')[-1]
-                        with open(f"/{file_name}", 'wb') as file:
+                        with open(f"{self.temp_dir}/{file_name}", 'wb') as file:
                             file.write(response.content)
-                        print(f"Downloaded {file_name} successfully.")
+                        print(f"Downloaded {file_name} to temporary directory.")
                     else:
                         print(f"Error downloading {file_url}: {response.status_code}")
                     response.close()
+                # Move files to the root if all downloads succeed
+                self.move_files_to_root()
             except Exception as e:
                 print(f"Error downloading update: {e}")
         else:
