@@ -8,6 +8,7 @@
 
 # Imports
 import machine
+import network
 import uasyncio as asyncio
 import urequests
 import uos
@@ -23,6 +24,17 @@ class GitHubUpdater:
         self.latest_version = None
         self.latest_release_url = None
         self.files_to_download = []
+
+    def isNetworkConnected(self):
+        """Check if the network interface is connected."""
+        try:
+            sta = network.WLAN(network.STA_IF)
+            if sta.isconnected():
+                return True  # Network is connected
+            else:
+                return False  # Network is not connected
+        except Exception as e:
+            return False
 
     async def check_for_update(self):
         """Checks for updates from GitHub."""
@@ -88,6 +100,9 @@ class GitHubUpdater:
 
     async def update(self):
         """Update device firmware from GitHub."""
+        if not self.isNetworkConnected:
+            return
+
         await self.check_for_update()
         if await self.is_update_available():
             await self.download_update()
@@ -102,5 +117,7 @@ class GitHubUpdater:
     async def run_periodically(self):
         """Periodically update device firmware from GitHub."""
         while True:
+            if not self.isNetworkConnected:
+                await asyncio.sleep(10)
             await self.update()
             await asyncio.sleep(self.update_interval)

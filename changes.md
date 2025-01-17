@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.1.3
+
+### Changes
+
+#### Automatic Updater
+
+The automatic updater now checks the network connection before attempting to update.
+
 ## V1.1.2
 
 ### Changes
