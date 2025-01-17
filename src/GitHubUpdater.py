@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.2.0
+# Version 1.0.0
 # © (c) 2025 Goat Technologies
 # Description:
 # Provides online update functionality for your device firmware.
