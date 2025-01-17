@@ -12,6 +12,8 @@ The automatic updater now checks the network connection before attempting to upd
 
 Added a network request timeout to ensure the system doesn't hang when unable to download files.
 
+The correct content URL is now used when fetching files.
+
 Update files are now stored in a temporary location and moved after successful download to prevent firmware corruption.
 
 Improved verbosity for debugging.

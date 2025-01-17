@@ -49,7 +49,7 @@ class GitHubUpdater:
                 print(f"Latest version: {self.latest_version}")
 
                 # List files in the 'src' directory for the release
-                contents_url = f"{self.repo_url}/contents/src?ref={self.latest_version}"
+                contents_url = f"{self.repo_url}/tree/{self.latest_version}/src"
                 self.files_to_download = await self.get_files_in_directory(contents_url)
             else:
                 print(f"Failed to fetch release data: {response.status_code}")
