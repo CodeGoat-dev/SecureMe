@@ -100,7 +100,7 @@ class GitHubUpdater:
 
     async def update(self):
         """Update device firmware from GitHub."""
-        if not self.isNetworkConnected:
+        if not self.isNetworkConnected():
             return
 
         await self.check_for_update()
@@ -116,8 +116,10 @@ class GitHubUpdater:
 
     async def run_periodically(self):
         """Periodically update device firmware from GitHub."""
+        print("Initializing automatic update...")
         while True:
-            if not self.isNetworkConnected:
+            if not self.isNetworkConnected():
+                print("The network is not currently connected. Retrying in 10 seconds.")
                 await asyncio.sleep(10)
             await self.update()
             await asyncio.sleep(self.update_interval)

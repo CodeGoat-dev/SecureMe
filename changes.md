@@ -10,6 +10,8 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 The automatic updater now checks the network connection before attempting to update.
 
+Improved verbosity for debugging.
+
 ## V1.1.2
 
 ### Changes
