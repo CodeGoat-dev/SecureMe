@@ -1,6 +1,6 @@
 # Goat SecureMe
 # Lightweight, portable, Security System
-# Version 1.1.0
+# Version 1.1.1
 # © (c) 2024-2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -26,9 +26,11 @@ if utils.isPicoW():
     import urequests
     from NetworkManager import NetworkManager
     from WebServer import WebServer
+    from GitHubUpdater import GitHubUpdater
 
 # Constants
-VERSION = "1.1.0"
+VERSION = "1.1.1"
+REPO_URL = "https://github.com/CodeGoat-dev/SecureMe"
 
 # Pin constants
 if utils.isPicoW():
@@ -1404,6 +1406,7 @@ async def main():
     if utils.isPicoW():
         web_server = WebServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", hostname="SecureMe", sta_web_server=web_server)
+        updater = GitHubUpdater(current_version=f"v{VERSION}", repo_url=REPO_URL, auto_reboot=True)
 
     await system_startup()
 
@@ -1423,6 +1426,7 @@ async def main():
 
     if utils.isPicoW():
         tasks.append(asyncio.create_task(network_manager.run()))
+        tasks.append(asyncio.create_task(updater.run_periodically()))
 
     # Run all tasks concurrently
     await asyncio.gather(*tasks)
