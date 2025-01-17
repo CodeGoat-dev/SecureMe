@@ -67,6 +67,9 @@ SecureMe comes packed with the following features:
 - **Silent Alarm**  
   Enable silent mode to receive push notifications without sounding a physical alarm.
 
+- **Automatic Update**  
+  Automatically receive firmware updates when available.
+
 - **Firmware Reset**  
   Easily reset firmware configuration via the SecureMe device or web interface.
 
