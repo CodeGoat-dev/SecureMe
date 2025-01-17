@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.1.1
+
+### Changes
+
+#### Automatic Updater
+
+The automatic updater now downloads files directly as a pose to downloading and extracting a tarball.
+
 ## V1.1.0
 
 ### New Features
