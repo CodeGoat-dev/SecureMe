@@ -41,7 +41,7 @@ class GitHubUpdater:
         url = f"{self.repo_url}/releases/latest"
         try:
             print("Checking for updates...")
-            response = urequests.get(url)
+            response = urequests.get(url, timeout=10)
             if response.status_code == 200:
                 release_data = response.json()
                 self.latest_version = release_data['tag_name']
@@ -60,7 +60,7 @@ class GitHubUpdater:
         """Fetch the list of files in a given directory."""
         files = []
         try:
-            response = urequests.get(url)
+            response = urequests.get(url, timeout=10)
             if response.status_code == 200:
                 contents = response.json()
                 for item in contents:
@@ -79,7 +79,7 @@ class GitHubUpdater:
             print(f"Downloading {len(self.files_to_download)} files...")
             try:
                 for file_url in self.files_to_download:
-                    response = urequests.get(file_url)
+                    response = urequests.get(file_url, timeout=10)
                     if response.status_code == 200:
                         # Determine the file path and save it
                         file_name = file_url.split('/')[-1]
