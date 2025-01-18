@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.1.6
+
+### Changes
+
+#### Automatic Update
+
+Automatic update now waits for 30 seconds before initializing to give the system time to settle.
+
 ## V1.1.5
 
 ### Changes
