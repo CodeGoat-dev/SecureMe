@@ -16,7 +16,7 @@ import uos
 class GitHubUpdater:
     """Provides online update functionality for device firmware."""
     def __init__(self, current_version, repo_url, update_interval=3600, auto_reboot=False):
-        self.current_version = current_version
+        self.current_version = f"v{current_version}"
         self.repo_url = repo_url
         self.update_interval = update_interval
         self.auto_reboot = auto_reboot
