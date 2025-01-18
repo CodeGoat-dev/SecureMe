@@ -49,7 +49,7 @@ class GitHubUpdater:
                 print(f"Latest version: {self.latest_version}")
 
                 # List files in the 'src' directory for the release
-                contents_url = f"{self.repo_url}/tree/{self.latest_version}/src"
+                contents_url = f"{self.repo_url}/contents/src?ref={self.latest_version}"
                 self.files_to_download = await self.get_files_in_directory(contents_url)
             else:
                 print(f"Failed to fetch release data: {response.status_code}")
@@ -103,16 +103,16 @@ class GitHubUpdater:
             print(f"Downloading {len(self.files_to_download)} files...")
             self.create_temp_dir()
             try:
-                for file_url in self.files_to_download:
-                    response = urequests.get(file_url, timeout=10)
+                for download_url in self.files_to_download:
+                    response = urequests.get(download_url, timeout=10)
                     if response.status_code == 200:
                         # Save the file in the temporary directory
-                        file_name = file_url.split('/')[-1]
+                        file_name = download_url.split('/')[-1]
                         with open(f"{self.temp_dir}/{file_name}", 'wb') as file:
                             file.write(response.content)
                         print(f"Downloaded {file_name} to temporary directory.")
                     else:
-                        print(f"Error downloading {file_url}: {response.status_code}")
+                        print(f"Error downloading {download_url}: {response.status_code}")
                     response.close()
                 # Move files to the root if all downloads succeed
                 self.move_files_to_root()
