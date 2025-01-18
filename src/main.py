@@ -30,7 +30,7 @@ if utils.isPicoW():
 
 # Constants
 VERSION = "1.1.4"
-REPO_URL = "https://github.com/CodeGoat-dev/SecureMe"
+REPO_URL = "https://api.github.com/repos/CodeGoat-dev/SecureMe"
 
 # Pin constants
 if utils.isPicoW():
