@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.1.4
+
+### Bug Fixes
+
+#### Detection
+
+Fixed missing global references which could cause issues with detection.
+
 ## V1.1.3
 
 ### Changes

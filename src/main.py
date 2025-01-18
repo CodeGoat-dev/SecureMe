@@ -394,8 +394,6 @@ async def handle_arming():
 # Alarm test handler
 async def handle_alarm_testing():
     """Test the alarm buzzer."""
-    global alarm_active
-
     try:
         while True:
             if alarm_test_button.value() == 1:  # Button pressed
@@ -410,7 +408,7 @@ async def handle_alarm_testing():
 # Alarm sound switching handler
 async def handle_alarm_sound_switching():
     """Handle switching the alarm sound for the system."""
-    global alarm_sound, alarm_config_file
+    global alarm_sound
 
     try:
         # Load the saved alarm sound value or default
@@ -466,7 +464,7 @@ async def handle_buzzer_volume():
 # Motion detection
 async def detect_motion():
     """Detect motion using the PIR sensor."""
-    global enable_detect_motion, is_armed, entering_security_code, pir_timeout
+    global enable_detect_motion, sensor_cooldown, pir_timeout
 
     try:
         print("Detecting movement...")
@@ -488,6 +486,9 @@ async def detect_motion():
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
+                if alarm_active:
+                    await asyncio.sleep(0.05)
+                    continue
                 print("Movement Detected.")
                 await alarm("Movement Detected.")
                 pir_timeout = utime.time() + sensor_cooldown
@@ -499,7 +500,7 @@ async def detect_motion():
 # Tilt detection
 async def detect_tilt():
     """Detect tilting using the tilt switch sensor."""
-    global enable_detect_tilt, is_armed, entering_security_code, tilt_timeout
+    global enable_detect_tilt, sensor_cooldown, tilt_timeout
 
     try:
         print("Detecting tilt...")
@@ -521,6 +522,9 @@ async def detect_tilt():
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
+                if alarm_active:
+                    await asyncio.sleep(0.05)
+                    continue
                 print("Tilt Detected.")
                 await alarm("Tilt Detected")
                 tilt_timeout = utime.time() + sensor_cooldown
@@ -532,7 +536,7 @@ async def detect_tilt():
 # Sound detection
 async def detect_sound():
     """Detect sound using the high sensitivity microphone sensor."""
-    global enable_detect_sound, is_armed, entering_security_code, mic_timeout
+    global enable_detect_sound, sensor_cooldown, mic_timeout
 
     try:
         print("Detecting sound...")
@@ -552,6 +556,9 @@ async def detect_sound():
 
             if is_armed and mic.value() == 1:
                 if entering_security_code:
+                    await asyncio.sleep(0.05)
+                    continue
+                if alarm_active:
                     await asyncio.sleep(0.05)
                     continue
                 print("Sound Detected.")
