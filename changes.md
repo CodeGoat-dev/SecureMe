@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.1.5
+
+### Changes
+
+#### Automatic Update
+
+Automatic update now supports directory structures.
+
 ## V1.1.4
 
 ### Bug Fixes

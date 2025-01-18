@@ -22,7 +22,6 @@ class GitHubUpdater:
         self.auto_reboot = auto_reboot
 
         self.latest_version = None
-        self.latest_release_url = None
         self.files_to_download = []
         self.temp_dir = "/temp_update"  # Temporary directory for updates
 
@@ -30,11 +29,8 @@ class GitHubUpdater:
         """Check if the network interface is connected."""
         try:
             sta = network.WLAN(network.STA_IF)
-            if sta.isconnected():
-                return True  # Network is connected
-            else:
-                return False  # Network is not connected
-        except Exception as e:
+            return sta.isconnected()
+        except Exception:
             return False
 
     async def check_for_update(self):
@@ -48,7 +44,7 @@ class GitHubUpdater:
                 self.latest_version = release_data['tag_name']
                 print(f"Latest version: {self.latest_version}")
 
-                # List files in the 'src' directory for the release
+                # Get file list recursively from the 'src' directory
                 contents_url = f"{self.repo_url}/contents/src?ref={self.latest_version}"
                 self.files_to_download = await self.get_files_in_directory(contents_url)
             else:
@@ -58,15 +54,18 @@ class GitHubUpdater:
             print(f"Error fetching update: {e}")
 
     async def get_files_in_directory(self, url):
-        """Fetch the list of files in a given directory."""
+        """Fetch the list of files in a given directory recursively."""
         files = []
         try:
             response = urequests.get(url, timeout=10)
             if response.status_code == 200:
                 contents = response.json()
                 for item in contents:
-                    if item['type'] == 'file':  # Only consider files
-                        files.append(item['download_url'])
+                    if item['type'] == 'file':  # Add files with their relative paths
+                        files.append({"url": item['download_url'], "path": item['path']})
+                    elif item['type'] == 'dir':  # Recurse into subdirectories
+                        sub_files = await self.get_files_in_directory(item['url'])
+                        files.extend(sub_files)
             else:
                 print(f"Failed to fetch directory contents: {response.status_code}")
             response.close()
@@ -83,43 +82,80 @@ class GitHubUpdater:
         except Exception as e:
             print(f"Error creating temporary directory: {e}")
 
-    def move_files_to_root(self):
-        """Move files from the temporary directory to the root."""
-        try:
-            for file_name in uos.listdir(self.temp_dir):
-                temp_file_path = f"{self.temp_dir}/{file_name}"
-                root_file_path = f"/{file_name}"
-                uos.rename(temp_file_path, root_file_path)
-                print(f"Moved {file_name} to root directory.")
-            # Remove the temporary directory after moving files
-            uos.rmdir(self.temp_dir)
-            print("Temporary directory removed.")
-        except Exception as e:
-            print(f"Error moving files to root: {e}")
-
     async def download_update(self):
         """Downloads the latest firmware version files to a temporary directory."""
         if self.files_to_download:
             print(f"Downloading {len(self.files_to_download)} files...")
             self.create_temp_dir()
             try:
-                for download_url in self.files_to_download:
+                for file_info in self.files_to_download:
+                    download_url = file_info["url"]
+                    relative_path = file_info["path"]
+                    temp_file_path = f"{self.temp_dir}/{relative_path}"
+
+                    # Ensure directories exist in temporary storage
+                    dir_path = "/".join(temp_file_path.split("/")[:-1])
+                    if not uos.path.exists(dir_path):
+                        self.create_directories(dir_path)
+
                     response = urequests.get(download_url, timeout=10)
                     if response.status_code == 200:
-                        # Save the file in the temporary directory
-                        file_name = download_url.split('/')[-1]
-                        with open(f"{self.temp_dir}/{file_name}", 'wb') as file:
+                        with open(temp_file_path, 'wb') as file:
                             file.write(response.content)
-                        print(f"Downloaded {file_name} to temporary directory.")
+                        print(f"Downloaded {relative_path} to temporary directory.")
                     else:
                         print(f"Error downloading {download_url}: {response.status_code}")
                     response.close()
+
                 # Move files to the root if all downloads succeed
                 self.move_files_to_root()
             except Exception as e:
                 print(f"Error downloading update: {e}")
         else:
             print("No files to download.")
+
+    def move_files_to_root(self):
+        """Move files from the temporary directory to the root filesystem."""
+        try:
+            for root, dirs, files in uos.walk(self.temp_dir):
+                for file_name in files:
+                    temp_file_path = f"{root}/{file_name}"
+                    relative_path = temp_file_path[len(self.temp_dir) + 1:]  # Remove temp_dir prefix
+                    final_file_path = f"/{relative_path}"
+
+                    # Ensure directories exist in the root filesystem
+                    dir_path = "/".join(final_file_path.split("/")[:-1])
+                    if not uos.path.exists(dir_path):
+                        self.create_directories(dir_path)
+
+                    uos.rename(temp_file_path, final_file_path)
+                    print(f"Moved {relative_path} to root directory.")
+
+            # Cleanup temporary directory
+            self.cleanup_temp_dir()
+            print("Temporary directory cleaned up.")
+        except Exception as e:
+            print(f"Error moving files to root: {e}")
+
+    def create_directories(self, path):
+        """Create directories recursively."""
+        parts = path.split("/")
+        for i in range(2, len(parts) + 1):
+            dir_path = "/".join(parts[:i])
+            if not uos.path.exists(dir_path):
+                uos.mkdir(dir_path)
+
+    def cleanup_temp_dir(self):
+        """Recursively delete the temporary directory and its contents."""
+        try:
+            for root, dirs, files in uos.walk(self.temp_dir, topdown=False):
+                for file_name in files:
+                    uos.remove(f"{root}/{file_name}")
+                for dir_name in dirs:
+                    uos.rmdir(f"{root}/{dir_name}")
+            uos.rmdir(self.temp_dir)
+        except Exception as e:
+            print(f"Error cleaning up temporary directory: {e}")
 
     async def is_update_available(self):
         """Check if a firmware update is available for download."""
