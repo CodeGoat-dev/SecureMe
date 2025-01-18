@@ -10,6 +10,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 Fixed missing global references which could cause issues with detection.
 
+#### Automatic Update
+
+Fixed an issue where the wrong repository URL was used.
+
 ## V1.1.3
 
 ### Changes
