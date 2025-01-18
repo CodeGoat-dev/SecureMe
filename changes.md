@@ -14,6 +14,8 @@ Fixed missing global references which could cause issues with detection.
 
 Fixed an issue where the wrong repository URL was used.
 
+Fixed an issue where incorrect API endpoints were queried for update information.
+
 ## V1.1.3
 
 ### Changes
