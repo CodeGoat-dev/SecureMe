@@ -4,13 +4,19 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ## V1.1.6
 
+### Bug Fixes
+
+#### Automatic Update
+
+Implemented a user agent in update requests to prevent access errors.
+
 ### Changes
 
 #### Automatic Update
 
 Automatic update now waits for 30 seconds before initializing to give the system time to settle.
 
-Reduced the update interval to 30 minutes.
+Reduced the automatic update check interval to 30 minutes.
 
 ## V1.1.5
 

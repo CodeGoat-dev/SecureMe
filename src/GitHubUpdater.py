@@ -21,6 +21,8 @@ class GitHubUpdater:
         self.update_interval = update_interval
         self.auto_reboot = auto_reboot
 
+        self.headers = {"User-Agent": "GitHubUpdater/1.0"}
+
         self.latest_version = None
         self.files_to_download = []
         self.temp_dir = "/temp_update"  # Temporary directory for updates
@@ -38,7 +40,7 @@ class GitHubUpdater:
         url = f"{self.repo_url}/releases/latest"
         try:
             print("Checking for updates...")
-            response = urequests.get(url, timeout=10)
+            response = urequests.get(url, headers=self.headers, timeout=10)
             if response.status_code == 200:
                 release_data = response.json()
                 self.latest_version = release_data['tag_name']
@@ -57,7 +59,7 @@ class GitHubUpdater:
         """Fetch the list of files in a given directory recursively."""
         files = []
         try:
-            response = urequests.get(url, timeout=10)
+            response = urequests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 contents = response.json()
                 for item in contents:
@@ -98,7 +100,7 @@ class GitHubUpdater:
                     if not uos.path.exists(dir_path):
                         self.create_directories(dir_path)
 
-                    response = urequests.get(download_url, timeout=10)
+                    response = urequests.get(download_url, headers=headers, timeout=10)
                     if response.status_code == 200:
                         with open(temp_file_path, 'wb') as file:
                             file.write(response.content)
