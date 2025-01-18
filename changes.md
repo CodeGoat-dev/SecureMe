@@ -10,6 +10,8 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 Automatic update now waits for 30 seconds before initializing to give the system time to settle.
 
+Reduced the update interval to 30 minutes.
+
 ## V1.1.5
 
 ### Changes

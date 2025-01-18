@@ -1413,7 +1413,7 @@ async def main():
     if utils.isPicoW():
         web_server = WebServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", hostname="SecureMe", sta_web_server=web_server)
-        updater = GitHubUpdater(current_version=f"v{VERSION}", repo_url=REPO_URL, auto_reboot=True)
+        updater = GitHubUpdater(current_version="{VERSION}", repo_url=REPO_URL, update_interval=1800, auto_reboot=True)
 
     await system_startup()
 
