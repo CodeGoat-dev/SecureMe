@@ -14,6 +14,8 @@ Implemented a user agent in update requests to prevent access errors.
 
 #### Automatic Update
 
+Automatic update is currently disabled due to memory allocation issues and will be re-enabled when resolved.
+
 Automatic update now waits for 30 seconds before initializing to give the system time to settle.
 
 Reduced the automatic update check interval to 30 minutes.

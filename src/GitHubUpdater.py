@@ -44,6 +44,7 @@ class GitHubUpdater:
             if response.status_code == 200:
                 release_data = response.json()
                 self.latest_version = release_data['tag_name']
+                print(f"Current version: {self.current_version}")
                 print(f"Latest version: {self.latest_version}")
 
                 # Get file list recursively from the 'src' directory
@@ -59,7 +60,7 @@ class GitHubUpdater:
         """Fetch the list of files in a given directory recursively."""
         files = []
         try:
-            response = urequests.get(url, headers=headers, timeout=10)
+            response = urequests.get(url, headers=self.headers, timeout=10)
             if response.status_code == 200:
                 contents = response.json()
                 for item in contents:
@@ -100,7 +101,7 @@ class GitHubUpdater:
                     if not uos.path.exists(dir_path):
                         self.create_directories(dir_path)
 
-                    response = urequests.get(download_url, headers=headers, timeout=10)
+                    response = urequests.get(download_url, headers=self.headers, timeout=10)
                     if response.status_code == 200:
                         with open(temp_file_path, 'wb') as file:
                             file.write(response.content)
@@ -161,7 +162,13 @@ class GitHubUpdater:
 
     async def is_update_available(self):
         """Check if a firmware update is available for download."""
-        return self.latest_version and self.current_version != self.latest_version
+        if self.latest_version:
+            if self.latest_version == self.current_version:
+                return False
+            else:
+                return True
+        else:
+            return False
 
     async def update(self):
         """Update device firmware from GitHub."""
