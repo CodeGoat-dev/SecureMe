@@ -1,10 +1,6 @@
 # Goat - GitHub Updater library
 # Version 1.0.0
 # © (c) 2025 Goat Technologies
-# Description:
-# Provides online update functionality for your device firmware.
-# Designed for the Raspberry Pi Pico W microcontroller.
-# Includes periodic update checking and automatic update download.
 
 # Imports
 import machine
@@ -21,8 +17,7 @@ class GitHubUpdater:
         self.update_interval = update_interval
         self.auto_reboot = auto_reboot
 
-        self.headers = {"User-Agent": "GitHubUpdater/1.0"}
-
+        self.headers = {"User-Agent": "GoatGitHubUpdater/1.1"}
         self.latest_version = None
         self.files_to_download = []
         self.temp_dir = "/temp_update"  # Temporary directory for updates
@@ -101,10 +96,17 @@ class GitHubUpdater:
                     if not uos.path.exists(dir_path):
                         self.create_directories(dir_path)
 
+                    # Stream the file and write in chunks
                     response = urequests.get(download_url, headers=self.headers, timeout=10)
                     if response.status_code == 200:
                         with open(temp_file_path, 'wb') as file:
-                            file.write(response.content)
+                            # Access raw socket stream to fetch data in chunks
+                            sock = response.raw
+                            while True:
+                                chunk = sock.read(1024)  # Stream 1KB chunks
+                                if not chunk:
+                                    break
+                                file.write(chunk)
                         print(f"Downloaded {relative_path} to temporary directory.")
                     else:
                         print(f"Error downloading {download_url}: {response.status_code}")
@@ -163,10 +165,19 @@ class GitHubUpdater:
     async def is_update_available(self):
         """Check if a firmware update is available for download."""
         if self.latest_version:
-            if self.latest_version == self.current_version:
-                return False
-            else:
-                return True
+            # Strip 'v' prefix and split versions into parts
+            current_version_parts = [int(x) for x in self.current_version.lstrip('v').split('.')]
+            latest_version_parts = [int(x) for x in self.latest_version.lstrip('v').split('.')]
+
+            # Compare versions part by part
+            for current, latest in zip(current_version_parts, latest_version_parts):
+                if latest > current:
+                    return True
+                elif latest < current:
+                    return False
+        
+            # Check if latest has additional parts (e.g., "1.2" < "1.2.1")
+            return len(latest_version_parts) > len(current_version_parts)
         else:
             return False
 
