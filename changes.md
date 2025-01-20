@@ -2,6 +2,20 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.2.0
+
+### Changes
+
+#### Compilation
+
+SecureMe is now compiled to byte code to improve initialization speed and memory usage in constrained environments.
+
+SecureMe can still be executed from source, however it is recommended to build before deploying to improve performance.
+
+#### Automatic Update
+
+Update files are now streamed to improve memory usage.
+
 ## V1.1.6
 
 ### Bug Fixes
