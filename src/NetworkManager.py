@@ -1,5 +1,5 @@
 # Goat - Pico Network Manager library
-# Version 1.0.0
+# Version 1.0.1
 # © (c) 2024-2025 Goat Technologies
 # Description:
 # Provides network management for your device firmware.
@@ -30,7 +30,8 @@ class NetworkManager:
         self.config_file = "network_config.conf"
 
         # Constants
-        self.VERSION = "1.0.0"
+        self.VERSION = "1.0.1"
+       self.repo_url = "https://github.com/CodeGoat-dev/Pico-Network-Manager"
 
         # Interface configuration
         self.sta_if = network.WLAN(network.STA_IF)
@@ -214,6 +215,7 @@ class NetworkManager:
             {body}
             <h1>Information</h1>
             <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
+            <p>Contribute to <b>Pico Network Manager</b> on <a href="{self.REPO_URL}">GitHub</a></p>
             <p><b>Version {self.VERSION}</b><br>
             <b>© (c) 2024-2025 Goat Technologies</b></p>
         </body>
@@ -406,7 +408,7 @@ class NetworkManager:
     async def run(self):
         """Runs the network manager initialization process and maintains connectivity."""
         try:
-            print(f"Goat - Network Manager Version {self.VERSION}")
+            print(f"Goat - Pico Network Manager Version {self.VERSION}")
 
             # Set the hostname for the device
             network.hostname(self.hostname)

@@ -12,6 +12,10 @@ SecureMe is now compiled to byte code to improve initialization speed and memory
 
 SecureMe can still be executed from source, however it is recommended to build before deploying to improve performance.
 
+#### Pico Network Manager
+
+Updated Pico Network Manager to v1.0.1.
+
 #### Automatic Update
 
 Update files are now streamed to improve memory usage.
