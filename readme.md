@@ -127,7 +127,11 @@ If you want to build the **SecureMe** system yourself, follow the instructions p
 
 ### Software Setup
 - Flash the microcontroller with MicroPython/CircuitPython firmware.
-- Upload the SecureMe source code and dependencies to the microcontroller.
+- On your host machine, create a Python virtual environment.
+- Install rshell and mpy-crosss and copy the **"src"** directory to the virtual environment.
+- Copy the **"make"** file to the virtual environment and run the script.
+- Connect your Pico to the computer and launch rshell.
+- Upload the contents of the SecureMe build directory to the microcontroller.
 
 ### Starting The System
 - Connect the SecureMe system to power using the breadboard power supply.
