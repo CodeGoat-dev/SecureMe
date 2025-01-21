@@ -800,12 +800,24 @@ async def send_system_status_notification(status_message):
     Args:
     - status_message: The message to send.
     """
+    global pushover_app_token, pushover_api_key
+
     if not status_message:
         print("A status message is required.")
         return
 
     if utils.isPicoW():
         try:
+            pushover_app_token = config.get_entry("pushover", "app_token")
+
+            if not pushover_app_token:
+                return
+
+            pushover_api_key = config.get_entry("pushover", "api_key")
+
+            if not pushover_api_key:
+                return
+
             if system_status_notifications:
                 if not utils.isNetworkConnected():
                     while not utils.isNetworkConnected():
@@ -996,7 +1008,7 @@ async def keypad_lock():
 # Alarm mode switch
 async def alarm_mode_switch():
     """Handle switching between alarm modes."""
-    global silent_alarm, pushover_api_key, alarm_active, security_code, entering_security_code
+    global silent_alarm, pushover_app_token, pushover_api_key, alarm_active, security_code, entering_security_code
 
     if not utils.isPicoW():
         print("Unsupported device.")
@@ -1017,6 +1029,13 @@ async def alarm_mode_switch():
             security_code = default_security_code
             config.set_entry("security", "security_code", security_code)
             await config.write_async()
+
+        pushover_app_token = config.get_entry("pushover", "app_token")
+
+        if not pushover_app_token:
+            print("A Pushover app token is required for silent alarms.")
+            await play_dynamic_bell(100, buzzer_volume, 0.05, 1)
+            return
 
         pushover_api_key = config.get_entry("pushover", "api_key")
 
