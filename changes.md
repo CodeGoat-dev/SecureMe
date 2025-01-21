@@ -4,6 +4,16 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ## V1.2.0
 
+### New Features
+
+#### System Notifications
+
+SecureMe can now send system notifications via **Pushover** for various system events including initialization, arming/disarming and alarm mode switching.
+
+Notifications for security code changes and configuration reset are also sent.
+
+System notifications can be configured via the web interface on the **Pushover Settings** page.
+
 ### Changes
 
 #### Compilation
@@ -11,6 +21,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 SecureMe is now compiled to byte code to improve initialization speed and memory usage in constrained environments.
 
 SecureMe can still be executed from source, however it is recommended to build before deploying to improve performance.
+
+#### Web Interface
+
+Renamed the **Pushover Credentials** page to **Pushover Settings** and added the new **System Notifications** setting.
 
 #### Pico Network Manager
 
