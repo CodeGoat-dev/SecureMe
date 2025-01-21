@@ -228,9 +228,8 @@ You should change the web interface administrative password from the default **"
 ## Future Enhancements
 
 The project roadmap includes:
-- Enhanced notification options (Push notifications for more events).
 - Support for additional sensors (e.g., ultrasonic).
-- Support for remote logging
+- Support for remote arming/disarming
 
 ---
 
