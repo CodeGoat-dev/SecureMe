@@ -44,6 +44,7 @@ class WebServer:
         self.default_arming_cooldown = 10
         self.pushover_app_token = None
         self.pushover_api_key = None
+        self.system_status_notifications = True
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
         self.security_code = "0000"
@@ -85,6 +86,11 @@ class WebServer:
             await self.config.write_async()
         self.pushover_app_token = self.config.get_entry("pushover", "app_token")
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
+        self.system_status_notifications = self.config.get_entry("pushover", "system_status_notifications")
+        if not isinstance(self.system_status_notifications, bool):
+            self.system_status_notifications = True
+            self.config.set_entry("pushover", "system_status_notifications", self.system_status_notifications)
+            await self.config.write_async()
         self.security_code = self.config.get_entry("security", "security_code")
         if not isinstance(self.security_code, str):
             self.security_code = self.default_security_code
@@ -202,10 +208,12 @@ class WebServer:
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.pushover_app_token = post_data.get('pushover_token', None)
                 self.pushover_api_key = post_data.get('pushover_key', None)
+                self.system_status_notifications = post_data.get('status_notifications', None)
                 self.config.set_entry("pushover", "app_token", self.pushover_app_token)
                 self.config.set_entry("pushover", "api_key", self.pushover_api_key)
+                self.config.set_entry("pushover", "system_status_notifications", self.system_status_notifications)
                 await self.config.write_async()
-                self.alert_text = "Pushover API credentials updated."
+                self.alert_text = "Pushover settings updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_security_code" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -282,7 +290,7 @@ class WebServer:
         <ul>
         <li><a href="detection_settings">Detection Settings</a></li>
         <li><a href="/change_password">Change Admin Password</a><br></li>
-        <li><a href="/change_pushover">Change Pushover API Credentials</a></li>
+        <li><a href="/change_pushover">Change Pushover Settings</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
         <li><a href="/reboot_device">Reboot Device</a></li>
         <li><a href="/reset_firmware">Reset Firmware</a></li>
@@ -337,9 +345,11 @@ class WebServer:
         return self.html_template("Change Admin Password", form)
 
     def serve_change_pushover_form(self):
-        """Serves the change Pushover API credentials form with the current credentials pre-populated."""
-        form = f"""<h2>Change Pushover API Credentials</h2>
-        <p>In order to use the silent alarm feature, you must specify Pushover API credentials.<br>
+        """Serves the change Pushover Settings form with the current credentials pre-populated."""
+        status_notifications_checked = 'checked' if self.system_status_notifications else ''
+
+        form = f"""<h2>Change Pushover Settings</h2>
+        <p>In order to receive system status notifications and use silent alarms, you must specify Pushover API credentials.<br>
         The Pushover app token identifies your application with Pushover.<br>
         The Pushover API key enables the SecureMe firmware to send push notifications when the alarm is triggered.</p>
         <p>To register an application and obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
@@ -349,6 +359,9 @@ class WebServer:
             <input type="text" id="pushover_token" name="pushover_token" value="{self.pushover_app_token}" required><br>
             <label for="pushover_key">Pushover API Key:</label>
             <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required><br>
+            Specify additional settings below.<br>
+            <label for="status_notifications">Enable System Status Notifications</label>
+            <input type="checkbox" id="status_notifications" name="status_notifications" {status_notifications_checked}><br>
             <input type="submit" value="Save">
         </form></p>
         """
