@@ -370,7 +370,7 @@ async def handle_arming():
                     is_armed = False
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     await system_ready_indicator(is_armed)
-                    await send_system_status_notification(status_message="System disarmed.")
+                    asyncio.create_task(send_system_status_notification(status_message="System disarmed."))
                 else:
                     if security_code:
                         entering_security_code = True
@@ -389,7 +389,7 @@ async def handle_arming():
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     is_armed = True
                     await system_ready_indicator(is_armed)
-                    await send_system_status_notification(status_message="System armed.")
+                    asyncio.create_task(send_system_status_notification(status_message="System armed."))
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_arming: {e}")
@@ -1074,12 +1074,12 @@ async def alarm_mode_switch():
             print("Alarm mode set to audible.")
             silent_alarm = False
             await alarm_mode_switch_indicator(silent_alarm)
-            await send_system_status_notification(status_message="Alarm mode set to audible.")
+            asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to audible."))
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
             await alarm_mode_switch_indicator(silent_alarm)
-            await send_system_status_notification(status_message="Alarm mode set to silent.")
+            asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to silent."))
     except Exception as e:
         print(f"Error in alarm_mode_switch: {e}")
 
@@ -1171,7 +1171,7 @@ async def change_security_code():
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
             await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
             print(f"Security code updated. New code: {security_code}")
-            await send_system_status_notification(status_message=f"System security code updated. New code: {security_code}")
+            asyncio.create_task(send_system_status_notification(status_message=f"System security code updated. New code: {security_code}"))
 
         entering_security_code = False
     except Exception as e:
@@ -1233,7 +1233,7 @@ async def reset_firmware_config():
 
         print("Resetting firmware configuration...")
 
-        await send_system_status_notification(status_message="Resetting firmware configuration to factory defaults.")
+        asyncio.create_task(send_system_status_notification(status_message="Resetting firmware configuration to factory defaults."))
 
         await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
 
