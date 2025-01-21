@@ -259,7 +259,7 @@ async def alarm(message):
 
         if utils.isPicoW():
             if silent_alarm:
-                await send_pushover_notification(message=message)
+                asyncio.create_task(send_pushover_notification(message=message))
                 alarm_active = False
                 return
 
@@ -810,7 +810,7 @@ async def send_system_status_notification(status_message):
                 if not utils.isNetworkConnected():
                     while not utils.isNetworkConnected():
                         await asyncio.sleep(0.1)
-                await send_pushover_notification(message=status_message)
+                asyncio.create_task(send_pushover_notification(message=status_message))
         except Exception as e:
             print(f"Unable to send system status notification: {e}")
 

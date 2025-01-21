@@ -34,6 +34,10 @@ Updated Pico Network Manager to v1.0.1.
 
 Update files are now streamed to improve memory usage.
 
+#### Notifications
+
+Notifications are now sent using background tasks to improve performance.
+
 ## V1.1.6
 
 ### Bug Fixes
