@@ -110,6 +110,7 @@ security_code_max_length = 8
 
 pushover_app_token = None
 pushover_api_key = None
+system_status_notifications = True
 
 keypad_locked = True
 
@@ -369,6 +370,7 @@ async def handle_arming():
                     is_armed = False
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     await system_ready_indicator(is_armed)
+                    await send_system_status_notification(status_message="System disarmed.")
                 else:
                     if security_code:
                         entering_security_code = True
@@ -387,6 +389,7 @@ async def handle_arming():
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     is_armed = True
                     await system_ready_indicator(is_armed)
+                    await send_system_status_notification(status_message="System armed.")
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_arming: {e}")
@@ -791,6 +794,26 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
 
     print("All attempts to send notification failed.")
 
+async def send_system_status_notification(status_message):
+    """Sends a system status notification via Pushover.
+
+    Args:
+    - status_message: The message to send.
+    """
+    if not status_message:
+        print("A status message is required.")
+        return
+
+    if utils.isPicoW():
+        try:
+            if system_status_notifications:
+                if not utils.isNetworkConnected():
+                    while not utils.isNetworkConnected():
+                        await asyncio.sleep(0.1)
+                await send_pushover_notification(message=status_message)
+        except Exception as e:
+            print(f"Unable to send system status notification: {e}")
+
 # System startup indicator
 async def system_startup_indicator():
     """Play the system startup indicator."""
@@ -1032,10 +1055,12 @@ async def alarm_mode_switch():
             print("Alarm mode set to audible.")
             silent_alarm = False
             await alarm_mode_switch_indicator(silent_alarm)
+            await send_system_status_notification(status_message="Alarm mode set to audible.")
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
             await alarm_mode_switch_indicator(silent_alarm)
+            await send_system_status_notification(status_message="Alarm mode set to silent.")
     except Exception as e:
         print(f"Error in alarm_mode_switch: {e}")
 
@@ -1127,6 +1152,7 @@ async def change_security_code():
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
             await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
             print(f"Security code updated. New code: {security_code}")
+            await send_system_status_notification(status_message=f"System security code updated. New code: {security_code}")
 
         entering_security_code = False
     except Exception as e:
@@ -1187,6 +1213,8 @@ async def reset_firmware_config():
         await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
 
         print("Resetting firmware configuration...")
+
+        await send_system_status_notification(status_message="Resetting firmware configuration to factory defaults.")
 
         await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
 
@@ -1298,13 +1326,16 @@ async def system_startup():
         await system_ready_indicator(is_armed)
 
         print("System ready.")
+
+        # Send system ready notification
+        asyncio.create_task(send_system_status_notification(status_message="System ready."))
     except Exception as e:
         print(f"Error in system_startup: {e}")
 
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, admin_password
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, admin_password
 
     print("Validating firmware configuration...")
 
@@ -1356,6 +1387,13 @@ async def validate_config():
         if not isinstance(security_code, str):
             security_code = default_security_code
             config.set_entry("security", "security_code", security_code)
+            await config.write_async()
+
+        system_status_notifications = config.get_entry("pushover", "system_status_notifications")
+
+        if not isinstance(system_status_notifications, bool):
+            system_status_notifications = True
+            config.set_entry("pushover", "system_status_notifications", system_status_notifications)
             await config.write_async()
 
         admin_password = config.get_entry("server", "admin_password")
