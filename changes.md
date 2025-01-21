@@ -38,6 +38,10 @@ Update files are now streamed to improve memory usage.
 
 Notifications are now sent using background tasks to improve performance.
 
+#### Alarm
+
+Improved system performance when sounding an alarm.
+
 ## V1.1.6
 
 ### Bug Fixes

@@ -403,7 +403,7 @@ async def handle_alarm_testing():
                 if alarm_active:
                     continue
                 print("Testing alarm...")
-                await alarm("Testing Alarm.")
+                asyncio.create_task(alarm("Testing Alarm."))
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_alarm_testing: {e}")
@@ -493,7 +493,7 @@ async def detect_motion():
                     await asyncio.sleep(0.05)
                     continue
                 print("Movement Detected.")
-                await alarm("Movement Detected.")
+                asyncio.create_task(alarm("Movement Detected."))
                 pir_timeout = utime.time() + sensor_cooldown
                 print("Detecting movement...")
             await asyncio.sleep(0.05)  # Polling interval
@@ -529,7 +529,7 @@ async def detect_tilt():
                     await asyncio.sleep(0.05)
                     continue
                 print("Tilt Detected.")
-                await alarm("Tilt Detected")
+                asyncio.create_task(alarm("Tilt Detected"))
                 tilt_timeout = utime.time() + sensor_cooldown
                 print("Detecting tilt...")
             await asyncio.sleep(0.05)  # Polling interval
@@ -565,7 +565,7 @@ async def detect_sound():
                     await asyncio.sleep(0.05)
                     continue
                 print("Sound Detected.")
-                await alarm("Sound Detected.")
+                asyncio.create_task(alarm("Sound Detected."))
                 mic_timeout = utime.time() + sensor_cooldown
                 print("Detecting sound...")
             await asyncio.sleep(0.05)  # Polling interval
