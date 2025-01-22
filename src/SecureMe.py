@@ -111,6 +111,8 @@ security_code_max_length = 8
 pushover_app_token = None
 pushover_api_key = None
 system_status_notifications = True
+general_notifications = True
+security_code_notifications = True
 
 keypad_locked = True
 
@@ -370,7 +372,9 @@ async def handle_arming():
                     is_armed = False
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     await system_ready_indicator(is_armed)
-                    asyncio.create_task(send_system_status_notification(status_message="System disarmed."))
+                    if system_status_notifications:
+                        if general_notifications:
+                            asyncio.create_task(send_system_status_notification(status_message="System disarmed."))
                 else:
                     if security_code:
                         entering_security_code = True
@@ -389,7 +393,9 @@ async def handle_arming():
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     is_armed = True
                     await system_ready_indicator(is_armed)
-                    asyncio.create_task(send_system_status_notification(status_message="System armed."))
+                    if system_status_notifications:
+                        if general_notifications:
+                            asyncio.create_task(send_system_status_notification(status_message="System armed."))
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_arming: {e}")
@@ -1074,12 +1080,16 @@ async def alarm_mode_switch():
             print("Alarm mode set to audible.")
             silent_alarm = False
             await alarm_mode_switch_indicator(silent_alarm)
-            asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to audible."))
+            if system_status_notifications:
+                if general_notifications:
+                    asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to audible."))
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
             await alarm_mode_switch_indicator(silent_alarm)
-            asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to silent."))
+            if system_status_notifications:
+                if general_notifications:
+                    asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to silent."))
     except Exception as e:
         print(f"Error in alarm_mode_switch: {e}")
 
@@ -1171,7 +1181,9 @@ async def change_security_code():
             await play_dynamic_bell(150, buzzer_volume, 0.05, 1)
             await play_dynamic_bell(200, buzzer_volume, 0.05, 1)
             print(f"Security code updated. New code: {security_code}")
-            asyncio.create_task(send_system_status_notification(status_message=f"System security code updated. New code: {security_code}"))
+            if system_status_notifications:
+                if general_notifications:
+                    asyncio.create_task(send_system_status_notification(status_message=f"System security code updated. New code: {security_code}"))
 
         entering_security_code = False
     except Exception as e:
@@ -1233,7 +1245,9 @@ async def reset_firmware_config():
 
         print("Resetting firmware configuration...")
 
-        asyncio.create_task(send_system_status_notification(status_message="Resetting firmware configuration to factory defaults."))
+        if system_status_notifications:
+            if general_notifications:
+                asyncio.create_task(send_system_status_notification(status_message="Resetting firmware configuration to factory defaults."))
 
         await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
 
@@ -1270,14 +1284,18 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
                     if len(code) < min_length:
                         print(f"Code too short: {code}")
                         await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
-                        asyncio.create_task(send_system_status_notification(status_message="The provided security code is too short."))
+                        if system_status_notifications:
+                            if security_code_notifications:
+                                asyncio.create_task(send_system_status_notification(status_message="The provided security code is too short."))
                         return None  # Cancellation
                     print(f"Code entered: {code}")
                     break
                 elif key == "*":  # Cancel or clear code
                     if len(code) == 0:
                         print("Code entry cancelled.")
-                        asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
+                        if system_status_notifications:
+                            if security_code_notifications:
+                                asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
                         return None  # Cancellation
                     print("Code cleared!")
                     code = ""  # Reset
@@ -1288,20 +1306,26 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
 
         if len(code) == 0:  # Code entry cancelled
             print("Code entry cancelled.")
-            asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
+            if system_status_notifications:
+                if security_code_notifications:
+                    asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
             return None
 
         if len(code) < min_length:  # Code too short
             print(f"Security code too short: {code}")
             await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
-            asyncio.create_task(send_system_status_notification(status_message="Security code too short."))
+            if system_status_notifications:
+                if security_code_notifications:
+                    asyncio.create_task(send_system_status_notification(status_message="Security code too short."))
             return None
 
         if code != security_code:  # Incorrect code
             attempts += 1
             print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
             await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
-            asyncio.create_task(send_system_status_notification(status_message="Invalid security code provided."))
+            if system_status_notifications:
+                if security_code_notifications:
+                    asyncio.create_task(send_system_status_notification(status_message="Invalid security code provided."))
             if attempts >= max_attempts:
                 print("Maximum attempts reached. Triggering alarm.")
                 asyncio.create_task(alarm("Invalid Security Code Provided."))  # Trigger the alarm after too many attempts
@@ -1311,7 +1335,9 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
 
         # Correct code
         print("Access granted.")
-        asyncio.create_task(send_system_status_notification(status_message="Access granted."))
+        if system_status_notifications:
+            if security_code_notifications:
+                asyncio.create_task(send_system_status_notification(status_message="Access granted."))
         return True  # Success
     return False  # Max attempts exceeded
 
@@ -1360,7 +1386,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, admin_password
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, admin_password
 
     print("Validating firmware configuration...")
 
@@ -1419,6 +1445,20 @@ async def validate_config():
         if not isinstance(system_status_notifications, bool):
             system_status_notifications = True
             config.set_entry("pushover", "system_status_notifications", system_status_notifications)
+            await config.write_async()
+
+        general_notifications = config.get_entry("pushover", "general_notifications")
+
+        if not isinstance(general_notifications, bool):
+            general_notifications = True
+            config.set_entry("pushover", "general_notifications", general_notifications)
+            await config.write_async()
+
+        security_code_notifications = config.get_entry("pushover", "security_code_notifications")
+
+        if not isinstance(security_code_notifications, bool):
+            security_code_notifications = True
+            config.set_entry("pushover", "security_code_notifications", security_code_notifications)
             await config.write_async()
 
         admin_password = config.get_entry("server", "admin_password")
