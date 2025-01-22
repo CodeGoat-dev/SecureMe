@@ -12,7 +12,7 @@ SecureMe can now send system notifications via **Pushover** for various system e
 
 Notifications for security code changes and configuration reset are also sent.
 
-System notifications can be configured via the web interface on the **Pushover Settings** page.
+System notifications including notification types can be configured via the web interface on the **Pushover Settings** page.
 
 ### Changes
 
@@ -24,7 +24,7 @@ SecureMe can still be executed from source, however it is recommended to build b
 
 #### Web Interface
 
-Renamed the **Pushover Credentials** page to **Pushover Settings** and added the new **System Notifications** setting.
+Renamed the **Pushover Credentials** page to **Pushover Settings** and added the new **System Notifications** settings.
 
 #### Pico Network Manager
 
@@ -40,7 +40,7 @@ Notifications are now sent using background tasks to improve performance.
 
 #### Alarm
 
-Improved system performance when sounding an alarm.
+Improved system performance when sounding an alarm by using background tasks.
 
 ## V1.1.6
 
