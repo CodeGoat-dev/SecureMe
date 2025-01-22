@@ -1270,12 +1270,14 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
                     if len(code) < min_length:
                         print(f"Code too short: {code}")
                         await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
+                        asyncio.create_task(send_system_status_notification(status_message="The provided security code is too short."))
                         return None  # Cancellation
                     print(f"Code entered: {code}")
                     break
                 elif key == "*":  # Cancel or clear code
                     if len(code) == 0:
                         print("Code entry cancelled.")
+                        asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
                         return None  # Cancellation
                     print("Code cleared!")
                     code = ""  # Reset
@@ -1286,26 +1288,30 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
 
         if len(code) == 0:  # Code entry cancelled
             print("Code entry cancelled.")
+            asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
             return None
 
         if len(code) < min_length:  # Code too short
-            print(f"Code too short: {code}")
+            print(f"Security code too short: {code}")
             await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
+            asyncio.create_task(send_system_status_notification(status_message="Security code too short."))
             return None
 
         if code != security_code:  # Incorrect code
             attempts += 1
             print(f"Invalid security code provided. Attempt {attempts}/{max_attempts}.")
             await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
+            asyncio.create_task(send_system_status_notification(status_message="Invalid security code provided."))
             if attempts >= max_attempts:
                 print("Maximum attempts reached. Triggering alarm.")
-                await alarm("Invalid Security Code Provided.")  # Trigger the alarm after too many attempts
+                asyncio.create_task(alarm("Invalid Security Code Provided."))  # Trigger the alarm after too many attempts
                 return False  # Return False to indicate max attempts exceeded
-            await alarm("Invalid Security Code Provided.")
+            asyncio.create_task(alarm("Invalid Security Code Provided."))
             continue
 
         # Correct code
         print("Access granted.")
+        asyncio.create_task(send_system_status_notification(status_message="Access granted."))
         return True  # Success
     return False  # Max attempts exceeded
 
