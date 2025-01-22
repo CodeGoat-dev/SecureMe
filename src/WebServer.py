@@ -45,6 +45,8 @@ class WebServer:
         self.pushover_app_token = None
         self.pushover_api_key = None
         self.system_status_notifications = True
+        self.general_notifications = True
+        self.security_code_notifications = True
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
         self.security_code = "0000"
@@ -90,6 +92,16 @@ class WebServer:
         if not isinstance(self.system_status_notifications, bool):
             self.system_status_notifications = True
             self.config.set_entry("pushover", "system_status_notifications", self.system_status_notifications)
+            await self.config.write_async()
+        self.general_notifications = self.config.get_entry("pushover", "general_notifications")
+        if not isinstance(self.general_notifications, bool):
+            self.general_notifications = True
+            self.config.set_entry("pushover", "general_notifications", self.general_notifications)
+            await self.config.write_async()
+        self.security_code_notifications = self.config.get_entry("pushover", "security_code_notifications")
+        if not isinstance(self.security_code_notifications, bool):
+            self.security_code_notifications = True
+            self.config.set_entry("pushover", "security_code_notifications", self.security_code_notifications)
             await self.config.write_async()
         self.security_code = self.config.get_entry("security", "security_code")
         if not isinstance(self.security_code, str):
@@ -208,10 +220,14 @@ class WebServer:
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.pushover_app_token = post_data.get('pushover_token', None)
                 self.pushover_api_key = post_data.get('pushover_key', None)
-                self.system_status_notifications = post_data.get('status_notifications', None)
+                self.system_status_notifications = post_data.get('status_notifications', True)
+                self.general_notifications = post_data.get('general_notifications', True)
+                self.security_code_notifications = post_data.get('security_code_notifications', True)
                 self.config.set_entry("pushover", "app_token", self.pushover_app_token)
                 self.config.set_entry("pushover", "api_key", self.pushover_api_key)
                 self.config.set_entry("pushover", "system_status_notifications", self.system_status_notifications)
+                self.config.set_entry("pushover", "general_notifications", self.general_notifications)
+                self.config.set_entry("pushover", "security_code_notifications", self.security_code_notifications)
                 await self.config.write_async()
                 self.alert_text = "Pushover settings updated."
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
@@ -308,7 +324,7 @@ class WebServer:
     
         form = f"""<h2>Detection Settings</h2>
         <p>The settings below control how the SecureMe system detects movement.</p>
-        <p><form method="POST" action="/update_detection_settings">
+        <form method="POST" action="/update_detection_settings">
             <p>Select the types of motion you want to detect."</p>
             <label for="detect_motion">Enable Motion Detection</label>
             <input type="checkbox" id="detect_motion" name="detect_motion" {detect_motion_checked}><br>
@@ -327,7 +343,7 @@ class WebServer:
             <label for="arming_cooldown">Arming Cooldown Time (Sec):</label>
             <input type="number" id="arming_cooldown" name="arming_cooldown" minlength=1 maxlength=2 value="{self.arming_cooldown}" required><br>
             <input type="submit" value="Save Settings">
-        </form></p>
+        </form><br>
         """
 
         return self.html_template("Detection Settings", form)
@@ -336,34 +352,42 @@ class WebServer:
         """Serves the change password form.""" 
         form = f"""<h2>Change Administrator Password</h2>
         <p>To change the administrator password, enter a new password below.</p>
-        <p><form method="POST" action="/update_password">
+        <form method="POST" action="/update_password">
             <label for="password">New Admin Password:</label>
             <input type="password" id="password" name="password" required><br>
             <input type="submit" value="Update Password">
-        </form></p>
+        </form><br>
         """
         return self.html_template("Change Admin Password", form)
 
     def serve_change_pushover_form(self):
         """Serves the change Pushover Settings form with the current credentials pre-populated."""
         status_notifications_checked = 'checked' if self.system_status_notifications else ''
+        general_notifications_checked = 'checked' if self.general_notifications else ''
+        security_code_notifications_checked = 'checked' if self.security_code_notifications else ''
 
         form = f"""<h2>Change Pushover Settings</h2>
-        <p>In order to receive system status notifications and use silent alarms, you must specify Pushover API credentials.<br>
-        The Pushover app token identifies your application with Pushover.<br>
-        The Pushover API key enables the SecureMe firmware to send push notifications when the alarm is triggered.</p>
         <p>To register an application and obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
         Sign up for an account and register an application to obtain a token, and a device to obtain a key.</p>
-        <p><form method="POST" action="/update_pushover">
+        <form method="POST" action="/update_pushover">
+        <p>In order to receive system status notifications and use silent alarms, you must specify Pushover API credentials.<br>
+        The Pushover app token identifies your application with Pushover.<br>
+        The Pushover API key enables the SecureMe firmware to send push notifications.</p>
+        <p>Specify your Pushover API credentials below.</p>
             <label for="pushover_token">Pushover App Token:</label>
             <input type="text" id="pushover_token" name="pushover_token" value="{self.pushover_app_token}" required><br>
             <label for="pushover_key">Pushover API Key:</label>
             <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required><br>
-            Specify additional settings below.<br>
+            <p>SecureMe can send system status notifications to keep you informed about how the system is operating.</p>
             <label for="status_notifications">Enable System Status Notifications</label>
             <input type="checkbox" id="status_notifications" name="status_notifications" {status_notifications_checked}><br>
+            <p>Specify which status notifications you want to receive.</p>
+            <label for="general_notifications">General Notifications</label>
+            <input type="checkbox" id="general_notifications" name="general_notifications" {general_notifications_checked}>
+            <label for="security_code_notifications">Security Code Entry Notifications</label>
+            <input type="checkbox" id="security_code_notifications" name="security_code_notifications" {security_code_notifications_checked}>
             <input type="submit" value="Save">
-        </form></p>
+        </form><br>
         """
         return self.html_template("Change Pushover API Key", form)
 
@@ -372,11 +396,11 @@ class WebServer:
         form = f"""<h2>Change Security Code</h2>
         <p>The system security code is required to arm or disarm the system.<br>
         You should change this from the default value of "0000".</p>
-        <p><form method="POST" action="/update_security_code">
+        <form method="POST" action="/update_security_code">
             <label for="security_code">New Security Code:</label>
             <input type="number" id="security_code" name="security_code" minlength={self.security_code_min_length} maxlength={self.security_code_max_length} value="{self.security_code}" required><br>
             <input type="submit" value="Update Security Code">
-        </form></p>
+        </form><br>
         """
         return self.html_template("Change System Security Code", form)
 
@@ -386,9 +410,9 @@ class WebServer:
         <p>If you recently made configuration changes and want to restart the SecureMe system, you can do so here.<br>
         Restarting the system will not affect any configuration settings.</p>
         <p>To reboot the SecureMe system, click "Reboot" below.</p>
-        <p><form method="POST" action="/reboot_device">
+        <form method="POST" action="/reboot_device">
             <input type="submit" value="Reboot Device">
-        </form></p>
+        </form><br>
         """
         return self.html_template("Reboot Device", form)
 
@@ -397,12 +421,12 @@ class WebServer:
         form = f"""<h2>Reset SecureMe Firmware</h2>
         <p>If you are having trouble with your SecureMe security system you can try resetting the firmware.<br>
         Resetting the firmware will clear all current configuration data.</p>
+        <form method="POST" action="/reset_firmware">
         <p>To reset the device, type "secureme" in the box below.</p>
-        <p><form method="POST" action="/reset_firmware">
             <label for="reset_confirmation">Reset Confirmation:</label>
             <input type="text" id="reset_confirmation" name="reset_confirmation" required><br>
             <input type="submit" value="Reset Device">
-        </form></p>
+        </form><br>
         """
         return self.html_template("Reset SecureMe Firmware", form)
 
