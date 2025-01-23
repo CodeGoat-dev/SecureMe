@@ -132,6 +132,7 @@ class WebServer:
             - priority: The notification priority (0-2).
             - timeout: The request timeout in seconds.
             """
+        await asyncio.sleep(0)
         url = "https://api.pushover.net/1/messages.json"
 
         self.pushover_app_token = self.config.get_entry("pushover", "app_token")

@@ -749,6 +749,8 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
 
     global pushover_app_token, pushover_api_key
 
+    await asyncio.sleep(0)
+
     if not utils.isPicoW():
         print("Unsupported device.")
         return
@@ -808,6 +810,8 @@ async def send_system_status_notification(status_message):
     - status_message: The message to send.
     """
     global pushover_app_token, pushover_api_key
+
+    await asyncio.sleep(0)
 
     if not status_message:
         print("A status message is required.")
