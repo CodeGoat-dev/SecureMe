@@ -174,7 +174,7 @@ class WebServer:
 
             # Handle authentication
             if not self.authenticate(request):
-                response = "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"SecureMe\"\r\n\r\nUnauthorized"
+                response = "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"SecureMe\"\r\n\r\n" + self.serveUnauthorized()
                 writer.write(response.encode())
                 await writer.drain()
                 return
@@ -297,6 +297,15 @@ class WebServer:
                 post_data[key] = value  # Store the key-value pair in the dictionary
         return post_data
 
+    def serve_unauthorized(self):
+        """Serves the web server unauthorized page."""
+        body = """<p>Unable to access the SecureMe web nterface.<br>
+        Please check your credentials and try again.</p>
+        <h2>System Recovery</h2>
+        <p>If you are unable to access the web interface, perform a configuration reset using the SecureMe console.</p>
+        """
+        return self.html_template("Unauthorized", body)
+
     def serve_index(self):
         """Serves the web server index page."""
         body = """<p>Welcome to the Goat - SecureMe - Portable Security System.<br>
@@ -389,7 +398,7 @@ class WebServer:
             <input type="submit" value="Save">
         </form><br>
         """
-        return self.html_template("Change Pushover API Key", form)
+        return self.html_template("Change Pushover Settings", form)
 
     def serve_change_security_code_form(self):
         """Serves the change security code form with the current key pre-populated.""" 
