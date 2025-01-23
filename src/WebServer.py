@@ -10,6 +10,7 @@ import machine
 import network
 import uasyncio as asyncio
 import uos
+import urequests
 import utime
 import ubinascii
 from ConfigManager import ConfigManager
@@ -47,6 +48,7 @@ class WebServer:
         self.system_status_notifications = True
         self.general_notifications = True
         self.security_code_notifications = True
+        self.web_interface_notifications = True
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
         self.security_code = "0000"
@@ -103,6 +105,11 @@ class WebServer:
             self.security_code_notifications = True
             self.config.set_entry("pushover", "security_code_notifications", self.security_code_notifications)
             await self.config.write_async()
+        self.web_interface_notifications = self.config.get_entry("pushover", "web_interface_notifications")
+        if not isinstance(self.web_interface_notifications, bool):
+            self.web_interface_notifications = True
+            self.config.set_entry("pushover", "web_interface_notifications", self.web_interface_notifications)
+            await self.config.write_async()
         self.security_code = self.config.get_entry("security", "security_code")
         if not isinstance(self.security_code, str):
             self.security_code = self.default_security_code
@@ -115,6 +122,93 @@ class WebServer:
             await self.config.write_async()
 
         self.config_watcher = asyncio.create_task(self.config.start_watching())
+
+    async def send_pushover_notification(self, title="Goat - SecureMe", message="Testing", priority=0, timeout=5):
+        """Send push notifications using Pushover.
+
+            Args:
+            - title: The title for the notification.
+            - message: The message to send.
+            - priority: The notification priority (0-2).
+            - timeout: The request timeout in seconds.
+            """
+        url = "https://api.pushover.net/1/messages.json"
+
+        self.pushover_app_token = self.config.get_entry("pushover", "app_token")
+
+        if not self.pushover_app_token:
+            print("A Pushover app token is required to send push notifications.")
+            return
+
+        self.pushover_api_key = self.config.get_entry("pushover", "api_key")
+
+        if not self.pushover_api_key:
+            print("A Pushover API key is required to send push notifications.")
+            return
+
+        data_dict = {
+            "token": self.pushover_app_token,
+            "user": self.pushover_api_key,
+            "message": message,
+            "priority": priority,
+            "title": title
+        }
+        data = self.urlencode(data_dict).encode("utf-8")
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+        for attempt in range(3):  # Retry up to 3 times
+            try:
+                print(f"Attempt {attempt + 1}: Sending notification...")
+                response = urequests.post(url, data=data, headers=headers, timeout=timeout)
+
+                if response.status_code == 200:
+                    print("Notification sent successfully!")
+                    print("Response:", response.text)
+                    return
+                else:
+                    print(f"Failed to send notification. Status code: {response.status_code}")
+            except Exception as e:
+                print(f"Error sending notification (Attempt {attempt + 1}): {e}")
+            finally:
+                if 'response' in locals():
+                    response.close()
+                await asyncio.sleep(0.5)  # Slight delay before retrying
+
+        print("All attempts to send notification failed.")
+
+    async def send_system_status_notification(self, status_message):
+        """Sends a system status notification via Pushover.
+
+        Args:
+        - status_message: The message to send.
+        """
+        await asyncio.sleep(0)
+        if not status_message:
+            print("A status message is required.")
+            return
+
+        if utils.isPicoW():
+            try:
+                self.pushover_app_token = self.config.get_entry("pushover", "app_token")
+
+                if not self.pushover_app_token:
+                    return
+
+                self.pushover_api_key = self.config.get_entry("pushover", "api_key")
+
+                if not self.pushover_api_key:
+                    return
+
+                self.system_status_notifications = self.config.get_entry("pushover", "system_status_notifications")
+
+                if self.system_status_notifications:
+                    asyncio.create_task(self.send_pushover_notification(message=status_message))
+            except Exception as e:
+                print(f"Unable to send system status notification: {e}")
+
+    def urlencode(self, data):
+        """Encode a dictionary into a URL-encoded string."""
+        return "&".join(f"{key}={value}" for key, value in data.items())
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
@@ -176,6 +270,9 @@ class WebServer:
             if not self.authenticate(request):
                 response = "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"SecureMe\"\r\n\r\n" + self.serveUnauthorized()
                 writer.write(response.encode())
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Web interface authorisation error."))
                 await writer.drain()
                 return
 
@@ -214,6 +311,9 @@ class WebServer:
                 self.config.set_entry("security", "arming_cooldown", self.arming_cooldown)
                 await self.config.write_async()
                 self.alert_text = "Detection settings updated."
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Detection settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_pushover" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -223,13 +323,18 @@ class WebServer:
                 self.system_status_notifications = post_data.get('status_notifications', True)
                 self.general_notifications = post_data.get('general_notifications', True)
                 self.security_code_notifications = post_data.get('security_code_notifications', True)
+                self.web_interface_notifications = post_data.get('web_interface_notifications', True)
                 self.config.set_entry("pushover", "app_token", self.pushover_app_token)
                 self.config.set_entry("pushover", "api_key", self.pushover_api_key)
                 self.config.set_entry("pushover", "system_status_notifications", self.system_status_notifications)
                 self.config.set_entry("pushover", "general_notifications", self.general_notifications)
                 self.config.set_entry("pushover", "security_code_notifications", self.security_code_notifications)
+                self.config.set_entry("pushover", "web_interface_notifications", self.web_interface_notifications)
                 await self.config.write_async()
                 self.alert_text = "Pushover settings updated."
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Pushover settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_security_code" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -238,6 +343,9 @@ class WebServer:
                 self.config.set_entry("security", "security_code", self.security_code)
                 await self.config.write_async()
                 self.alert_text = "System security code updated."
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="System security code updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_password" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -246,10 +354,16 @@ class WebServer:
                 self.config.set_entry("server", "admin_password", self.admin_password)
                 await self.config.write_async()
                 self.alert_text = "Web administration password updated."
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Web administration password updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /reboot_device" in request:
                 content = request.split("\r\n\r\n")[1]
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="System rebooting."))
                 machine.reset()
             elif "POST /reset_firmware" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -264,6 +378,9 @@ class WebServer:
                     if self.network_config_file in uos.listdir(self.config_directory):
                         uos.remove(f"{self.config_directory}/{self.network_config_file}")
                     uos.rmdir(self.config_directory)
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Configuration reset to factory defaults."))
                     machine.reset()
             else:
                 response = "HTTP/1.1 404 Not Found\r\n\r\nNot Found"
@@ -374,6 +491,7 @@ class WebServer:
         status_notifications_checked = 'checked' if self.system_status_notifications else ''
         general_notifications_checked = 'checked' if self.general_notifications else ''
         security_code_notifications_checked = 'checked' if self.security_code_notifications else ''
+        web_interface_notifications_checked = 'checked' if self.web_interface_notifications else ''
 
         form = f"""<h2>Change Pushover Settings</h2>
         <p>To register an application and obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
@@ -392,9 +510,11 @@ class WebServer:
             <input type="checkbox" id="status_notifications" name="status_notifications" {status_notifications_checked}><br>
             <p>Specify which status notifications you want to receive.</p>
             <label for="general_notifications">General Notifications</label>
-            <input type="checkbox" id="general_notifications" name="general_notifications" {general_notifications_checked}>
+            <input type="checkbox" id="general_notifications" name="general_notifications" {general_notifications_checked}><br>
             <label for="security_code_notifications">Security Code Entry Notifications</label>
-            <input type="checkbox" id="security_code_notifications" name="security_code_notifications" {security_code_notifications_checked}>
+            <input type="checkbox" id="security_code_notifications" name="security_code_notifications" {security_code_notifications_checked}><br>
+            <label for="web_interface_notifications">Web Interface Entry Notifications</label>
+            <input type="checkbox" id="web_interface_notifications" name="web_interface_notifications" {web_interface_notifications_checked}><br>
             <input type="submit" value="Save">
         </form><br>
         """
