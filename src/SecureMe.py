@@ -1335,9 +1335,6 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
 
         # Correct code
         print("Access granted.")
-        if system_status_notifications:
-            if security_code_notifications:
-                asyncio.create_task(send_system_status_notification(status_message="Access granted."))
         return True  # Success
     return False  # Max attempts exceeded
 
