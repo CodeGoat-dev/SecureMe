@@ -1470,6 +1470,16 @@ async def validate_config():
                 admin_password = default_admin_password
                 config.set_entry("server", "admin_password", admin_password)
                 await config.write_async()
+
+        # Conditionally disable settings which require internet access
+        if not utils.isPicoW():
+            pushover_app_token = None
+            pushover_api_key = None
+            system_status_notifications = False
+            general_notifications = False
+            security_code_notifications = False
+            web_interface_notifications = False
+            admin_password = default_admin_password
     except Exception as e:
         print(f"Error in validate_config: {e}")
 
