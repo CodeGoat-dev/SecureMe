@@ -26,6 +26,8 @@ SecureMe can still be executed from source, however it is recommended to build b
 
 Renamed the **Pushover Credentials** page to **Pushover Settings** and added the new **System Notifications** settings.
 
+Improved HTTP401 Unauthorized errors to provide more information.
+
 #### Pico Network Manager
 
 Updated Pico Network Manager to v1.0.1.
