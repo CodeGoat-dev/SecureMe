@@ -32,6 +32,10 @@ Improved HTTP401 Unauthorized and HTTP400 Not Found errors to provide more infor
 
 Implemented system status notifications support to send notifications when configuration changes are made.
 
+#### Configuration
+
+Implemented conditional checking for Pico W specific configuration settings. When running on Pico, these settings will not be checked.
+
 #### Pico Network Manager
 
 Updated Pico Network Manager to v1.0.1.

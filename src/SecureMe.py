@@ -1444,40 +1444,32 @@ async def validate_config():
             config.set_entry("security", "security_code", security_code)
             await config.write_async()
 
-        system_status_notifications = config.get_entry("pushover", "system_status_notifications")
-
-        if not isinstance(system_status_notifications, bool):
-            system_status_notifications = True
-            config.set_entry("pushover", "system_status_notifications", system_status_notifications)
-            await config.write_async()
-
-        general_notifications = config.get_entry("pushover", "general_notifications")
-
-        if not isinstance(general_notifications, bool):
-            general_notifications = True
-            config.set_entry("pushover", "general_notifications", general_notifications)
-            await config.write_async()
-
-        security_code_notifications = config.get_entry("pushover", "security_code_notifications")
-
-        if not isinstance(security_code_notifications, bool):
-            security_code_notifications = True
-            config.set_entry("pushover", "security_code_notifications", security_code_notifications)
-            await config.write_async()
-
-        web_interface_notifications = config.get_entry("pushover", "web_interface_notifications")
-
-        if not isinstance(web_interface_notifications, bool):
-            web_interface_notifications = True
-            config.set_entry("pushover", "web_interface_notifications", web_interface_notifications)
-            await config.write_async()
-
-        admin_password = config.get_entry("server", "admin_password")
-
-        if not isinstance(admin_password, str):
-            admin_password = default_admin_password
-            config.set_entry("server", "admin_password", admin_password)
-            await config.write_async()
+        if utils.isPicoW():
+            system_status_notifications = config.get_entry("pushover", "system_status_notifications")
+            if not isinstance(system_status_notifications, bool):
+                system_status_notifications = True
+                config.set_entry("pushover", "system_status_notifications", system_status_notifications)
+                await config.write_async()
+            general_notifications = config.get_entry("pushover", "general_notifications")
+            if not isinstance(general_notifications, bool):
+                general_notifications = True
+                config.set_entry("pushover", "general_notifications", general_notifications)
+                await config.write_async()
+            security_code_notifications = config.get_entry("pushover", "security_code_notifications")
+            if not isinstance(security_code_notifications, bool):
+                security_code_notifications = True
+                config.set_entry("pushover", "security_code_notifications", security_code_notifications)
+                await config.write_async()
+            web_interface_notifications = config.get_entry("pushover", "web_interface_notifications")
+            if not isinstance(web_interface_notifications, bool):
+                web_interface_notifications = True
+                config.set_entry("pushover", "web_interface_notifications", web_interface_notifications)
+                await config.write_async()
+            admin_password = config.get_entry("server", "admin_password")
+            if not isinstance(admin_password, str):
+                admin_password = default_admin_password
+                config.set_entry("server", "admin_password", admin_password)
+                await config.write_async()
     except Exception as e:
         print(f"Error in validate_config: {e}")
 
