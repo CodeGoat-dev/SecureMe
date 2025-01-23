@@ -238,6 +238,8 @@ async def alarm(message):
         """
     global alarm_active, alarm_sound, entering_security_code
 
+    await asyncio.sleep(0)  # Yield control to the event loop
+
     if not message:
         return
 
