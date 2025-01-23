@@ -133,6 +133,7 @@ class WebServer:
             - timeout: The request timeout in seconds.
             """
         await asyncio.sleep(0)
+
         url = "https://api.pushover.net/1/messages.json"
 
         self.pushover_app_token = self.config.get_entry("pushover", "app_token")
@@ -184,28 +185,28 @@ class WebServer:
         - status_message: The message to send.
         """
         await asyncio.sleep(0)
+
         if not status_message:
             print("A status message is required.")
             return
 
-        if utils.isPicoW():
-            try:
-                self.pushover_app_token = self.config.get_entry("pushover", "app_token")
+        try:
+            self.pushover_app_token = self.config.get_entry("pushover", "app_token")
 
-                if not self.pushover_app_token:
-                    return
+            if not self.pushover_app_token:
+                return
 
-                self.pushover_api_key = self.config.get_entry("pushover", "api_key")
+            self.pushover_api_key = self.config.get_entry("pushover", "api_key")
 
-                if not self.pushover_api_key:
-                    return
+            if not self.pushover_api_key:
+                return
 
-                self.system_status_notifications = self.config.get_entry("pushover", "system_status_notifications")
+            self.system_status_notifications = self.config.get_entry("pushover", "system_status_notifications")
 
-                if self.system_status_notifications:
-                    asyncio.create_task(self.send_pushover_notification(message=status_message))
-            except Exception as e:
-                print(f"Unable to send system status notification: {e}")
+            if self.system_status_notifications:
+                asyncio.create_task(self.send_pushover_notification(message=status_message))
+        except Exception as e:
+            print(f"Unable to send system status notification: {e}")
 
     def urlencode(self, data):
         """Encode a dictionary into a URL-encoded string."""
@@ -270,10 +271,10 @@ class WebServer:
             # Handle authentication
             if not self.authenticate(request):
                 response = "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"SecureMe\"\r\n\r\n" + self.serveUnauthorized()
-                writer.write(response.encode())
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
                         asyncio.create_task(self.send_system_status_notification(status_message="Web interface authorisation error."))
+                writer.write(response.encode())
                 await writer.drain()
                 return
 
@@ -384,7 +385,7 @@ class WebServer:
                         asyncio.create_task(self.send_system_status_notification(status_message="Configuration reset to factory defaults."))
                     machine.reset()
             else:
-                response = "HTTP/1.1 404 Not Found\r\n\r\nNot Found"
+                response = "HTTP/1.1 404 Not Found\r\n\r\n" + self.serve_error()
 
             # Send the response
             writer.write(response.encode())
@@ -417,10 +418,17 @@ class WebServer:
 
     def serve_unauthorized(self):
         """Serves the web server unauthorized page."""
-        body = """<p>Unable to access the SecureMe web nterface.<br>
-        Please check your credentials and try again.</p>
+        body = """<p>Unable to access the SecureMe web interface using the credentials you provided.<br>
+        Please check your access credentials and try again.</p>
         <h2>System Recovery</h2>
-        <p>If you are unable to access the web interface, perform a configuration reset using the SecureMe console.</p>
+        <p>If you are unable to access the web interface due to lost credentials, perform a configuration reset using the SecureMe console.</p>
+        """
+        return self.html_template("Unauthorized", body)
+
+    def serve_error(self):
+        """Serves the web server error page."""
+        body = """<p>The page you requested does not exist.<br>
+        <a href="/">Home</a></p>
         """
         return self.html_template("Unauthorized", body)
 
