@@ -65,13 +65,13 @@ SecureMe comes packed with the following features:
   Set cooldown times for connected sensors to prevent redundant triggers.
 
 - **Push Notifications**  
-  Configure Pushover API credentials to receive push notifications for system events or silent alarms.
+  Configure Pushover API credentials to receive push notifications for system events and silent alarms.
 
 - **Silent Alarm**  
   Enable silent alarm mode to receive push notifications without sounding a physical alarm.
 
 - **Automatic Update**  
-  Automatically receive firmware updates when available.
+  Automatically receive firmware updates when available. Currently disabled.
 
 - **Firmware Reset**  
   Easily reset firmware configuration via the SecureMe device or web interface.
@@ -153,6 +153,7 @@ If you want to build the **SecureMe** system yourself, follow the instructions p
 - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
 - Login with the username **admin** and password **secureme** and change the password.
 - You can configure detection settings as well as Pushover notification settings for system and alarm notifications.
+- You can additionally modify the web administration password and system security code.
 
 ---
 
