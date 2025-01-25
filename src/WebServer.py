@@ -522,7 +522,7 @@ class WebServer:
             <input type="checkbox" id="general_notifications" name="general_notifications" {general_notifications_checked}><br>
             <label for="security_code_notifications">Security Code Entry Notifications</label>
             <input type="checkbox" id="security_code_notifications" name="security_code_notifications" {security_code_notifications_checked}><br>
-            <label for="web_interface_notifications">Web Interface Entry Notifications</label>
+            <label for="web_interface_notifications">Web Interface Notifications</label>
             <input type="checkbox" id="web_interface_notifications" name="web_interface_notifications" {web_interface_notifications_checked}><br>
             <input type="submit" value="Save">
         </form><br>
