@@ -45,10 +45,10 @@ class WebServer:
         self.default_arming_cooldown = 10
         self.pushover_app_token = None
         self.pushover_api_key = None
-        self.system_status_notifications = True
-        self.general_notifications = True
-        self.security_code_notifications = True
-        self.web_interface_notifications = True
+        self.system_status_notifications = None
+        self.general_notifications = None
+        self.security_code_notifications = None
+        self.web_interface_notifications = None
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
         self.security_code = "0000"
