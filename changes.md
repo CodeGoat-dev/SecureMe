@@ -38,7 +38,7 @@ Implemented conditional checking for Pico W specific configuration settings. Whe
 
 #### Pico Network Manager
 
-Updated Pico Network Manager to v1.0.1.
+Updated Pico Network Manager to v1.0.2.
 
 #### Automatic Update
 
