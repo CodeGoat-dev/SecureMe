@@ -151,7 +151,7 @@ If you want to build the **SecureMe** system yourself, follow the instructions p
 - Use a network scanner to locate the new device on your network and make a note of the IP address.
 - Access the web interface using the device's IP address to configure and customize settings.
 - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
-- Login with the username **admin** and password **secureme** and change the password.
+- Login with the username **"admin"** and password **"secureme"** and change the password.
 - You can configure detection settings as well as Pushover notification settings for system and alarm notifications.
 - You can additionally modify the web administration password and system security code.
 
@@ -166,7 +166,7 @@ The only other buttons on the board are the buzzer volume buttons.
 
 1. **Arming And Disarming**
    - Press the arm button at the bottom of the breadboard. You will hear a bell.
-   - Type the default security code **0000** using the matrix keypad and press **hash**.
+   - Type the default security code **"0000"** using the matrix keypad and press **hash**.
    - A bell will sound for 10 sec and the system will be armed or disarmed.
    - You can tell if the system was armed or disarmed via the indicator after the bell.
    - The armed indicator will flash the system LED every second to indicate that the system is armed.
@@ -186,15 +186,15 @@ The only other buttons on the board are the buzzer volume buttons.
    - You can switch alarm modes if you have registered a **Pushover** app token and API key via the web interface.
    - Press the **A** key to unlock the keypad.
    - Press the **B** key to switch alarm modes.
-   - Type your security code **default 0000** and press **hash**.
+   - Type your security code **default "0000"** and press **hash**.
    - The Pushover API key will be validated and the alarm mode will switch between active and silent.
    - Press the **A** key to lock the keypad again.
 
 6. **Changing The Security Code**
-   - You should change the security code **default 0000** to keep the system secure.
+   - You should change the security code **default "0000"** to keep the system secure.
    - Press the **A** key to unlock the keypad.
    - Press the **C** key to change the security code.
-   - Type your current security code **default 0000** and press **hash**.
+   - Type your current security code **default "0000"** and press **hash**.
    - Type a new security code between 4 and 8 digits and press **hash** if the code is less than 8 digits.
    - Confirm the new security code and press **hash** if the code is less than 8 digits.
    - The security code will now be changed.
@@ -204,7 +204,7 @@ The only other buttons on the board are the buzzer volume buttons.
    - Resetting the configuration will return all settings to factory defaults.
    - Press the **A** key to unlock the keypad.
    - Press the **D** key to reset the configuration.
-   - Type your security code **default 0000** and press **hash**.
+   - Type your security code **default "0000"** and press **hash**.
    - Retype your security code and press **hash**.
    - The configuration will reset after 10 seconds, indicated by a low pitch bell.
    - The system will restart to complete the configuration reset.
