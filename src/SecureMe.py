@@ -1528,7 +1528,7 @@ async def main():
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = WebServer()
-        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", sta_web_server=web_server)
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=True, sta_web_server=web_server)
         updater = GitHubUpdater(current_version="{VERSION}", repo_url=REPO_URL, update_interval=1800, auto_reboot=True)
 
     await system_startup()
