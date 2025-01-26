@@ -6,6 +6,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### New Features
 
+#### Time Synchronisation
+
+The system date and time are now automatically synchronised when connected to the internet.
+
 #### System Notifications
 
 SecureMe can now send system notifications via **Pushover** for various system events including initialization, arming/disarming, alarm mode switching, security code changes and configuration reset.
@@ -38,7 +42,7 @@ Implemented conditional checking for Pico W specific configuration settings. Whe
 
 #### Pico Network Manager
 
-Updated Pico Network Manager to v1.0.2.
+Updated Pico Network Manager to v1.0.3.
 
 #### Automatic Update
 

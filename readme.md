@@ -58,6 +58,9 @@ SecureMe comes packed with the following features:
 - **Network Connectivity**  
   Connect to Wi-Fi networks using a captive portal for seamless setup.
 
+- **Time Synchronisation**  
+  Automatic date and time synchronisation when connected to the internet.
+
 - **Web Interface**  
   Configure and manage SecureMe through a user-friendly, password-protected web interface.
 
