@@ -8,7 +8,7 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 #### Time Synchronisation
 
-The system date and time are now automatically synchronised when connected to the internet.
+The system date and time is now automatically synchronised via an internally hosted API when connected to the internet.
 
 #### System Notifications
 
@@ -42,7 +42,7 @@ Implemented conditional checking for Pico W specific configuration settings. Whe
 
 #### Pico Network Manager
 
-Updated Pico Network Manager to v1.0.3.
+Updated Pico Network Manager to v1.0.4.
 
 #### Automatic Update
 
