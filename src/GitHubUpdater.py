@@ -34,7 +34,7 @@ class GitHubUpdater:
         """Checks for updates from GitHub."""
         url = f"{self.repo_url}/releases/latest"
         try:
-            print("Checking for updates...")
+            print("Checking for firmware updates...")
             response = urequests.get(url, headers=self.headers, timeout=10)
             if response.status_code == 200:
                 release_data = response.json()
@@ -46,16 +46,18 @@ class GitHubUpdater:
                 contents_url = f"{self.repo_url}/contents/build?ref={self.latest_version}"
                 self.files_to_download = await self.get_files_in_directory(contents_url)
             else:
-                print(f"Failed to fetch release data: {response.status_code}")
+                print(f"Failed to fetch firmware release information: {response.status_code}")
             response.close()
         except Exception as e:
-            print(f"Error fetching update: {e}")
+            print(f"Error checking for firmware updates: {e}")
 
     async def get_files_in_directory(self, url):
         """Fetch the list of files in a given directory recursively."""
         files = []
+
         try:
             response = urequests.get(url, headers=self.headers, timeout=10)
+
             if response.status_code == 200:
                 contents = response.json()
                 for item in contents:
@@ -65,10 +67,11 @@ class GitHubUpdater:
                         sub_files = await self.get_files_in_directory(item['url'])
                         files.extend(sub_files)
             else:
-                print(f"Failed to fetch directory contents: {response.status_code}")
+                print(f"Failed to fetch update contents: {response.status_code}")
             response.close()
         except Exception as e:
-            print(f"Error fetching directory contents: {e}")
+            print(f"Error fetching update contents: {e}")
+
         return files
 
     async def download_update(self):
@@ -77,22 +80,22 @@ class GitHubUpdater:
             print("No files to download.")
             return
 
-        print(f"Downloading {len(self.files_to_download)} files using MIP...")
+        print(f"Installing firmware update...")
 
         try:
             for file_info in self.files_to_download:
                 download_url = file_info["url"]
-                print(f"Installing {download_url} via MIP...")
+                print(f"Installing dependency: {download_url}...")
 
                 try:
                     mip.install(download_url, target="/")
-                    print(f"Successfully installed {download_url}")
+                    print(f"Successfully installed dependency: {download_url}")
                 except Exception as e:
-                    print(f"Failed to install {download_url}: {e}")
+                    print(f"Failed to install dependency: {download_url}: {e}")
         
-            print("All updates downloaded successfully.")
+            print("All dependencies installed successfully.")
         except Exception as e:
-            print(f"Error during MIP installation: {e}")
+            print(f"Error during firmware update installation: {e}")
 
     async def is_update_available(self):
         """Check if a firmware update is available for download."""
@@ -122,12 +125,12 @@ class GitHubUpdater:
         if await self.is_update_available():
             await self.download_update()
             self.current_version = self.latest_version
-            print(f"Update complete to version {self.current_version}")
+            print(f"Firmware update complete. Updated to version {self.current_version}")
             if self.auto_reboot:
-                print("Restarting...")
+                print("Restarting system...")
                 machine.reset()
         else:
-            print("No updates available.")
+            print("No firmware updates available.")
 
     async def run_periodically(self):
         """Periodically update device firmware from GitHub."""
