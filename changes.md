@@ -46,7 +46,7 @@ Updated Pico Network Manager to v1.0.4.
 
 #### Automatic Update
 
-Update files are now streamed to improve memory usage.
+Update files are now downloaded using MIP which is designed for installing modules and libraries.
 
 #### Notifications
 
