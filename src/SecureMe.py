@@ -1549,7 +1549,7 @@ async def main():
 
     if utils.isPicoW():
         tasks.append(asyncio.create_task(network_manager.run()))
-        # tasks.append(asyncio.create_task(updater.run_periodically()))  # Disabled due to memory constraints
+        tasks.append(asyncio.create_task(updater.run_periodically()))  # Disabled due to memory constraints
 
     # Run all tasks concurrently
     await asyncio.gather(*tasks)
