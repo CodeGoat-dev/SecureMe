@@ -1529,7 +1529,7 @@ async def main():
     if utils.isPicoW():
         web_server = WebServer()
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=True, sta_web_server=web_server)
-        updater = GitHubUpdater(current_version="{VERSION}", repo_url=REPO_URL, update_interval=1800, auto_reboot=True)
+        updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=1800, auto_reboot=True)
 
     await system_startup()
 
@@ -1549,7 +1549,7 @@ async def main():
 
     if utils.isPicoW():
         tasks.append(asyncio.create_task(network_manager.run()))
-        tasks.append(asyncio.create_task(updater.run_periodically()))  # Disabled due to memory constraints
+        tasks.append(asyncio.create_task(updater.run_periodically()))
 
     # Run all tasks concurrently
     await asyncio.gather(*tasks)
