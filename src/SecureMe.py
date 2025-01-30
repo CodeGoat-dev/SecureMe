@@ -113,6 +113,7 @@ pushover_api_key = None
 system_status_notifications = True
 general_notifications = True
 security_code_notifications = True
+update_notifications = True
 web_interface_notifications = True
 
 keypad_locked = True
@@ -1390,7 +1391,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, admin_password
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, admin_password
 
     print("Validating firmware configuration...")
 
@@ -1464,6 +1465,11 @@ async def validate_config():
             if not isinstance(web_interface_notifications, bool):
                 web_interface_notifications = True
                 config.set_entry("pushover", "web_interface_notifications", web_interface_notifications)
+                await config.write_async()
+            update_notifications = config.get_entry("pushover", "update_notifications")
+            if not isinstance(update_notifications, bool):
+                update_notifications = True
+                config.set_entry("pushover", "update_notifications", update_notifications)
                 await config.write_async()
             admin_password = config.get_entry("server", "admin_password")
             if not isinstance(admin_password, str):
