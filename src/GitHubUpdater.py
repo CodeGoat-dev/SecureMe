@@ -53,6 +53,8 @@ class GitHubUpdater:
             self.config.set_entry("pushover", "update_notifications", self.update_notifications)
             await self.config.write_async()
 
+        self.config_watcher = asyncio.create_task(self.config.start_watching())
+
     def isNetworkConnected(self):
         """Check if the network interface is connected."""
         try:

@@ -8,6 +8,8 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 #### Automatic Update
 
+Implemented configuration watching to enable the automatic updater to keep track of configuration changes.
+
 Added a delay before rebooting after an update to give any notifications a chance to be sent.
 
 ## V1.2.3
