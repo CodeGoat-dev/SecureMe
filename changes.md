@@ -2,13 +2,21 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.2.3
+
+### Bug Fixes
+
+#### Automatic Update
+
+Fixes an incorrect configuration reference for update notifications.
+
 ## V1.2.2
 
 ### Bug Fixes
 
 #### Web Interface
 
-Fixed an invalid reference to the HTTP401 Unauthorized page which caused the web interface to be inaccessible.
+Fixes an invalid reference to the HTTP401 Unauthorized page which caused the web interface to be inaccessible.
 
 ## V1.2.1
 

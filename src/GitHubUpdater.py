@@ -1,6 +1,9 @@
 # Goat - GitHub Updater library
-# Version 1.1.0
+# Version 1.1.1
 # © (c) 2025 Goat Technologies
+# https://github.com/CodeGoat-dev/SecureMe
+# Description:
+# Provides automatic firmware update functionality for the Goat - SecureMe firmware.
 
 # Imports
 import machine
@@ -259,13 +262,13 @@ class GitHubUpdater:
         await self.check_for_update()
         if await self.is_update_available():
             if self.system_status_notifications:
-                if self.web_interface_notifications:
+                if self.update_notifications:
                     asyncio.create_task(self.send_system_status_notification(status_message=f"Firmware update available. Updating from {self.current_version} to {self.latest_version}"))
             await self.download_update()
             self.current_version = self.latest_version
             print(f"Firmware update complete. Updated to version {self.current_version}")
             if self.system_status_notifications:
-                if self.web_interface_notifications:
+                if self.update_notifications:
                     asyncio.create_task(self.send_system_status_notification(status_message=f"Firmware update complete. Updated to {self.latest_version}"))
             if self.auto_reboot:
                 print("Restarting system...")
