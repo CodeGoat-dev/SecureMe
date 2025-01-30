@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.1
+# Version 1.1.2
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -29,9 +29,6 @@ class GitHubUpdater:
         self.pushover_app_token = None
         self.pushover_api_key = None
         self.system_status_notifications = None
-        self.general_notifications = None
-        self.security_code_notifications = None
-        self.web_interface_notifications = None
         self.update_notifications = None
 
         self.headers = {"User-Agent": "GoatGitHubUpdater/1.1"}
@@ -49,21 +46,6 @@ class GitHubUpdater:
         if not isinstance(self.system_status_notifications, bool):
             self.system_status_notifications = True
             self.config.set_entry("pushover", "system_status_notifications", self.system_status_notifications)
-            await self.config.write_async()
-        self.general_notifications = self.config.get_entry("pushover", "general_notifications")
-        if not isinstance(self.general_notifications, bool):
-            self.general_notifications = True
-            self.config.set_entry("pushover", "general_notifications", self.general_notifications)
-            await self.config.write_async()
-        self.security_code_notifications = self.config.get_entry("pushover", "security_code_notifications")
-        if not isinstance(self.security_code_notifications, bool):
-            self.security_code_notifications = True
-            self.config.set_entry("pushover", "security_code_notifications", self.security_code_notifications)
-            await self.config.write_async()
-        self.web_interface_notifications = self.config.get_entry("pushover", "web_interface_notifications")
-        if not isinstance(self.web_interface_notifications, bool):
-            self.web_interface_notifications = True
-            self.config.set_entry("pushover", "web_interface_notifications", self.web_interface_notifications)
             await self.config.write_async()
         self.update_notifications = self.config.get_entry("pushover", "update_notifications")
         if not isinstance(self.update_notifications, bool):
@@ -269,9 +251,10 @@ class GitHubUpdater:
             print(f"Firmware update complete. Updated to version {self.current_version}")
             if self.system_status_notifications:
                 if self.update_notifications:
-                    asyncio.create_task(self.send_system_status_notification(status_message=f"Firmware update complete. Updated to {self.latest_version}"))
+                    asyncio.create_task(self.send_system_status_notification(status_message=f"Firmware update complete. Updated to {self.latest_version}."))
             if self.auto_reboot:
                 print("Restarting system...")
+                await asyncio.sleep(10)  # Delay before rebooting
                 machine.reset()
         else:
             print("No firmware updates available.")
