@@ -2,6 +2,18 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.2.1
+
+### Changes
+
+#### System Notifications
+
+SecureMe can now send system status notifications for firmware updates.
+
+#### Web Interface
+
+Added an option to enable/disable firmware update notifications.
+
 ## V1.2.0
 
 ### New Features
