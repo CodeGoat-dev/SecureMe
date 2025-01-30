@@ -49,6 +49,7 @@ class WebServer:
         self.general_notifications = None
         self.security_code_notifications = None
         self.web_interface_notifications = None
+        self.update_notifications = None
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
         self.security_code = "0000"
@@ -109,6 +110,11 @@ class WebServer:
         if not isinstance(self.web_interface_notifications, bool):
             self.web_interface_notifications = True
             self.config.set_entry("pushover", "web_interface_notifications", self.web_interface_notifications)
+            await self.config.write_async()
+        self.update_notifications = self.config.get_entry("pushover", "update_notifications")
+        if not isinstance(self.update_notifications, bool):
+            self.update_notifications = True
+            self.config.set_entry("pushover", "update_notifications", self.update_notifications)
             await self.config.write_async()
         self.security_code = self.config.get_entry("security", "security_code")
         if not isinstance(self.security_code, str):
@@ -326,12 +332,14 @@ class WebServer:
                 self.general_notifications = post_data.get('general_notifications', True)
                 self.security_code_notifications = post_data.get('security_code_notifications', True)
                 self.web_interface_notifications = post_data.get('web_interface_notifications', True)
+                self.update_notifications = post_data.get('update_notifications', True)
                 self.config.set_entry("pushover", "app_token", self.pushover_app_token)
                 self.config.set_entry("pushover", "api_key", self.pushover_api_key)
                 self.config.set_entry("pushover", "system_status_notifications", self.system_status_notifications)
                 self.config.set_entry("pushover", "general_notifications", self.general_notifications)
                 self.config.set_entry("pushover", "security_code_notifications", self.security_code_notifications)
                 self.config.set_entry("pushover", "web_interface_notifications", self.web_interface_notifications)
+                self.config.set_entry("pushover", "update_notifications", self.update_notifications)
                 await self.config.write_async()
                 self.alert_text = "Pushover settings updated."
                 if self.system_status_notifications:
@@ -501,6 +509,7 @@ class WebServer:
         general_notifications_checked = 'checked' if self.general_notifications else ''
         security_code_notifications_checked = 'checked' if self.security_code_notifications else ''
         web_interface_notifications_checked = 'checked' if self.web_interface_notifications else ''
+        update_notifications_checked = 'checked' if self.update_notifications else ''
 
         form = f"""<h2>Change Pushover Settings</h2>
         <p>To register an application and obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
@@ -524,6 +533,8 @@ class WebServer:
             <input type="checkbox" id="security_code_notifications" name="security_code_notifications" {security_code_notifications_checked}><br>
             <label for="web_interface_notifications">Web Interface Notifications</label>
             <input type="checkbox" id="web_interface_notifications" name="web_interface_notifications" {web_interface_notifications_checked}><br>
+            <label for="update_notifications">Firmware Update Notifications</label>
+            <input type="checkbox" id="update_notifications" name="update_notifications" {update_notifications_checked}><br>
             <input type="submit" value="Save">
         </form><br>
         """
