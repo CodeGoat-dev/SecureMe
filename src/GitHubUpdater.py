@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.2
+# Version 1.1.3
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -30,6 +30,9 @@ class GitHubUpdater:
         self.pushover_api_key = None
         self.system_status_notifications = None
         self.update_notifications = None
+        self.enable_auto_update = None
+       self.update_check_interval = None
+        self.default_update_check_interval = 30
 
         self.headers = {"User-Agent": "GoatGitHubUpdater/1.1"}
         self.latest_version = None
@@ -51,6 +54,16 @@ class GitHubUpdater:
         if not isinstance(self.update_notifications, bool):
             self.update_notifications = True
             self.config.set_entry("pushover", "update_notifications", self.update_notifications)
+            await self.config.write_async()
+        self.enable_auto_update = self.config.get_entry("update", "enable_auto_update")
+        if not isinstance(self.enable_auto_update, bool):
+            self.enable_auto_update = True
+            self.config.set_entry("update", "enable_auto_update", self.enable_auto_update)
+            await self.config.write_async()
+        self.update_check_interval = self.config.get_entry("update", "update_check_interval")
+        if not isinstance(self.update_check_interval, int):
+            self.update_check_interval = self.default_update_check_interval
+            self.config.set_entry("update", "update_check_interval", self.update_check_interval)
             await self.config.write_async()
 
         self.config_watcher = asyncio.create_task(self.config.start_watching())
@@ -273,5 +286,6 @@ class GitHubUpdater:
             if not self.isNetworkConnected():
                 print("The network is not currently connected. Retrying in 10 seconds.")
                 await asyncio.sleep(10)
-            await self.update()
-            await asyncio.sleep(self.update_interval)
+            if self.enable_auto_update:
+                await self.update()
+            await asyncio.sleep(self.update_check_interval)
