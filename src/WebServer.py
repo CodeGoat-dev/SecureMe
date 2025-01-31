@@ -497,7 +497,7 @@ class WebServer:
         form = f"""<h2>Detection Settings</h2>
         <p>The settings below control how the SecureMe system detects movement.</p>
         <form method="POST" action="/update_detection_settings">
-            <p>Select the types of motion you want to detect."</p>
+            <p>Select the types of motion you want to detect.</p>
             <label for="detect_motion">Enable Motion Detection</label>
             <input type="checkbox" id="detect_motion" name="detect_motion" {detect_motion_checked}><br>
             <label for="detect_tilt">Enable Tilt Detection</label>
