@@ -286,6 +286,11 @@ class GitHubUpdater:
             if not self.isNetworkConnected():
                 print("The network is not currently connected. Retrying in 10 seconds.")
                 await asyncio.sleep(10)
+
+            self.enable_auto_update = self.config.get_entry("update", "enable_auto_update")
+            self.update_check_interval = self.config.get_entry("update", "update_check_interval")
+
             if self.enable_auto_update:
                 await self.update()
+
             await asyncio.sleep(self.update_check_interval)
