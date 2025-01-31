@@ -2,6 +2,16 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.2.6
+
+### Bug Fixes
+
+#### Web Interface
+
+Fixed formatting issues on the **Detection Settings** page.
+
+Fixed unexpected authorization error notifications when authenticating.
+
 ## V1.2.5
 
 ### Changes
