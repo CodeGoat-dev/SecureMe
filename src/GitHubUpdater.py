@@ -31,7 +31,7 @@ class GitHubUpdater:
         self.system_status_notifications = None
         self.update_notifications = None
         self.enable_auto_update = None
-       self.update_check_interval = None
+        self.update_check_interval = None
         self.default_update_check_interval = 30
 
         self.headers = {"User-Agent": "GoatGitHubUpdater/1.1"}
