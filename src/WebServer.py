@@ -275,6 +275,11 @@ class WebServer:
                 return True
 
             print("Incorrect credentials.")
+
+            if self.system_status_notifications:
+                if self.web_interface_notifications:
+                    asyncio.create_task(self.send_system_status_notification(status_message="Web interface authorisation error."))
+
             return False
         except Exception as e:
             print(f"Authentication error: {e}")
@@ -290,9 +295,6 @@ class WebServer:
             # Handle authentication
             if not self.authenticate(request):
                 response = "HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm=\"SecureMe\"\r\n\r\n" + self.serve_unauthorized()
-                if self.system_status_notifications:
-                    if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Web interface authorisation error."))
                 writer.write(response.encode())
                 await writer.drain()
                 return
