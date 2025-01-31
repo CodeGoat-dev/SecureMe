@@ -116,6 +116,10 @@ security_code_notifications = True
 update_notifications = True
 web_interface_notifications = True
 
+enable_auto_update = True
+update_check_interval = 30
+default_update_check_interval = 30
+
 keypad_locked = True
 
 keypad_characters = [
@@ -1391,7 +1395,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, admin_password
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, admin_password, enable_auto_update, update_check_interval
 
     print("Validating firmware configuration...")
 
@@ -1476,6 +1480,16 @@ async def validate_config():
                 admin_password = default_admin_password
                 config.set_entry("server", "admin_password", admin_password)
                 await config.write_async()
+            enable_auto_update = config.get_entry("update", "enable_auto_update")
+            if not isinstance(enable_auto_update, bool):
+                enable_auto_update = True
+                config.set_entry("update", "enable_auto_update", enable_auto_update)
+                await config.write_async()
+            update_check_interval = config.get_entry("update", "update_check_interval")
+            if not isinstance(update_check_interval, int):
+                update_check_interval = default_update_check_interval
+                config.set_entry("update", "update_check_interval", update_check_interval)
+                await config.write_async()
 
         # Conditionally disable settings which require internet access
         if not utils.isPicoW():
@@ -1518,26 +1532,7 @@ async def system_shutdown():
 # Firmware entry point
 async def main():
     """Main coroutine to handle firmware services"""
-    global config, tasks
-
-    print(f"Welcome to Goat - SecureMe version {VERSION}.")
-
-    print("Initializing firmware...")
-
-    await check_config()
-
-    print("Loading firmware configuration...")
-
-    config = ConfigManager(config_directory, config_file)
-    await config.read_async()
-
-    # Instantiate network specific features
-    if utils.isPicoW():
-        web_server = WebServer()
-        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=True, sta_web_server=web_server)
-        updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=1800, auto_reboot=True)
-
-    await system_startup()
+    global tasks
 
     # Create task list
     tasks = [
@@ -1562,6 +1557,25 @@ async def main():
 
 # Startup and run
 try:
+    print(f"Welcome to Goat - SecureMe version {VERSION}.")
+
+    print("Initializing firmware...")
+
+    asyncio.run(check_config())
+
+    print("Loading firmware configuration...")
+
+    config = ConfigManager(config_directory, config_file)
+    asyncio.run(config.read_async())
+
+    # Instantiate network specific features
+    if utils.isPicoW():
+        web_server = WebServer()
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=True, sta_web_server=web_server)
+        updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval * 60, auto_reboot=True)
+
+    asyncio.run(system_startup())
+
     asyncio.run(main())
 except KeyboardInterrupt:
     print("Keyboard interupt detected.")
