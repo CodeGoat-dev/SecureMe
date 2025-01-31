@@ -56,6 +56,9 @@ class WebServer:
         self.default_security_code = "0000"
         self.security_code_min_length = 4
         self.security_code_max_length = 8
+        self.enable_auto_update = None
+        self.update_check_interval = None
+        self.default_update_check_interval = 30
 
         self.alert_text = None
 
@@ -125,6 +128,16 @@ class WebServer:
         if not isinstance(self.admin_password, str):
             self.admin_password = self.default_admin_password
             self.config.set_entry("server", "admin_password", self.admin_password)
+            await self.config.write_async()
+        self.enable_auto_update = self.config.get_entry("update", "enable_auto_update")
+        if not isinstance(self.enable_auto_update, bool):
+            self.enable_auto_update = True
+            self.config.set_entry("update", "enable_auto_update", self.enable_auto_update)
+            await self.config.write_async()
+        self.update_check_interval = self.config.get_entry("update", "update_check_interval")
+        if not isinstance(self.update_check_interval, int):
+            self.update_check_interval = self.default_update_check_interval
+            self.config.set_entry("update", "update_check_interval", self.update_check_interval)
             await self.config.write_async()
 
         self.config_watcher = asyncio.create_task(self.config.start_watching())
@@ -293,6 +306,8 @@ class WebServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_pushover_form()
             elif "GET /change_security_code" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_security_code_form()
+            elif "GET /auto_update_settings" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_auto_update_settings_form()
             elif "GET /reset_firmware" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reset_firmware_form()
             elif "GET /reboot_device" in request:
@@ -367,6 +382,19 @@ class WebServer:
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
                         asyncio.create_task(self.send_system_status_notification(status_message="Web administration password updated."))
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+            elif "POST /update_auto_update_settings" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                self.enable_auto_update = post_data.get('enable_auto_update', True)
+                self.update_check_interval = post_data.get('update_check_interval', self.default_update_check_interval)
+                self.config.set_entry("update", "enable_auto_update", self.enable_auto_update)
+                self.config.set_entry("update", "update_check_interval", self.update_check_interval)
+                await self.config.write_async()
+                self.alert_text = "Automatic update settings updated."
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Automatic update settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /reboot_device" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -451,6 +479,7 @@ class WebServer:
         <li><a href="/change_password">Change Admin Password</a><br></li>
         <li><a href="/change_pushover">Change Pushover Settings</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
+        <li><a href="/auto_update_settings">Automatic Update Settings</a></li>
         <li><a href="/reboot_device">Reboot Device</a></li>
         <li><a href="/reset_firmware">Reset Firmware</a></li>
         </ul></p>
@@ -552,6 +581,26 @@ class WebServer:
         </form><br>
         """
         return self.html_template("Change System Security Code", form)
+
+    def serve_auto_update_settings_form(self):
+        """Serves the automatic update settings form with the current settings pre-populated."""
+        enable_auto_update_checked = 'checked' if self.enable_auto_update else ''
+    
+        form = f"""<h2>Automatic Update Settings</h2>
+        <p>The settings below control how the SecureMe system checks for firmware updates.</p>
+        <form method="POST" action="/update_auto_update_settings">
+            <p>Choose whether to enable the automatic update feature.</p>
+            <label for="enable_auto_update">Enable Automatic Update</label>
+            <input type="checkbox" id="enable_auto_update" name="enable_auto_update" {enable_auto_update_checked}><br>
+            <p>After checking for updates when the system starts, SecureMe will wait for a specified duration before checking again.<br>
+            Specify how long in minutes to wait between update checks.</p>
+            <label for="update_check_interval">Update Check Interval (Min):</label>
+            <input type="number" id="update_check_interval" name="update_check_interval" minlength=1 maxlength=3 value="{self.update_check_interval}" required><br>
+            <input type="submit" value="Save Settings">
+        </form><br>
+        """
+
+        return self.html_template("Automatic Update Settings", form)
 
     def serve_reboot_device_form(self):
         """Serves the reboot device form.""" 
