@@ -2,6 +2,18 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.2.5
+
+### Changes
+
+#### Automatic Update
+
+Automatic update can now be enabled/disabled. The update interval is also customisable.
+
+#### Web Interface
+
+Added an **Automatic Update Settings** page to the web interface.
+
 ## V1.2.4
 
 ### Changes
