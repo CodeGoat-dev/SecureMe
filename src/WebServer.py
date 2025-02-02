@@ -59,6 +59,9 @@ class WebServer:
         self.enable_auto_update = None
         self.update_check_interval = None
         self.default_update_check_interval = 30
+        self.enable_time_sync = None
+        self.time_sync_server = "https://goatbot.org"
+        self.default_time_sync_server = "https://goatbot.org"
 
         self.alert_text = None
 
@@ -138,6 +141,16 @@ class WebServer:
         if not isinstance(self.update_check_interval, int):
             self.update_check_interval = self.default_update_check_interval
             self.config.set_entry("update", "update_check_interval", self.update_check_interval)
+            await self.config.write_async()
+        self.enable_time_sync = self.config.get_entry("time", "enable_time_sync")
+        if not isinstance(self.enable_time_sync, bool):
+            self.enable_time_sync = True
+            self.config.set_entry("time", "enable_time_sync", self.enable_time_sync)
+            await self.config.write_async()
+        self.time_sync_server = self.config.get_entry("time", "time_sync_server")
+        if not isinstance(self.time_sync_server, str):
+            self.time_sync_server = self.default_time_sync_server
+            self.config.set_entry("time", "time_sync_server", self.time_sync_server)
             await self.config.write_async()
 
         self.config_watcher = asyncio.create_task(self.config.start_watching())
@@ -310,6 +323,8 @@ class WebServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_security_code_form()
             elif "GET /auto_update_settings" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_auto_update_settings_form()
+            elif "GET /time_sync_settings" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_time_sync_settings_form()
             elif "GET /reset_firmware" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reset_firmware_form()
             elif "GET /reboot_device" in request:
@@ -398,6 +413,19 @@ class WebServer:
                     if self.web_interface_notifications:
                         asyncio.create_task(self.send_system_status_notification(status_message="Automatic update settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+            elif "POST /update_time_sync_settings" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                self.enable_time_sync = post_data.get('enable_time_sync', True)
+                self.time_sync_server = post_data.get('time_sync_server', self.default_time_sync_server)
+                self.config.set_entry("time", "enable_time_sync", self.enable_time_sync)
+                self.config.set_entry("time", "time_sync_server", self.time_sync_server)
+                await self.config.write_async()
+                self.alert_text = "Time synchronisation settings updated."
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Time synchronisation settings updated."))
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /reboot_device" in request:
                 content = request.split("\r\n\r\n")[1]
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
@@ -482,6 +510,7 @@ class WebServer:
         <li><a href="/change_pushover">Change Pushover Settings</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
         <li><a href="/auto_update_settings">Automatic Update Settings</a></li>
+        <li><a href="/time_sync_settings">Time Synchronisation Settings</a></li>
         <li><a href="/reboot_device">Reboot Device</a></li>
         <li><a href="/reset_firmware">Reset Firmware</a></li>
         </ul></p>
@@ -603,6 +632,28 @@ class WebServer:
         """
 
         return self.html_template("Automatic Update Settings", form)
+
+    def serve_time_sync_settings_form(self):
+        """Serves the time synchronisation settings form with the current settings pre-populated."""
+        enable_time_sync_checked = 'checked' if self.enable_time_sync else ''
+    
+        form = f"""<h2>Time Synchronisation Settings</h2>
+        <p>The settings below control how the SecureMe system synchronises the time and date.</p>
+        <form method="POST" action="/update_time_sync_settings">
+            <p>Choose whether to enable the time synchronisation feature.</p>
+            <label for="enable_time_sync">Enable Time Synchronisation</label>
+            <input type="checkbox" id="enable_time_sync" name="enable_time_sync" {enable_time_sync_checked}><br>
+            <p>By default, SecureMe will use the <b>Goatbot.org</b> server for time synchronisation.<br>
+            You can optionally specify an alternate server to use.<br>
+            You should only choose an alternative server if you are self-hosting the Time Synchronisation API from the Pico Network Manager library.<br>
+            Specify the time synchronisation server you want to use below.</p>
+            <label for="time_sync_server">Time Synchronisation Server:</label>
+            <input type="string" id="time_sync_server" name="time_sync_server" value="{self.time_sync_server}" required><br>
+            <input type="submit" value="Save Settings">
+        </form><br>
+        """
+
+        return self.html_template("Time Synchronisation Settings", form)
 
     def serve_reboot_device_form(self):
         """Serves the reboot device form.""" 
