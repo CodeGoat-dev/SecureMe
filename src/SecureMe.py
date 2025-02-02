@@ -1399,7 +1399,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, admin_password, enable_auto_update, update_check_interval
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
 
     print("Validating firmware configuration...")
 
@@ -1586,13 +1586,13 @@ try:
     config = ConfigManager(config_directory, config_file)
     asyncio.run(config.read_async())
 
+    asyncio.run(system_startup())
+
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = WebServer()
-        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=True, sta_web_server=web_server)
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=time_sync, time_sync_server=time_sync_server, sta_web_server=web_server)
         updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval * 60, auto_reboot=True)
-
-    asyncio.run(system_startup())
 
     asyncio.run(main())
 except KeyboardInterrupt:
