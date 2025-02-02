@@ -8,6 +8,7 @@
 # Imports
 import machine
 import network
+import time
 import uasyncio as asyncio
 import uos
 import urequests
@@ -246,6 +247,11 @@ class WebServer:
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
+        now = time.localtime()
+
+        current_date = f"{now[1]:02d}/{now[2]:02d}/{now[0]}"
+        current_time = f"{now[3]:02d}:{now[4]:02d}"
+
         template = f"""<html>
         <head><title>{title}</title></head>
         <body>
@@ -264,6 +270,8 @@ class WebServer:
         template += body
 
         template += f"""<h1>Information</h1>
+        <p>Date: {current_date}<br>
+        time: {current_time}</p>
         <p>Check out other Goat Technologies offerings at <a href="https://goatbot.org/">Goatbot.org</a></p>
         <p>Contribute to <b>SecureMe</b> on <a href="{self.REPO_URL}">GitHub</a></p>
         <p><b>Version {self.VERSION}</b><br>
