@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.3.3
+
+### Bug Fixes
+
+#### Automatic Update
+
+Fixes an issue where the latest update would be continuously offered.
+
 ## V1.3.2
 
 ### Changes
