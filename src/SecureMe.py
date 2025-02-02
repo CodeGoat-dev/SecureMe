@@ -120,6 +120,10 @@ enable_auto_update = True
 update_check_interval = 30
 default_update_check_interval = 30
 
+enable_time_sync = True
+time_sync_server = "https://goatbot.org"
+default_time_sync_server = "https://goatbot.org"
+
 keypad_locked = True
 
 keypad_characters = [
@@ -1490,6 +1494,16 @@ async def validate_config():
                 update_check_interval = default_update_check_interval
                 config.set_entry("update", "update_check_interval", update_check_interval)
                 await config.write_async()
+            enable_time_sync = config.get_entry("time", "enable_time_sync")
+            if not isinstance(enable_time_sync, bool):
+                enable_time_sync = True
+                config.set_entry("time", "enable_time_sync", enable_time_sync)
+                await config.write_async()
+            time_sync_server = config.get_entry("time", "time_sync_server")
+            if not isinstance(time_sync_server, str):
+                time_sync_server = default_time_sync_server
+                config.set_entry("time", "time_sync_server", time_sync_server)
+                await config.write_async()
 
         # Conditionally disable settings which require internet access
         if not utils.isPicoW():
@@ -1500,6 +1514,10 @@ async def validate_config():
             security_code_notifications = False
             web_interface_notifications = False
             admin_password = default_admin_password
+            enable_auto_update = False
+            update_check_interval = default_update_check_interval
+            enable_time_sync = False
+            time_sync_server = default_time_sync_server
     except Exception as e:
         print(f"Error in validate_config: {e}")
 
