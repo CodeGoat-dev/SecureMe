@@ -2,6 +2,24 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.3.0
+
+### Bug Fixes
+
+#### Initialisation
+
+Fixed an issue with configuration reflection where some settings would not be correctly reflected.
+
+### Changes
+
+#### Time Synchronisation
+
+Time synchronisation can now be configured. You can enable/disable time synchronisation and specify the time synchronisation server to use.
+
+#### Web Interface
+
+Added a **Time Synchronisation Settings** page to the web interface.
+
 ## V1.2.6
 
 ### Bug Fixes
