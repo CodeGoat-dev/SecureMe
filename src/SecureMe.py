@@ -1591,7 +1591,7 @@ try:
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = WebServer()
-        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=time_sync, time_sync_server=time_sync_server, sta_web_server=web_server)
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=enable_time_sync, time_server=time_sync_server, sta_web_server=web_server)
         updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval * 60, auto_reboot=True)
 
     asyncio.run(main())
