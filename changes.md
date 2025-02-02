@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.3.2
+
+### Changes
+
+#### Web Interface
+
+Adds the current system date and time to all web interface pages.
+
 ## V1.3.1
 
 ### Bug Fixes
