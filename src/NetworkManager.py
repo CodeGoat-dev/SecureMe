@@ -1,5 +1,5 @@
 # Goat - Pico Network Manager library
-# Version 1.1.1
+# Version 1.1.2
 # © (c) 2024-2025 Goat Technologies
 # Description:
 # Provides network management for your device firmware.
@@ -33,7 +33,7 @@ class NetworkManager:
         self.config_file = "network_config.conf"
 
         # Constants
-        self.VERSION = "1.1.1"
+        self.VERSION = "1.1.2"
         self.repo_url = "https://github.com/CodeGoat-dev/Pico-Network-Manager"
 
         # Interface configuration
@@ -188,6 +188,7 @@ class NetworkManager:
             print(f"Serving on {self.ip_address}:{self.captive_portal_http_port}")
 
             while True:
+                machine.idle()
                 await asyncio.sleep(1)  # Keep the server running
         except Exception as e:
             print(f"Error starting the captive portal server: {e}")
@@ -518,6 +519,8 @@ class NetworkManager:
                     print("No active connections. Rescanning...")
                     await asyncio.sleep(3)  # Pause before rescanning
                     continue
+
+                machine.idle()
 
                 await asyncio.sleep(0.1)
         except Exception as e:

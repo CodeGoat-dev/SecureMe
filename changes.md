@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.3.6
+
+### Changes
+
+#### Pico Network Manager
+
+Updated Pico Network Manager to v1.1.2.
+
 ## V1.3.5
 
 ### Changes
