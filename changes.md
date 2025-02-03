@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.3.4
+
+### Changes
+
+#### Pico Network Manager
+
+Updated Pico Network Manager to v1.1.1.
+
 ## V1.3.3
 
 ### Bug Fixes
@@ -43,6 +51,10 @@ Time synchronisation can now be configured. You can enable/disable time synchron
 #### Web Interface
 
 Added a **Time Synchronisation Settings** page to the web interface.
+
+#### Pico Network Manager
+
+Updated Pico Network Manager to v1.1.0.
 
 ## V1.2.6
 
