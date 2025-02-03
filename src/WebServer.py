@@ -506,7 +506,7 @@ class WebServer:
         for pair in pairs:
             if "=" in pair:
                 key, value = pair.split("=", 1)  # Split each pair by '='
-                post_data[urldecode(key)] = urldecode(value)  # Decode the key and value
+                post_data[self.urldecode(key)] = self.urldecode(value)  # Decode the key and value
 
         return post_data
 
