@@ -408,6 +408,9 @@ async def handle_arming():
                     if system_status_notifications:
                         if general_notifications:
                             asyncio.create_task(send_system_status_notification(status_message="System armed."))
+
+            idle()
+
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_arming: {e}")
@@ -422,6 +425,9 @@ async def handle_alarm_testing():
                     continue
                 print("Testing alarm...")
                 asyncio.create_task(alarm("Testing Alarm."))
+
+            idle()
+
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_alarm_testing: {e}")
@@ -455,6 +461,8 @@ async def handle_alarm_sound_switching():
                 config.set_entry("alarm", "alarm_sound", alarm_sound)
                 await config.write_async()
 
+            idle()
+
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in handle_alarm_sound_switching: {e}")
@@ -477,6 +485,8 @@ async def handle_buzzer_volume():
                     continue
                 print("Turning up volume.")
                 await increase_buzzer_volume()
+
+            idle()
 
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
@@ -514,6 +524,9 @@ async def detect_motion():
                 asyncio.create_task(alarm("Movement Detected."))
                 pir_timeout = utime.time() + sensor_cooldown
                 print("Detecting movement...")
+
+            idle()
+
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in detect_motion: {e}")
@@ -550,6 +563,9 @@ async def detect_tilt():
                 asyncio.create_task(alarm("Tilt Detected"))
                 tilt_timeout = utime.time() + sensor_cooldown
                 print("Detecting tilt...")
+
+            idle()
+
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in detect_tilt: {e}")
@@ -586,6 +602,9 @@ async def detect_sound():
                 asyncio.create_task(alarm("Sound Detected."))
                 mic_timeout = utime.time() + sensor_cooldown
                 print("Detecting sound...")
+
+            idle()
+
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:
         print(f"Error in detect_sound: {e}")
@@ -603,6 +622,9 @@ async def handle_arming_indicator():
                 led.value(1)
                 await asyncio.sleep(0.1)
                 led.value(0)
+
+            idle()
+
             await asyncio.sleep(1)  # Polling interval
     except Exception as e:
         print(f"Error in handle_arming_indicator: {e}")
@@ -639,6 +661,8 @@ async def detect_keypad_keys():
                     await reset_firmware_config()
                 else:
                     print(f"Unhandled key press detected: {key}")
+
+            idle()
 
             await asyncio.sleep(0.05)  # Polling interval
     except Exception as e:

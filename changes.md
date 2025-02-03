@@ -6,6 +6,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### Changes
 
+#### Execution
+
+Improves execution by implementing CPU clock gating.
+
 #### Pico Network Manager
 
 Updated Pico Network Manager to v1.1.2.

@@ -725,6 +725,8 @@ class WebServer:
             print(f"Serving on {self.ip_address}:{self.http_port}")
 
             while True:
+                machine.idle()
+
                 await asyncio.sleep(1)  # Keep the server running
         except Exception as e:
             await self.stop_server()
