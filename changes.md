@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.3.5
+
+### Changes
+
+### Web Interface
+
+Improved decoding of form data in the web interface to improve compatibility with non-alphanumeric entries.
+
 ## V1.3.4
 
 ### Changes

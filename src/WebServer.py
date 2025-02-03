@@ -480,14 +480,34 @@ class WebServer:
                 .replace("'", "&#39;")
         )
 
+    def urldecode(self, value):
+        """Decodes percent-encoded characters in a URL-encoded string."""
+        result = []
+        i = 0
+        while i < len(value):
+            if value[i] == "%" and i + 2 < len(value):
+                hex_value = value[i+1:i+3]
+                try:
+                    result.append(chr(int(hex_value, 16)))  # Convert hex to char
+                    i += 3
+                except ValueError:
+                    result.append(value[i])  # If invalid, keep character as is
+                    i += 1
+            else:
+                result.append(value[i])
+                i += 1
+        return "".join(result)
+
     def parse_form_data(self, content):
-        """Parses URL-encoded form data into a dictionary."""
+        """Parses URL-encoded form data into a dictionary and decodes percent-encoded characters."""
         post_data = {}
         pairs = content.split("&")  # Split the form data by '&'
+
         for pair in pairs:
             if "=" in pair:
                 key, value = pair.split("=", 1)  # Split each pair by '='
-                post_data[key] = value  # Store the key-value pair in the dictionary
+                post_data[urldecode(key)] = urldecode(value)  # Decode the key and value
+
         return post_data
 
     def serve_unauthorized(self):
