@@ -12,7 +12,7 @@
 # Designed for Raspberry Pi Pico based microcontrollers.
 
 # Imports
-from machine import Pin, PWM, reset
+from machine import Pin, PWM, idle, reset
 import os
 import time
 import utime
