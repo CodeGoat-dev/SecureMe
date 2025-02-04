@@ -325,8 +325,8 @@ class WebServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_detection_settings_form()
             elif "GET /change_password" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_password_form()
-            elif "GET /change_pushover" in request:
-                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_pushover_form()
+            elif "GET /pushover_settings" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_pushover_settings_form()
             elif "GET /change_security_code" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_security_code_form()
             elif "GET /auto_update_settings" in request:
@@ -363,7 +363,7 @@ class WebServer:
                     if self.web_interface_notifications:
                         asyncio.create_task(self.send_system_status_notification(status_message="Detection settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
-            elif "POST /update_pushover" in request:
+            elif "POST /update_pushover_settings" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.pushover_app_token = post_data.get('pushover_token', None)
@@ -533,9 +533,9 @@ class WebServer:
         <h2>System Settings</h2>
         <p>Select a setting from the list below.<br>
         <ul>
-        <li><a href="detection_settings">Detection Settings</a></li>
+        <li><a href="/detection_settings">Detection Settings</a></li>
         <li><a href="/change_password">Change Admin Password</a><br></li>
-        <li><a href="/change_pushover">Change Pushover Settings</a></li>
+        <li><a href="/pushover_settings">Pushover Settings</a></li>
         <li><a href="/change_security_code">Change System Security Code</a></li>
         <li><a href="/auto_update_settings">Automatic Update Settings</a></li>
         <li><a href="/time_sync_settings">Time Synchronisation Settings</a></li>
@@ -591,18 +591,18 @@ class WebServer:
         """
         return self.html_template("Change Admin Password", form)
 
-    def serve_change_pushover_form(self):
-        """Serves the change Pushover Settings form with the current credentials pre-populated."""
+    def serve_pushover_settings_form(self):
+        """Serves the Pushover Settings form with the current credentials pre-populated."""
         status_notifications_checked = 'checked' if self.system_status_notifications else ''
         general_notifications_checked = 'checked' if self.general_notifications else ''
         security_code_notifications_checked = 'checked' if self.security_code_notifications else ''
         web_interface_notifications_checked = 'checked' if self.web_interface_notifications else ''
         update_notifications_checked = 'checked' if self.update_notifications else ''
 
-        form = f"""<h2>Change Pushover Settings</h2>
+        form = f"""<h2>Pushover Settings</h2>
         <p>To register an application and obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
         Sign up for an account and register an application to obtain a token, and a device to obtain a key.</p>
-        <form method="POST" action="/update_pushover">
+        <form method="POST" action="/update_pushover_settings">
         <p>In order to receive system status notifications and use silent alarms, you must specify Pushover API credentials.<br>
         The Pushover app token identifies your application with Pushover.<br>
         The Pushover API key enables the SecureMe firmware to send push notifications.</p>
@@ -626,7 +626,7 @@ class WebServer:
             <input type="submit" value="Save">
         </form><br>
         """
-        return self.html_template("Change Pushover Settings", form)
+        return self.html_template("Pushover Settings", form)
 
     def serve_change_security_code_form(self):
         """Serves the change security code form with the current key pre-populated.""" 
