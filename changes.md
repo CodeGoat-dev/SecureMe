@@ -6,6 +6,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### Changes
 
+#### Web Interface
+
+Updated various end points.
+
 #### Pico Network Manager
 
 Updated Pico Network Manager to v1.1.3.
