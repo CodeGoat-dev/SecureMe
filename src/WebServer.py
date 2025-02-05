@@ -63,6 +63,8 @@ class WebServer:
         self.enable_time_sync = None
         self.time_sync_server = "https://goatbot.org"
         self.default_time_sync_server = "https://goatbot.org"
+        self.time_sync_interval = 360
+        self.default_time_sync_interval = 360
 
         self.alert_text = None
 
@@ -152,6 +154,11 @@ class WebServer:
         if not isinstance(self.time_sync_server, str):
             self.time_sync_server = self.default_time_sync_server
             self.config.set_entry("time", "time_sync_server", self.time_sync_server)
+            await self.config.write_async()
+        self.time_sync_interval = self.config.get_entry("time", "time_sync_interval")
+        if not isinstance(self.time_sync_interval, int):
+            self.time_sync_interval = self.default_time_sync_interval
+            self.config.set_entry("time", "time_sync_interval", self.time_sync_interval)
             await self.config.write_async()
 
         self.config_watcher = asyncio.create_task(self.config.start_watching())
@@ -426,8 +433,10 @@ class WebServer:
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 self.enable_time_sync = post_data.get('enable_time_sync', True)
                 self.time_sync_server = post_data.get('time_sync_server', self.default_time_sync_server)
+                self.time_sync_interval = post_data.get('time_sync_server', self.default_time_sync_interval)
                 self.config.set_entry("time", "enable_time_sync", self.enable_time_sync)
                 self.config.set_entry("time", "time_sync_server", self.time_sync_server)
+                self.config.set_entry("time", "time_sync_interval", self.time_sync_interval)
                 await self.config.write_async()
                 self.alert_text = "Time synchronisation settings updated."
                 if self.system_status_notifications:
@@ -677,6 +686,9 @@ class WebServer:
             Specify the time synchronisation server you want to use below.</p>
             <label for="time_sync_server">Time Synchronisation Server:</label>
             <input type="string" id="time_sync_server" name="time_sync_server" value="{self.time_sync_server}" required><br>
+            <p>The system date and time are synchronised automatically after a specified interval.<br>
+            You can optionally customize the time synchronisation interval below.</p>
+            <input type="number" id="time_sync_interval" name="time_sync_interval" minlength=1 maxlength=4 value="{self.time_sync_interval}" required><br>
             <input type="submit" value="Save Settings">
         </form><br>
         """
