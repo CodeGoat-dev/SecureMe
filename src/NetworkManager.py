@@ -1,5 +1,5 @@
 # Goat - Pico Network Manager library
-# Version 1.1.3
+# Version 1.1.4
 # © (c) 2024-2025 Goat Technologies
 # Description:
 # Provides network management for your device firmware.
@@ -26,14 +26,14 @@ class NetworkManager:
     Responsible for maintaining network state and managing connection lifetime.
     """
     # Class constructor
-    def __init__(self, ap_ssid="Goat - Captive Portal", ap_password="password", ap_dns_server=True, hostname="PicoW", time_sync=True, time_server="https://goatbot.org", sta_web_server=None):
+    def __init__(self, ap_ssid="Goat - Captive Portal", ap_password="password", ap_dns_server=True, hostname="PicoW", time_sync=True, time_server="https://goatbot.org", time_sync_interval=30, sta_web_server=None):
         """Constructs the class and exposes properties."""
         # Network configuration
         self.config_directory = "/config"
         self.config_file = "network_config.conf"
 
         # Constants
-        self.VERSION = "1.1.3"
+        self.VERSION = "1.1.4"
         self.repo_url = "https://github.com/CodeGoat-dev/Pico-Network-Manager"
 
         # Interface configuration
@@ -64,6 +64,7 @@ class NetworkManager:
         # Time synchronisation settings
         self.time_sync = time_sync
         self.time_server = time_server
+        self.time_sync_interval = time_sync_interval
 
         # STA web server configuration
         self.sta_web_server = sta_web_server
@@ -102,7 +103,7 @@ class NetworkManager:
                         # Set system date/time
                         try:
                             if self.time_sync:
-                                await self.get_ntp_time()
+                                asyncio.create_task(self.start_time_sync())
                         except Exception as e:
                             print(f"Unable to set the system date and time: {e}")
                         if self.sta_web_server:
@@ -355,7 +356,7 @@ class NetworkManager:
                 # Set system date/time
                 try:
                     if self.time_sync:
-                        await self.get_ntp_time()
+                        asyncio.create_task(self.start_time_sync())
                 except Exception as e:
                     print(f"Unable to set the system date and time: {e}")
 
@@ -404,7 +405,7 @@ class NetworkManager:
                 # Set system date/time
                 try:
                     if self.time_sync:
-                        await self.get_ntp_time()
+                        asyncio.create_task(self.start_time_sync())
                 except Exception as e:
                     print(f"Unable to set the system date and time: {e}")
 
@@ -504,6 +505,25 @@ class NetworkManager:
         finally:
             if 'response' in locals():
                 response.close()
+
+    async def start_time_sync():
+        """Periodically synchronises the system date and time."""
+        if not self.time_sync:
+            return
+
+        try:
+            print("Starting automatic time synchronisation...")
+
+            while True:
+                if not self.sta_if.isconnected():
+                    print("Stopping automatic time synchronisation...")
+                    break
+
+                asyncio.create_task(get_ntp_time())
+
+                await asyncio.sleep(self.time_sync_interval*60)
+        except Exception as e:
+            print(f"Unable to start time synchronisation: {e}")
 
     async def run(self):
         """Runs the network manager initialization process and maintains connectivity."""
