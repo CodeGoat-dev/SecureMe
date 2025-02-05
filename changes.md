@@ -16,6 +16,10 @@ Automatic update was not correctly respecting the update interval configured for
 
 Time synchronisation is now performed at a customisable interval.
 
+#### Web Interface
+
+Added a setting to the **Time Synchronisation Settings** page to adjust the time synchronisation interval.
+
 #### Pico Network Manager
 
 Updated Pico Network Manager to v1.1.4.

@@ -688,6 +688,7 @@ class WebServer:
             <input type="string" id="time_sync_server" name="time_sync_server" value="{self.time_sync_server}" required><br>
             <p>The system date and time are synchronised automatically after a specified interval.<br>
             You can optionally customize the time synchronisation interval below.</p>
+            <label for="time_sync_interval">Time Synchronisation Interval (Min):</label>
             <input type="number" id="time_sync_interval" name="time_sync_interval" minlength=1 maxlength=4 value="{self.time_sync_interval}" required><br>
             <input type="submit" value="Save Settings">
         </form><br>
