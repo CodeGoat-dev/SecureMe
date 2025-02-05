@@ -4,6 +4,12 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ## V1.3.8
 
+### Bug Fixes
+
+#### Automatic Update
+
+Automatic update was not correctly respecting the update interval configured for the system.
+
 ### Changes
 
 #### Pico Network Manager

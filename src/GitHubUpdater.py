@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.3
+# Version 1.1.4
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -293,4 +293,4 @@ class GitHubUpdater:
             if self.enable_auto_update:
                 await self.update()
 
-            await asyncio.sleep(self.update_check_interval)
+            await asyncio.sleep(self.update_check_interval*60)
