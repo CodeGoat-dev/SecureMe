@@ -123,7 +123,8 @@ default_update_check_interval = 30
 enable_time_sync = True
 time_sync_server = "https://goatbot.org"
 default_time_sync_server = "https://goatbot.org"
-time_sync_interval = 3600
+time_sync_interval = 360
+default_time_sync_interval = 360
 
 keypad_locked = True
 
