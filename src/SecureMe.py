@@ -123,6 +123,7 @@ default_update_check_interval = 30
 enable_time_sync = True
 time_sync_server = "https://goatbot.org"
 default_time_sync_server = "https://goatbot.org"
+time_sync_interval = 3600
 
 keypad_locked = True
 
@@ -1528,6 +1529,11 @@ async def validate_config():
                 time_sync_server = default_time_sync_server
                 config.set_entry("time", "time_sync_server", time_sync_server)
                 await config.write_async()
+            time_sync_interval = config.get_entry("time", "time_sync_interval")
+            if not isinstance(time_sync_interval, int):
+                time_sync_interval = default_time_sync_interval
+                config.set_entry("time", "time_sync_interval", time_sync_interval)
+                await config.write_async()
 
         # Conditionally disable settings which require internet access
         if not utils.isPicoW():
@@ -1542,6 +1548,7 @@ async def validate_config():
             update_check_interval = default_update_check_interval
             enable_time_sync = False
             time_sync_server = default_time_sync_server
+            time_sync_interval = default_time_sync_interval
     except Exception as e:
         print(f"Error in validate_config: {e}")
 
@@ -1615,7 +1622,7 @@ try:
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = WebServer()
-        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=enable_time_sync, time_server=time_sync_server, sta_web_server=web_server)
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=enable_time_sync, time_server=time_sync_server, time_sync_interval=time_sync_interval, sta_web_server=web_server)
         updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval, auto_reboot=True)
 
     asyncio.run(main())

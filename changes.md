@@ -12,10 +12,13 @@ Automatic update was not correctly respecting the update interval configured for
 
 ### Changes
 
+#### Time Synchronisation
+
+Time synchronisation is now performed at a customisable interval.
+
 #### Pico Network Manager
 
 Updated Pico Network Manager to v1.1.4.
-
 
 ## V1.3.7
 
@@ -87,7 +90,7 @@ Fixes an issue with Pico Network Manager class instantiation.
 
 #### Initialisation
 
-Fixed an issue with configuration reflection where some settings would not be correctly reflected.
+Fixes an issue with configuration reflection where some settings would not be correctly reflected.
 
 ### Changes
 
