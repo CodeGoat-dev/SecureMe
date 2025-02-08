@@ -1630,7 +1630,7 @@ try:
 
     # Instantiate network specific features
     if utils.isPicoW():
-        web_server = WebServer()
+        web_server = WebServer(http_port=http_port)
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=enable_time_sync, time_server=time_sync_server, time_sync_interval=time_sync_interval, sta_web_server=web_server)
         updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval, auto_reboot=True)
 
