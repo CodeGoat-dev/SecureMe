@@ -14,6 +14,10 @@ Adds a setting to control the web interface HTTP port.
 
 Adds a new **Web Interface Settings** page to control settings related to the web interface such as the HTTP port.
 
+#### Pico Network Manager
+
+Updated Pico Network Manager to v1.1.6.
+
 ## V1.3.9
 
 ### Changes
