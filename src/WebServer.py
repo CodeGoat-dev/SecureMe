@@ -51,6 +51,8 @@ class WebServer:
         self.security_code_notifications = None
         self.web_interface_notifications = None
         self.update_notifications = None
+        self.web_server_http_port = 8000
+        self.default_web_server_http_port = 8000
         self.admin_password = "secureme"
         self.default_admin_password = "secureme"
         self.security_code = "0000"
@@ -129,6 +131,11 @@ class WebServer:
         if not isinstance(self.security_code, str):
             self.security_code = self.default_security_code
             self.config.set_entry("security", "security_code", self.security_code)
+            await self.config.write_async()
+        self.web_server_http_port = self.config.get_entry("server", "http_port")
+        if not isinstance(self.web_server_http_port, int):
+            self.web_server_http_port = self.default_web_server_http_port
+            self.config.set_entry("server", "http_port", self.web_server_http_port)
             await self.config.write_async()
         self.admin_password = self.config.get_entry("server", "admin_password")
         if not isinstance(self.admin_password, str):
@@ -328,7 +335,9 @@ class WebServer:
                 return
 
             # Serve the appropriate pages based on the request
-            if "GET /detection_settings" in request:
+            if "GET /web_interface_settings" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_web_interface_settings_form()
+            elif "GET /detection_settings" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_detection_settings_form()
             elif "GET /change_password" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_change_password_form()
@@ -346,6 +355,18 @@ class WebServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reboot_device_form()
             elif "GET /" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
+            elif "POST /update_web_interface_settings" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                http_port = 'http_port' in post_data
+                self.web_server_http_port = http_port
+                self.config.set_entry("server", "http_port", self.web_server_http_port)
+                await self.config.write_async()
+                self.alert_text = "Web interface settings updated."
+                if self.system_status_notifications:
+                    if self.web_interface_notifications:
+                        asyncio.create_task(self.send_system_status_notification(status_message="Web interface settings updated."))
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_detection_settings" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
@@ -542,6 +563,7 @@ class WebServer:
         <h2>System Settings</h2>
         <p>Select a setting from the list below.<br>
         <ul>
+        <li><a href="/web_interface_settings">Web Interface Settings</a></li>
         <li><a href="/detection_settings">Detection Settings</a></li>
         <li><a href="/change_password">Change Admin Password</a><br></li>
         <li><a href="/pushover_settings">Pushover Settings</a></li>
@@ -555,6 +577,20 @@ class WebServer:
         <p>SecureMe is a portable, configurable security system designed for simplicity and effectiveness.</p>
         """
         return self.html_template("Welcome", body)
+
+    def serve_web_interface_settings_form(self):
+        """Serves the web interface settings form with the current settings pre-populated.""" 
+        form = f"""<h2>Web Interface Settings</h2>
+        <p>The settings below control the SecureMe web interface.<br>
+        You should take care when modifying these settings.</p>
+        <p><b>Improper modification of the settings below may render the web interface inaccessible.</b></p>
+        <form method="POST" action="/update_web_interface_settings">
+            <label for="http_port">HTTP Port:</label>
+            <input type="number" id="http_port" name="http_port" minlength=1 maxlength=5} value="{self.web_server_http_port}" required><br>
+            <input type="submit" value="Save Settings">
+        </form><br>
+        """
+        return self.html_template("Web Interface Settings", form)
 
     def serve_detection_settings_form(self):
         """Serves the detection settings form with the current settings pre-populated."""
@@ -632,7 +668,7 @@ class WebServer:
             <input type="checkbox" id="web_interface_notifications" name="web_interface_notifications" {web_interface_notifications_checked}><br>
             <label for="update_notifications">Firmware Update Notifications</label>
             <input type="checkbox" id="update_notifications" name="update_notifications" {update_notifications_checked}><br>
-            <input type="submit" value="Save">
+            <input type="submit" value="Save Settings">
         </form><br>
         """
         return self.html_template("Pushover Settings", form)

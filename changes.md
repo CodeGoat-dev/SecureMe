@@ -10,6 +10,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 Adds a setting to control the web interface HTTP port.
 
+#### Web Interface
+
+Adds a new **Web Interface Settings** page to control settings related to the web interface such as the HTTP port.
+
 ## V1.3.9
 
 ### Changes
