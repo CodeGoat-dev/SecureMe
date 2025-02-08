@@ -98,6 +98,8 @@ silent_alarm = False
 default_buzzer_volume = 3072
 buzzer_volume = 3072
 
+http_port = 8000
+default_http_port = 8000
 admin_password = "secureme"
 default_admin_password = "secureme"
 
@@ -1425,7 +1427,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
 
     print("Validating firmware configuration...")
 
@@ -1505,6 +1507,11 @@ async def validate_config():
                 update_notifications = True
                 config.set_entry("pushover", "update_notifications", update_notifications)
                 await config.write_async()
+            http_port = config.get_entry("server", "http_port")
+            if not isinstance(http_port, int):
+                http_port = default_http_port
+                config.set_entry("server", "http_port", http_port)
+                await config.write_async()
             admin_password = config.get_entry("server", "admin_password")
             if not isinstance(admin_password, str):
                 admin_password = default_admin_password
@@ -1544,6 +1551,7 @@ async def validate_config():
             general_notifications = False
             security_code_notifications = False
             web_interface_notifications = False
+            http_port = default_http_port
             admin_password = default_admin_password
             enable_auto_update = False
             update_check_interval = default_update_check_interval

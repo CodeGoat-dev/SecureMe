@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.4.0
+
+### Changes
+
+#### Configuration
+
+Adds a setting to control the web interface HTTP port.
+
 ## V1.3.9
 
 ### Changes
