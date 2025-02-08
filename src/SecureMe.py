@@ -98,8 +98,8 @@ silent_alarm = False
 default_buzzer_volume = 3072
 buzzer_volume = 3072
 
-http_port = 8000
-default_http_port = 8000
+web_server_http_port = 8000
+default_web_server_http_port = 8000
 admin_password = "secureme"
 default_admin_password = "secureme"
 
@@ -718,7 +718,7 @@ def read_keypad_key():
             row.low()
 
 # Validate Pushover API key
-async def validate_pushover_api_key(timeout=5):
+async def validate_pushover_api_key(timeout =5):
     """Validate the configured Pushover API key.
 
         Args:
@@ -758,7 +758,7 @@ async def validate_pushover_api_key(timeout=5):
     for attempt in range(3):  # Retry up to 3 times
         try:
             print(f"Attempt {attempt + 1}: Validating API key...")
-            response = urequests.post(url, data=data, headers=headers, timeout=timeout)
+            response = urequests.post(url, data=data, headers=headers, timeout =timeout)
 
             if response.status_code == 200:
                 key_is_valid = True
@@ -776,7 +776,7 @@ async def validate_pushover_api_key(timeout=5):
     return key_is_valid
 
 # Send push notifications using Pushover
-async def send_pushover_notification(title="Goat - SecureMe", message="Testing", priority=0, timeout=5):
+async def send_pushover_notification(title="Goat - SecureMe", message="Testing", priority=0, timeout =5):
     """Send push notifications using Pushover.
 
         Args:
@@ -825,7 +825,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
     for attempt in range(3):  # Retry up to 3 times
         try:
             print(f"Attempt {attempt + 1}: Sending notification...")
-            response = urequests.post(url, data=data, headers=headers, timeout=timeout)
+            response = urequests.post(url, data=data, headers=headers, timeout =timeout)
 
             if response.status_code == 200:
                 print("Notification sent successfully!")
@@ -1427,7 +1427,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, web_server_http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
 
     print("Validating firmware configuration...")
 
@@ -1507,10 +1507,10 @@ async def validate_config():
                 update_notifications = True
                 config.set_entry("pushover", "update_notifications", update_notifications)
                 await config.write_async()
-            http_port = config.get_entry("server", "http_port")
-            if not isinstance(http_port, int):
-                http_port = default_http_port
-                config.set_entry("server", "http_port", http_port)
+            web_server_http_port = config.get_entry("server", "http_port")
+            if not isinstance(web_server_http_port, int):
+                web_server_http_port = default_web_server_http_port
+                config.set_entry("server", "http_port", web_server_http_port)
                 await config.write_async()
             admin_password = config.get_entry("server", "admin_password")
             if not isinstance(admin_password, str):
@@ -1551,7 +1551,7 @@ async def validate_config():
             general_notifications = False
             security_code_notifications = False
             web_interface_notifications = False
-            http_port = default_http_port
+            web_server_http_port = default_web_server_http_port
             admin_password = default_admin_password
             enable_auto_update = False
             update_check_interval = default_update_check_interval
@@ -1630,9 +1630,9 @@ try:
 
     # Instantiate network specific features
     if utils.isPicoW():
-        web_server = WebServer(http_port=http_port)
+        web_server = WebServer(http_port =web_server_http_port)
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=enable_time_sync, time_server=time_sync_server, time_sync_interval=time_sync_interval, sta_web_server=web_server)
-        updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval, auto_reboot=True)
+        updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval, auto_reboot =True)
 
     asyncio.run(main())
 except KeyboardInterrupt:
