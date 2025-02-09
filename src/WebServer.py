@@ -576,20 +576,22 @@ class WebServer:
         <h2>About SecureMe</h2>
         <p>SecureMe is a portable, configurable security system designed for simplicity and effectiveness.</p>
         """
+
         return self.html_template("Welcome", body)
 
     def serve_web_interface_settings_form(self):
-        """Serves the web interface settings form with the current settings pre-populated.""" 
+        """Serves the web interface settings form with the current settings pre-populated."""
         form = f"""<h2>Web Interface Settings</h2>
         <p>The settings below control the SecureMe web interface.<br>
         You should take care when modifying these settings.</p>
-        <p><b>Improper modification of the settings below may render the web interface inaccessible.</b></p>
+        <p><b>Improper modification of the settings below may render the SecureMe web interface inaccessible.</b></p>
         <form method="POST" action="/update_web_interface_settings">
             <label for="http_port">HTTP Port:</label>
-            <input type="number" id="http_port" name="http_port" minlength=1 maxlength=5} value="{self.web_server_http_port}" required><br>
+            <input type="number" id="http_port" name="http_port" minlength=1 maxlength=5 value="{self.web_server_http_port}" required><br>
             <input type="submit" value="Save Settings">
         </form><br>
         """
+
         return self.html_template("Web Interface Settings", form)
 
     def serve_detection_settings_form(self):
@@ -634,6 +636,7 @@ class WebServer:
             <input type="submit" value="Update Password">
         </form><br>
         """
+
         return self.html_template("Change Admin Password", form)
 
     def serve_pushover_settings_form(self):
@@ -671,6 +674,7 @@ class WebServer:
             <input type="submit" value="Save Settings">
         </form><br>
         """
+
         return self.html_template("Pushover Settings", form)
 
     def serve_change_security_code_form(self):
@@ -684,6 +688,7 @@ class WebServer:
             <input type="submit" value="Update Security Code">
         </form><br>
         """
+
         return self.html_template("Change System Security Code", form)
 
     def serve_auto_update_settings_form(self):
@@ -742,6 +747,7 @@ class WebServer:
             <input type="submit" value="Reboot Device">
         </form><br>
         """
+
         return self.html_template("Reboot Device", form)
 
     def serve_reset_firmware_form(self):
@@ -756,6 +762,7 @@ class WebServer:
             <input type="submit" value="Reset Device">
         </form><br>
         """
+
         return self.html_template("Reset SecureMe Firmware", form)
 
     async def start_server(self):

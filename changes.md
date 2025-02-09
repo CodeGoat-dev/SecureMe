@@ -4,6 +4,12 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ## V1.4.1
 
+### Bug Fixes
+
+#### Web Interface
+
+Fixes an issue where the new **Web Interface Settings** form would not be displayed.
+
 ### Changes
 
 #### Pico Network Manager
