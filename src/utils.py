@@ -102,3 +102,21 @@ async def configure_network():
 def urlencode(data):
     """Encode a dictionary into a URL-encoded string."""
     return "&".join(f"{key}={value}" for key, value in data.items())
+
+def urldecode(value):
+    """Decodes percent-encoded characters in a URL-encoded string."""
+    result = []
+    i = 0
+    while i < len(value):
+        if value[i] == "%" and i + 2 < len(value):
+            hex_value = value[i+1:i+3]
+            try:
+                result.append(chr(int(hex_value, 16)))  # Convert hex to char
+                i += 3
+            except ValueError:
+                result.append(value[i])  # If invalid, keep character as is
+                i += 1
+        else:
+            result.append(value[i])
+            i += 1
+    return "".join(result)

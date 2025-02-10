@@ -15,6 +15,7 @@ import urequests
 import utime
 import ubinascii
 from ConfigManager import ConfigManager
+import utils
 
 # WebServer class
 class WebServer:
@@ -202,7 +203,7 @@ class WebServer:
             "priority": priority,
             "title": title
         }
-        data = self.urlencode(data_dict).encode("utf-8")
+        data = utils.urlencode(data_dict).encode("utf-8")
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
         for attempt in range(3):  # Retry up to 3 times
@@ -254,10 +255,6 @@ class WebServer:
                 asyncio.create_task(self.send_pushover_notification(message=status_message))
         except Exception as e:
             print(f"Unable to send system status notification: {e}")
-
-    def urlencode(self, data):
-        """Encode a dictionary into a URL-encoded string."""
-        return "&".join(f"{key}={value}" for key, value in data.items())
 
     def html_template(self, title, body):
         """Generates an HTML page template."""
@@ -510,24 +507,6 @@ class WebServer:
                 .replace("'", "&#39;")
         )
 
-    def urldecode(self, value):
-        """Decodes percent-encoded characters in a URL-encoded string."""
-        result = []
-        i = 0
-        while i < len(value):
-            if value[i] == "%" and i + 2 < len(value):
-                hex_value = value[i+1:i+3]
-                try:
-                    result.append(chr(int(hex_value, 16)))  # Convert hex to char
-                    i += 3
-                except ValueError:
-                    result.append(value[i])  # If invalid, keep character as is
-                    i += 1
-            else:
-                result.append(value[i])
-                i += 1
-        return "".join(result)
-
     def parse_form_data(self, content):
         """Parses URL-encoded form data into a dictionary and decodes percent-encoded characters."""
         post_data = {}
@@ -536,7 +515,7 @@ class WebServer:
         for pair in pairs:
             if "=" in pair:
                 key, value = pair.split("=", 1)  # Split each pair by '='
-                post_data[self.urldecode(key)] = self.urldecode(value)  # Decode the key and value
+                post_data[utils.urldecode(key)] = utils.urldecode(value)  # Decode the key and value
 
         return post_data
 
