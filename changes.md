@@ -6,6 +6,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### Changes
 
+#### Initialization
+
+Improved error handling when initializing hardware.
+
 #### Automatic Update
 
 The automatic update process has been refined with retry logic and better error handling.

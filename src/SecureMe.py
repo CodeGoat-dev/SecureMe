@@ -52,22 +52,19 @@ VOLUME_UP_BUTTON_PIN = 16
 keypad_row_pins = [7, 8, 9, 10]
 keypad_col_pins = [11, 12, 13, 14]
 
-# Configure required pins
-led = Pin(LED_PIN, Pin.OUT)
-buzzer = PWM(Pin(BUZZER_PIN))
-arm_button = Pin(ARM_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
-alarm_test_button = Pin(ALARM_TEST_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
-alarm_sound_button = Pin(ALARM_SOUND_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
-volume_down_button = Pin(VOLUME_DOWN_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
-volume_up_button = Pin(VOLUME_UP_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
-pir = Pin(PIR_PIN, Pin.IN, Pin.PULL_DOWN)
-tilt = Pin(TILT_SWITCH_PIN, Pin.IN, Pin.PULL_UP)
-mic = Pin(MICROPHONE_SENSOR_DIGITAL_PIN, Pin.IN, Pin.PULL_DOWN)
-
-# Initialize keypad row pins as outputs
-keypad_rows = [Pin(pin, Pin.OUT) for pin in keypad_row_pins]
-# Initialize keypad column pins as inputs
-keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
+# Hardware
+led = None
+buzzer = None
+arm_button = None
+alarm_test_button = None
+alarm_sound_button = None
+volume_down_button = None
+volume_up_button = None
+pir = None
+tilt = None
+mic = None
+keypad_rows = None
+keypad_cols = None
 
 # Global variables
 config_directory = "/config"
@@ -1618,6 +1615,29 @@ try:
     print(f"Welcome to Goat - SecureMe version {VERSION}.")
 
     print("Initializing firmware...")
+
+    # Configure required pins
+    try:
+        print("Configuring hardware...")
+
+        led = Pin(LED_PIN, Pin.OUT)
+        buzzer = PWM(Pin(BUZZER_PIN))
+        arm_button = Pin(ARM_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
+        alarm_test_button = Pin(ALARM_TEST_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
+        alarm_sound_button = Pin(ALARM_SOUND_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
+        volume_down_button = Pin(VOLUME_DOWN_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
+        volume_up_button = Pin(VOLUME_UP_BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
+        pir = Pin(PIR_PIN, Pin.IN, Pin.PULL_DOWN)
+        tilt = Pin(TILT_SWITCH_PIN, Pin.IN, Pin.PULL_UP)
+        mic = Pin(MICROPHONE_SENSOR_DIGITAL_PIN, Pin.IN, Pin.PULL_DOWN)
+
+        # Initialize keypad row pins as outputs
+        keypad_rows = [Pin(pin, Pin.OUT) for pin in keypad_row_pins]
+        # Initialize keypad column pins as inputs
+        keypad_cols = [Pin(pin, Pin.IN, Pin.PULL_DOWN) for pin in keypad_col_pins]
+    except Exception as e:
+        print(f"Unable to configure system hardware: {e}")
+        reset()
 
     asyncio.run(check_config())
 
