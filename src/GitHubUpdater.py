@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.4
+# Version 1.1.5
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -166,47 +166,81 @@ class GitHubUpdater:
         return "&".join(f"{key}={value}" for key, value in data.items())
 
     async def check_for_update(self):
-        """Checks for updates from GitHub."""
+        """Checks for updates from GitHub with retry and error handling."""
         url = f"{self.repo_url}/releases/latest"
-        try:
-            print("Checking for firmware updates...")
-            response = urequests.get(url, headers=self.headers, timeout=10)
-            if response.status_code == 200:
-                release_data = response.json()
-                self.latest_version = release_data['tag_name']
-                print(f"Current version: {self.current_version}")
-                print(f"Latest version: {self.latest_version}")
+        attempts = 0
 
-                # Get file list from the 'build' directory
-                contents_url = f"{self.repo_url}/contents/build?ref={self.latest_version}"
-                self.files_to_download = await self.get_files_in_directory(contents_url)
-            else:
-                print(f"Failed to fetch firmware release information: {response.status_code}")
-            response.close()
-        except Exception as e:
-            print(f"Error checking for firmware updates: {e}")
+        while attempts < 3:
+            try:
+                print("Checking for firmware updates...")
+                response = urequests.get(url, headers=self.headers, timeout=10)
+
+                if response.status_code == 403:
+                    print("GitHub API rate limit reached. Try again later.")
+                    response.close()
+                    return
+                
+                if response.status_code == 200:
+                    release_data = response.json()
+                    self.latest_version = release_data['tag_name']
+                    print(f"Current version: {self.current_version}")
+                    print(f"Latest version: {self.latest_version}")
+
+                    # Get file list from the 'build' directory
+                    contents_url = f"{self.repo_url}/contents/build?ref={self.latest_version}"
+                    self.files_to_download = await self.get_files_in_directory(contents_url)
+                    response.close()
+                    return  # Success, exit retry loop
+                else:
+                    print(f"Failed to fetch firmware release info: {response.status_code}")
+                    response.close()
+
+            except Exception as e:
+                print(f"Attempt {attempts + 1}: Error checking for firmware updates: {e}")
+            finally:
+                if response:
+                    response.close()
+
+            await asyncio.sleep(2)
+            attempts += 1
+
+        print("All attempts to fetch firmware update information failed.")
 
     async def get_files_in_directory(self, url):
         """Fetch the list of files in a given directory recursively."""
         files = []
+        attempts = 0
 
-        try:
-            response = urequests.get(url, headers=self.headers, timeout=10)
+        while attempts < 3:
+            try:
+                response = urequests.get(url, headers=self.headers, timeout=10)
 
-            if response.status_code == 200:
-                contents = response.json()
-                for item in contents:
-                    if item['type'] == 'file':  # Add files with their download URLs
-                        files.append({"url": item['download_url'], "path": item['path']})
-                    elif item['type'] == 'dir':  # Recurse into subdirectories
-                        sub_files = await self.get_files_in_directory(item['url'])
-                        files.extend(sub_files)
-            else:
-                print(f"Failed to fetch update contents: {response.status_code}")
-            response.close()
-        except Exception as e:
-            print(f"Error fetching update contents: {e}")
+                if response.status_code == 200:
+                    contents = response.json()
+                    for item in contents:
+                        if item['type'] == 'file':  # Add files with their download URLs
+                            files.append({"url": item['download_url'], "path": item['path']})
+                        elif item['type'] == 'dir':  # Recurse into subdirectories
+                            sub_files = await self.get_files_in_directory(item['url'])
+                            files.extend(sub_files)
 
+                    response.close()
+                    return files  # Exit retry loop on success
+
+                else:
+                    print(f"Failed to fetch update contents: {response.status_code}")
+                    response.close()
+
+            except Exception as e:
+                print(f"Attempt {attempts + 1}: Error fetching update contents: {e}")
+            finally:
+                if response:
+                    response.close()
+
+            await asyncio.sleep(2)  # Small delay before retry
+            attempts += 1
+
+        print("Failed to retrieve update contents after multiple attempts.")
         return files
 
     async def download_update(self):
@@ -217,39 +251,36 @@ class GitHubUpdater:
 
         print(f"Installing firmware update...")
 
-        try:
-            for file_info in self.files_to_download:
-                download_url = file_info["url"]
-                print(f"Installing dependency: {download_url}...")
+        for file_info in self.files_to_download:
+            download_url = file_info["url"]
+            print(f"Installing dependency: {download_url}...")
 
+            attempts = 0
+            while attempts < 3:
                 try:
                     mip.install(download_url, target="/")
                     print(f"Successfully installed dependency: {download_url}")
+                    break  # Exit retry loop on success
                 except Exception as e:
-                    print(f"Failed to install dependency: {download_url}: {e}")
-        
-            print("All dependencies installed successfully.")
-        except Exception as e:
-            print(f"Error during firmware update installation: {e}")
+                    attempts += 1
+                    print(f"Attempt {attempts}: Failed to install {download_url}: {e}")
+
+                    if attempts == 3:
+                        print(f"Failed to install {download_url} after {attempts} attempts.")
+
+            await asyncio.sleep(1)  # Short delay before the next install
+
+        print("Firmware update process completed.")
 
     async def is_update_available(self):
         """Check if a firmware update is available for download."""
         if self.latest_version:
-            # Strip 'v' prefix and split versions into parts
-            current_version_parts = [int(x) for x in self.current_version.lstrip('v').split('.')]
-            latest_version_parts = [int(x) for x in self.latest_version.lstrip('v').split('.')]
+            # Strip 'v' prefix and convert to tuples (e.g., "1.2.3" -> (1,2,3))
+            current_version_tuple = tuple(map(int, self.current_version.lstrip('v').split('.')))
+            latest_version_tuple = tuple(map(int, self.latest_version.lstrip('v').split('.')))
 
-            # Compare versions part by part
-            for current, latest in zip(current_version_parts, latest_version_parts):
-                if latest > current:
-                    return True
-                elif latest < current:
-                    return False
-
-            # Check if latest has additional parts (e.g., "1.2" < "1.2.1")
-            return len(latest_version_parts) > len(current_version_parts)
-        else:
-            return False
+            return latest_version_tuple > current_version_tuple  # Tuple comparison works natively
+        return False
 
     async def update(self):
         """Update device firmware from GitHub."""
