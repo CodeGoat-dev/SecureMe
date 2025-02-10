@@ -10,6 +10,8 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 The automatic update process has been refined with retry logic and better error handling.
 
+Removed unnecessary code which is already provided by the utils module.
+
 #### Web server
 
 Removed unnecessary code which is already provided by the utils module.

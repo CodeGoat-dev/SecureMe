@@ -13,6 +13,7 @@ import urequests
 import uos
 import mip
 from ConfigManager import ConfigManager
+import utils
 
 class GitHubUpdater:
     """Provides online update functionality for device firmware using MIP."""
@@ -108,7 +109,7 @@ class GitHubUpdater:
             "priority": priority,
             "title": title
         }
-        data = self.urlencode(data_dict).encode("utf-8")
+        data = utils.urlencode(data_dict).encode("utf-8")
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
         for attempt in range(3):  # Retry up to 3 times
@@ -160,10 +161,6 @@ class GitHubUpdater:
                 asyncio.create_task(self.send_pushover_notification(message=status_message))
         except Exception as e:
             print(f"Unable to send system status notification: {e}")
-
-    def urlencode(self, data):
-        """Encode a dictionary into a URL-encoded string."""
-        return "&".join(f"{key}={value}" for key, value in data.items())
 
     async def check_for_update(self):
         """Checks for updates from GitHub with retry and error handling."""
