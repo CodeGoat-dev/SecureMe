@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.4.4
+
+### Bug Fixes
+
+#### hardware
+
+Fixes an issue where buttons and various sensors would work incorrectly on RP2350 microcontrollers due to a pulldown resistor bug.
+
 ## V1.4.3
 
 ### Changes
