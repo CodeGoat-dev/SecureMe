@@ -1,5 +1,5 @@
 # Goat - Pico Network Manager library
-# Version 1.1.7
+# Version 1.1.8
 # © (c) 2024-2025 Goat Technologies
 # Description:
 # Provides network management for your device firmware.
@@ -33,8 +33,8 @@ class NetworkManager:
         self.config_file = "network_config.conf"
 
         # Constants
-        self.VERSION = "1.1.7"
-        self.repo_url = "https://github.com/CodeGoat-dev/Pico-Network-Manager"
+        self.VERSION = "1.1.8"
+        self.REPO_URL = "https://github.com/CodeGoat-dev/Pico-Network-Manager"
 
         # Interface configuration
         self.sta_if = network.WLAN(network.STA_IF)
