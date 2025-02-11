@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.4.7
+
+### Changes
+
+#### Hardware
+
+Adds debouncing before resetting GPIO pins to prevent multiple button detections on RP2350 microcontrollers.
+
 ## V1.4.6
 
 ### Bug Fixes
