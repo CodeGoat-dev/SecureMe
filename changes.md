@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.4.6
+
+### Bug Fixes
+
+#### hardware
+
+Improves the RP2350 pulldown bug fix which wasn't working as expected.
+
 ## V1.4.5
 
 ### Bug Fixes
