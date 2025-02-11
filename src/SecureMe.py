@@ -1,6 +1,6 @@
 # Goat SecureMe
 # Lightweight, portable, Security System
-# Version 1.4.2
+# Version 1.4.3
 # © (c) 2024-2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -29,7 +29,7 @@ if utils.isPicoW():
     from GitHubUpdater import GitHubUpdater
 
 # Constants
-VERSION = "1.4.2"
+VERSION = "1.4.3"
 REPO_URL = "https://api.github.com/repos/CodeGoat-dev/SecureMe"
 
 # Pin constants
