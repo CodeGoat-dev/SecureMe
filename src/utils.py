@@ -80,6 +80,20 @@ async def deinitialize_pins(skip_pins=None):
             # Ignore invalid pin numbers or configuration errors
             pass
 
+# Pin type checker
+def pin_is_input(pin):
+    """Checks if a GPIO pin is configured as an input.
+
+    Args:
+    - pin: The GPIO pin object to check.
+    """
+    try:
+        pin.value(1)  # Try to set the pin high
+        pin.value(0)  # Reset it
+        return False
+    except:
+        return True
+
 # Configure network interfaces on PicoW
 async def configure_network():
     print("Initializing network interfaces...")
