@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.4.8
+
+### Changes
+
+#### Hardware
+
+Redesigns the workaround for the RP2350 pulldown resistor bug to help prevent multiple detections.
+
 ## V1.4.7
 
 ### Changes

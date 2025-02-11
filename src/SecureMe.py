@@ -351,10 +351,11 @@ async def handle_arming():
             await config.write_async()
 
         while True:
-            if arm_button.value() == 1:  # Button pressed
-                await asyncio.sleep(0.1)
-                arm_button.init(Pin.OUT)
+            if not utils.pin_is_input(arm_button):
                 arm_button.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
+
+            if arm_button.value() == 1:  # Button pressed
+                arm_button.init(Pin.OUT)
                 if alarm_active:
                     print("Stopping alarm...")
                     alarm_active = False
@@ -424,10 +425,11 @@ async def handle_alarm_testing():
     """Test the alarm buzzer."""
     try:
         while True:
-            if alarm_test_button.value() == 1:  # Button pressed
-                await asyncio.sleep(0.1)
-                alarm_test_button.init(Pin.OUT)
+            if not utils.pin_is_input(alarm_test_button):
                 alarm_test_button.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
+
+            if alarm_test_button.value() == 1:  # Button pressed
+                alarm_test_button.init(Pin.OUT)
                 if alarm_active:
                     continue
                 print("Testing alarm...")
@@ -449,10 +451,11 @@ async def handle_alarm_sound_switching():
         alarm_sound = config.get_entry("alarm", "alarm_sound")
 
         while True:
-            if alarm_sound_button.value() == 1:  # Button pressed
-                await asyncio.sleep(0.1)
-                alarm_sound_button.init(Pin.OUT)
+            if not utils.pin_is_input(alarm_sound_button):
                 alarm_sound_button.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
+
+            if alarm_sound_button.value() == 1:  # Button pressed
+                alarm_sound_button.init(Pin.OUT)
                 print("Switching alarm sound")
                 if alarm_sound == 0:
                     alarm_sound = 1
@@ -484,19 +487,20 @@ async def handle_buzzer_volume():
 
     try:
         while True:
-            if volume_down_button.value() == 1:  # Button pressed
-                await asyncio.sleep(0.1)
-                volume_down_button.init(Pin.OUT)
+            if not utils.pin_is_input(volume_down_button):
                 volume_down_button.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
+            if not utils.pin_is_input(volume_up_button):
+                volume_up_button.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
+
+            if volume_down_button.value() == 1:  # Button pressed
+                volume_down_button.init(Pin.OUT)
                 if alarm_active:
                     continue
                 print("Turning down volume.")
                 await decrease_buzzer_volume()
 
             if volume_up_button.value() == 1:  # Button pressed
-                await asyncio.sleep(0.1)
                 volume_up_button.init(Pin.OUT)
-                volume_up_button.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
                 if alarm_active:
                     continue
                 print("Turning up volume.")
@@ -568,10 +572,11 @@ async def detect_tilt():
                     await asyncio.sleep(0.5)
                     continue
 
-            if is_armed and tilt.value() == 1:
-                await asyncio.sleep(0.1)
-                tilt.init(Pin.OUT)
+            if not utils.pin_is_input(tilt):
                 tilt.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
+
+            if is_armed and tilt.value() == 1:
+                tilt.init(Pin.OUT)
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
@@ -610,10 +615,11 @@ async def detect_sound():
                     await asyncio.sleep(0.5)
                     continue
 
-            if is_armed and mic.value() == 1:
-                await asyncio.sleep(0.1)
-                mic.init(Pin.OUT)
+            if not utils.pin_is_input(mic):
                 mic.init(Pin.IN, Pin.PULL_DOWN)  # Reassert pulldown state to work around RP2350 pulldown bug
+
+            if is_armed and mic.value() == 1:
+                mic.init(Pin.OUT)
                 if entering_security_code:
                     await asyncio.sleep(0.05)
                     continue
