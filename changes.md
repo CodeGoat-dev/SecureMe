@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.5.0
+
+### Changes
+
+#### Automatic Update
+
+Improves error handling when checking for updates to prevent unexpected reboots.
+
 ## V1.4.8
 
 ### Changes

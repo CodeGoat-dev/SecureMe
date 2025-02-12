@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.5
+# Version 1.1.6
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -182,16 +182,19 @@ class GitHubUpdater:
                     self.latest_version = release_data['tag_name']
                     print(f"Current version: {self.current_version}")
                     print(f"Latest version: {self.latest_version}")
+                    response.close()
 
                     # Get file list from the 'build' directory
                     contents_url = f"{self.repo_url}/contents/build?ref={self.latest_version}"
-                    self.files_to_download = await self.get_files_in_directory(contents_url)
-                    response.close()
+                    try:
+                        self.files_to_download = await self.get_files_in_directory(contents_url)
+                    except Exception as e:
+                        print(f"Unable to fetch update contents: {e}")
+
                     return  # Success, exit retry loop
                 else:
                     print(f"Failed to fetch firmware release info: {response.status_code}")
                     response.close()
-
             except Exception as e:
                 print(f"Attempt {attempts + 1}: Error checking for firmware updates: {e}")
             finally:
@@ -199,6 +202,7 @@ class GitHubUpdater:
                     response.close()
 
             await asyncio.sleep(2)
+
             attempts += 1
 
         print("All attempts to fetch firmware update information failed.")
@@ -223,11 +227,9 @@ class GitHubUpdater:
 
                     response.close()
                     return files  # Exit retry loop on success
-
                 else:
                     print(f"Failed to fetch update contents: {response.status_code}")
                     response.close()
-
             except Exception as e:
                 print(f"Attempt {attempts + 1}: Error fetching update contents: {e}")
             finally:
