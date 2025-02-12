@@ -87,10 +87,8 @@ default_sensor_cooldown = 10
 arming_cooldown = 10
 default_arming_cooldown = 10
 
-is_armed = True
-alarm_active = False
 alarm_sound = 0
-silent_alarm = False
+default_alarm_sound = 0
 
 default_buzzer_volume = 3072
 buzzer_volume = 3072
@@ -124,6 +122,10 @@ time_sync_server = "https://goatbot.org"
 default_time_sync_server = "https://goatbot.org"
 time_sync_interval = 360
 default_time_sync_interval = 360
+
+is_armed = True
+alarm_active = False
+silent_alarm = False
 
 keypad_locked = True
 
@@ -1369,7 +1371,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, web_server_http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
+    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, alarm_sound, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, web_server_http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
 
     print("Validating firmware configuration...")
 
@@ -1407,6 +1409,13 @@ async def validate_config():
         if not isinstance(arming_cooldown, int):
             arming_cooldown = default_arming_cooldown
             config.set_entry("security", "arming_cooldown", arming_cooldown)
+            await config.write_async()
+
+        alarm_sound = config.get_entry("alarm", "alarm_sound")
+
+        if not isinstance(alarm_sound, int):
+            alarm_sound = default_alarm_sound
+            config.set_entry(""alarm", "alarm_sound", alarm_sound)
             await config.write_async()
 
         buzzer_volume = config.get_entry("buzzer", "buzzer_volume")

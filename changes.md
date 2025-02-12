@@ -26,6 +26,10 @@ Adjusts the high-low alarm duration to be shorter.
 
 Improves error handling when checking for updates to prevent unexpected reboots.
 
+#### Configuration
+
+Improves configuration validation during initialization.
+
 ## V1.4.8
 
 ### Changes
