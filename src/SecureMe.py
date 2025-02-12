@@ -27,6 +27,7 @@ if utils.isPicoW():
     from NetworkManager import NetworkManager
     from WebServer import WebServer
     from GitHubUpdater import GitHubUpdater
+    import pushover
 
 # Constants
 VERSION = "1.5.0"
@@ -758,64 +759,6 @@ def read_keypad_key():
         for i, row in enumerate(keypad_rows):
             row.low()
 
-# Validate Pushover API key
-async def validate_pushover_api_key(timeout =5):
-    """Validate the configured Pushover API key.
-
-        Args:
-        - timeout: The request timeout in seconds.
-        """
-    global pushover_app_token, pushover_api_key
-
-    if not utils.isPicoW():
-        print("Unsupported device.")
-        return False
-
-    if not utils.isNetworkConnected():
-        print("No internet connection available.")
-        return False
-
-    key_is_valid = False
-
-    url = "https://api.pushover.net/1/users/validate.json"
-
-    pushover_app_token = config.get_entry("pushover", "app_token")
-
-    if not pushover_app_token:
-        return key_is_valid
-
-    pushover_api_key = config.get_entry("pushover", "api_key")
-
-    if not pushover_api_key:
-        return key_is_valid
-
-    data_dict = {
-        "token": pushover_app_token,
-        "user": pushover_api_key,
-    }
-    data = utils.urlencode(data_dict).encode("utf-8")
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-    for attempt in range(3):  # Retry up to 3 times
-        try:
-            print(f"Attempt {attempt + 1}: Validating API key...")
-            response = urequests.post(url, data=data, headers=headers, timeout =timeout)
-
-            if response.status_code == 200:
-                key_is_valid = True
-                print("API key is valid.")
-                return key_is_valid
-            else:
-                print(f"Invalid API key. Status code: {response.status_code}")
-        except Exception as e:
-            print(f"Error validating API key (Attempt {attempt + 1}): {e}")
-        finally:
-            if 'response' in locals():
-                response.close()
-            await asyncio.sleep(0.5)  # Slight delay before retrying
-
-    return key_is_valid
-
 # Send push notifications using Pushover
 async def send_pushover_notification(title="Goat - SecureMe", message="Testing", priority=0, timeout =5):
     """Send push notifications using Pushover.
@@ -839,8 +782,6 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         print("No internet connection available.")
         return
 
-    url = "https://api.pushover.net/1/messages.json"
-
     pushover_app_token = config.get_entry("pushover", "app_token")
 
     if not pushover_app_token:
@@ -853,35 +794,10 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         print("A Pushover API key is required to send push notifications.")
         return
 
-    data_dict = {
-        "token": pushover_app_token,
-        "user": pushover_api_key,
-        "message": message,
-        "priority": priority,
-        "title": title
-    }
-    data = utils.urlencode(data_dict).encode("utf-8")
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-    for attempt in range(3):  # Retry up to 3 times
-        try:
-            print(f"Attempt {attempt + 1}: Sending notification...")
-            response = urequests.post(url, data=data, headers=headers, timeout =timeout)
-
-            if response.status_code == 200:
-                print("Notification sent successfully!")
-                print("Response:", response.text)
-                return
-            else:
-                print(f"Failed to send notification. Status code: {response.status_code}")
-        except Exception as e:
-            print(f"Error sending notification (Attempt {attempt + 1}): {e}")
-        finally:
-            if 'response' in locals():
-                response.close()
-            await asyncio.sleep(0.5)  # Slight delay before retrying
-
-    print("All attempts to send notification failed.")
+    try:
+        asyncio.create_task(pushover.send_notification(app_token=pushover_app_token, api_key=pushover_api_key, title=title, message=message, priority=priority, timeout=timeout))
+   except Exception as e:
+        print(f"Error sending notification: {e}")
 
 async def send_system_status_notification(status_message):
     """Sends a system status notification via Pushover.
@@ -1058,7 +974,7 @@ async def alarm_mode_switch():
             await play_dynamic_bell(300, buzzer_volume, 0.05, 1)
 
         if not silent_alarm:
-            key_is_valid = await validate_pushover_api_key()
+            key_is_valid = await pushover.validate_api_key(app_token=pushover_app_token, api_key=pushover_api_key)
             if not key_is_valid:
                 print("The configured Pushover API key is invalid.")
                 await play_dynamic_bell(100, buzzer_volume, 0.05, 1)

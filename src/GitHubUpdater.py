@@ -13,6 +13,7 @@ import urequests
 import uos
 import mip
 from ConfigManager import ConfigManager
+import pushover
 import utils
 
 class GitHubUpdater:
@@ -80,8 +81,6 @@ class GitHubUpdater:
             """
         await asyncio.sleep(0)
 
-        url = "https://api.pushover.net/1/messages.json"
-
         self.pushover_app_token = self.config.get_entry("pushover", "app_token")
 
         if not self.pushover_app_token:
@@ -94,35 +93,10 @@ class GitHubUpdater:
             print("A Pushover API key is required to send push notifications.")
             return
 
-        data_dict = {
-            "token": self.pushover_app_token,
-            "user": self.pushover_api_key,
-            "message": message,
-            "priority": priority,
-            "title": title
-        }
-        data = utils.urlencode(data_dict).encode("utf-8")
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-        for attempt in range(3):  # Retry up to 3 times
-            try:
-                print(f"Attempt {attempt + 1}: Sending notification...")
-                response = urequests.post(url, data=data, headers=headers, timeout=timeout)
-
-                if response.status_code == 200:
-                    print("Notification sent successfully!")
-                    print("Response:", response.text)
-                    return
-                else:
-                    print(f"Failed to send notification. Status code: {response.status_code}")
-            except Exception as e:
-                print(f"Error sending notification (Attempt {attempt + 1}): {e}")
-            finally:
-                if 'response' in locals():
-                    response.close()
-                await asyncio.sleep(0.5)  # Slight delay before retrying
-
-        print("All attempts to send notification failed.")
+        try:
+            asyncio.create_task(pushover.send_notification(app_token=self.pushover_app_token, api_key=self.pushover_api_key, title=title, message=message, priority=priority, timeout=timeout))
+        except Exception as e:
+            print(f"Error sending notification: {e}")
 
     async def send_system_status_notification(self, status_message):
         """Sends a system status notification via Pushover.

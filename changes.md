@@ -30,6 +30,10 @@ Improves error handling when checking for updates to prevent unexpected reboots.
 
 Updates web interface settings pages to provide additional information.
 
+#### Notifications
+
+Implements a new **Pushover** library for sending push notifications to consolidate duplicate code.
+
 #### Configuration
 
 Improves configuration validation during initialization.
