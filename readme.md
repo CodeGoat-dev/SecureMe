@@ -59,7 +59,7 @@ SecureMe comes packed with the following features:
   Connect to Wi-Fi networks using a captive portal for seamless setup.
 
 - **Time Synchronisation**  
-  Automatic date and time synchronisation via an internally hosted API when connected to the internet.
+  Automatic date and time synchronisation via an internally hosted or self-hosted API when connected to the internet.
 
 - **Web Interface**  
   Configure and manage SecureMe through a user-friendly, password-protected web interface.
@@ -88,7 +88,7 @@ SecureMe comes packed with the following features:
 To build and deploy Goat - SecureMe, you will need:
 
 1. **Hardware Components**:
-   - Microcontroller (e.g., Raspberry Pi Pico or Pico W for wireless connectivity)
+   - Microcontroller (e.g., Raspberry Pi Pico 2 or Pico 2 W for wireless connectivity)
    - PIR motion sensor **With Adjustable Sensitivity**
    - Tilt sensor
    - High intensity microphone sensor **HW484, KY-037 or similar**
@@ -102,6 +102,9 @@ To build and deploy Goat - SecureMe, you will need:
 2. **Software**:
    - MicroPython or CircuitPython
    - Required Python libraries (all native to the SecureMe firmware distribution)
+
+3. **Important Notes**:
+   - Memory allocation issues may occur in features like auto update on microcontrollers built on the RP2040 chip **Pico and Pico W**.
 
 ---
 
@@ -156,7 +159,7 @@ If you want to build the **SecureMe** system yourself, follow the instructions p
 - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
 - Login with the username **"admin"** and password **"secureme"** and change the password.
 - You can configure detection settings as well as Pushover notification settings for system and alarm notifications.
-- You can additionally modify the web administration password and system security code.
+- You can additionally modify the web administration password and system security code, along with automatic update, time synchronisation and web interface settings.
 
 ---
 
