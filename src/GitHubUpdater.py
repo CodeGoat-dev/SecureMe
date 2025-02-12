@@ -275,6 +275,9 @@ class GitHubUpdater:
 
     async def update(self):
         """Update device firmware from GitHub."""
+        if not utils.isPicoW():
+            return
+
         if not utils.isNetworkConnected():
             return
 
