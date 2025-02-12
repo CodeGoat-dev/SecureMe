@@ -220,7 +220,7 @@ async def play_alarm(alarm_type="sweep", start_freq=500, end_freq=3000, cycles=1
                     await asyncio.sleep(duration)
 
         elif alarm_type == "high_low":
-            for _ in range(3):
+            for _ in range(2):
                 buzzer.freq(5000)  # Higher pitch
                 led.value(1)
                 await asyncio.sleep(0.5)

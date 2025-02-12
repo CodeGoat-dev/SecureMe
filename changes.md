@@ -16,6 +16,9 @@ Fixes an issue checking the network connection during automatic update.
 
 Consolidates system indicators to reduce code duplication.
 
+#### Alarm
+Adjusts the high-low alarm duration to be shorter.
+
 #### Automatic Update
 
 Improves error handling when checking for updates to prevent unexpected reboots.
