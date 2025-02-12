@@ -538,7 +538,7 @@ class WebServer:
     def serve_index(self):
         """Serves the web server index page."""
         body = """<p>Welcome to the Goat - SecureMe - Portable Security System.<br>
-        Use the web interface to manage system settings securely.</p>
+        Use the SecureMe web interface to manage system settings securely.</p>
         <h2>System Settings</h2>
         <p>Select a setting from the list below.<br>
         <ul>
@@ -563,6 +563,7 @@ class WebServer:
         form = f"""<h2>Web Interface Settings</h2>
         <p>The settings below control the SecureMe web interface.<br>
         You should take care when modifying these settings.</p>
+        <p><b>The SecureMe system must be restarted after changing web interface settings.</b></p>
         <p><b>Improper modification of the settings below may render the SecureMe web interface inaccessible.</b></p>
         <form method="POST" action="/update_web_interface_settings">
             <label for="http_port">HTTP Port:</label>
@@ -580,7 +581,8 @@ class WebServer:
         detect_sound_checked = 'checked' if self.detect_sound else ''
     
         form = f"""<h2>Detection Settings</h2>
-        <p>The settings below control how the SecureMe system detects movement.</p>
+        <p>The settings below control how the SecureMe system detects movement.<br>
+        You can control which sensors are enabled as well as adjust cooldown times.</p>
         <form method="POST" action="/update_detection_settings">
             <p>Select the types of motion you want to detect.</p>
             <label for="detect_motion">Enable Motion Detection</label>
@@ -608,7 +610,8 @@ class WebServer:
     def serve_change_password_form(self):
         """Serves the change password form.""" 
         form = f"""<h2>Change Administrator Password</h2>
-        <p>To change the administrator password, enter a new password below.</p>
+        <p>It is recommended to change the SecureMe web interface password to prevent unauthorized access.<br>
+        To change the web interface administrator password, enter a new password below.</p>
         <form method="POST" action="/update_password">
             <label for="password">New Admin Password:</label>
             <input type="password" id="password" name="password" required><br>
@@ -660,7 +663,8 @@ class WebServer:
         """Serves the change security code form with the current key pre-populated.""" 
         form = f"""<h2>Change Security Code</h2>
         <p>The system security code is required to arm or disarm the system.<br>
-        You should change this from the default value of "0000".</p>
+        The security code will also be required when changing the alarm mode or resetting the configuration to factory settings.</p>
+        <p>You should change the security code from the default value of "0000" if you have not already done so.</p>
         <form method="POST" action="/update_security_code">
             <label for="security_code">New Security Code:</label>
             <input type="number" id="security_code" name="security_code" minlength={self.security_code_min_length} maxlength={self.security_code_max_length} value="{self.security_code}" required><br>
@@ -675,7 +679,8 @@ class WebServer:
         enable_auto_update_checked = 'checked' if self.enable_auto_update else ''
     
         form = f"""<h2>Automatic Update Settings</h2>
-        <p>The settings below control how the SecureMe system checks for firmware updates.</p>
+        <p>The settings below control how the SecureMe system checks for firmware updates.<br>
+        You can control whether automatic update is enabled as well as adjust the update interval.</p>
         <form method="POST" action="/update_auto_update_settings">
             <p>Choose whether to enable the automatic update feature.</p>
             <label for="enable_auto_update">Enable Automatic Update</label>
@@ -695,7 +700,8 @@ class WebServer:
         enable_time_sync_checked = 'checked' if self.enable_time_sync else ''
     
         form = f"""<h2>Time Synchronisation Settings</h2>
-        <p>The settings below control how the SecureMe system synchronises the time and date.</p>
+        <p>The settings below control how the SecureMe system synchronises the time and date.<br>
+        You can control whether time synchronisation is enabled, the sync interval and the server to synchronise from.</p>
         <form method="POST" action="/update_time_sync_settings">
             <p>Choose whether to enable the time synchronisation feature.</p>
             <label for="enable_time_sync">Enable Time Synchronisation</label>

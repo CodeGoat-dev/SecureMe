@@ -26,6 +26,10 @@ Adjusts the high-low alarm duration to be shorter.
 
 Improves error handling when checking for updates to prevent unexpected reboots.
 
+#### Web Interface
+
+Updates web interface settings pages to provide additional information.
+
 #### Configuration
 
 Improves configuration validation during initialization.
