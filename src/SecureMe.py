@@ -227,6 +227,12 @@ async def play_alarm(alarm_type="sweep", start_freq=500, end_freq=3000, cycles=1
                 buzzer.freq(500)  # Lower pitch
                 led.value(0)
                 await asyncio.sleep(0.5)
+        elif alarm_type == "bell":
+            for _ in range(cycles):
+                # High bell
+                await play_dynamic_bell(end_freq, buzzer_volume, 0.05, 1)
+                # Low bell
+                await play_dynamic_bell(start_freq, buzzer_volume, 0.05, 1)
 
         else:
             raise ValueError(f"Unsupported alarm type: {alarm_type}")
@@ -315,6 +321,12 @@ async def alarm(message):
                 await asyncio.sleep(0.05)
                 led.value(0)
                 await play_alarm("high_low")
+                await asyncio.sleep(0.05)
+            elif alarm_sound == 4:
+                await play_alarm("bell", 500, 4000, 1)
+                await asyncio.sleep(0.05)
+                led.value(0)
+                await play_alarm("bell", 500, 4000, 1)
                 await asyncio.sleep(0.05)
             else:
                 await play_alarm("sweep", 500, 3000, 1)
@@ -467,6 +479,9 @@ async def handle_alarm_sound_switching():
                     alarm_sound = 3
                     await play_alarm("high_low", 300, 4000, 1)
                 elif alarm_sound == 3:
+                    alarm_sound = 4
+                    await play_alarm("bell", 300, 4000, 1)
+                elif alarm_sound == 4:
                     alarm_sound = 0
                     await play_alarm("sweep", 500, 3000, 1)
 

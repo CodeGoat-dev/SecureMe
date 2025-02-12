@@ -17,6 +17,9 @@ Fixes an issue checking the network connection during automatic update.
 Consolidates system indicators to reduce code duplication.
 
 #### Alarm
+
+Adds a new **Bell** sound which can be selected when changing the alarm sound.
+
 Adjusts the high-low alarm duration to be shorter.
 
 #### Automatic Update
