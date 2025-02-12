@@ -69,14 +69,6 @@ class GitHubUpdater:
 
         self.config_watcher = asyncio.create_task(self.config.start_watching())
 
-    def isNetworkConnected(self):
-        """Check if the network interface is connected."""
-        try:
-            sta = network.WLAN(network.STA_IF)
-            return sta.isconnected()
-        except Exception:
-            return False
-
     async def send_pushover_notification(self, title="Goat - SecureMe", message="Testing", priority=0, timeout=5):
         """Send push notifications using Pushover.
 
@@ -283,7 +275,7 @@ class GitHubUpdater:
 
     async def update(self):
         """Update device firmware from GitHub."""
-        if not self.isNetworkConnected():
+        if not utils.isNetworkConnected():
             return
 
         await self.check_for_update()

@@ -4,6 +4,12 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ## V1.5.0
 
+### Bug Fixes
+
+#### Automatic Update
+
+Fixes an issue checking the network connection during automatic update.
+
 ### Changes
 
 #### System Indicators
