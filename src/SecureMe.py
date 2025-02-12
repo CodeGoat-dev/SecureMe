@@ -388,7 +388,7 @@ async def handle_arming():
                     print("Disarming")
                     is_armed = False
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
-                    await system_ready_indicator(is_armed)
+                    await indicator_signal("system_ready", state=is_armed)
                     if system_status_notifications:
                         if general_notifications:
                             asyncio.create_task(send_system_status_notification(status_message="System disarmed."))
@@ -409,7 +409,7 @@ async def handle_arming():
                     print("Arming")
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     is_armed = True
-                    await system_ready_indicator(is_armed)
+                    await indicator_signal("system_ready", state=is_armed)
                     if system_status_notifications:
                         if general_notifications:
                             asyncio.create_task(send_system_status_notification(status_message="System armed."))
@@ -706,7 +706,7 @@ async def increase_buzzer_volume():
     config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
     await config.write_async()
     print(f"Buzzer volume increased to: {buzzer_volume}")
-    await buzzer_volume_indicator()
+    await indicator_signal("buzzer_volume")
 
 # Method to decrease buzzer volume by 10%
 async def decrease_buzzer_volume():
@@ -718,7 +718,7 @@ async def decrease_buzzer_volume():
     config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
     await config.write_async()
     print(f"Buzzer volume decreased to: {buzzer_volume}")
-    await buzzer_volume_indicator()
+    await indicator_signal("buzzer_volume")
 
 # Read a single key from the keypad
 def read_keypad_key():
@@ -730,7 +730,7 @@ def read_keypad_key():
                 if col.value() == 1:
                     row.low()
                     if entering_security_code:
-                        keypad_entry_indicator()
+                        indicator_signal("keypad_entry")
                     time.sleep_ms(100)
                     return keypad_characters[i][j]
             row.low()
@@ -900,166 +900,69 @@ async def send_system_status_notification(status_message):
         except Exception as e:
             print(f"Unable to send system status notification: {e}")
 
-# System startup indicator
-async def system_startup_indicator():
-    """Play the system startup indicator."""
-    try:
-        led.value(1)
-        buzzer.duty_u16(buzzer_volume)
-        buzzer.freq(500)
-        await asyncio.sleep(0.1)
-        buzzer.freq(1000)
-        await asyncio.sleep(0.1)
-        buzzer.freq(1500)
-        await asyncio.sleep(0.1)
-        buzzer.freq(2000)
-        await asyncio.sleep(0.1)
-        led.value(0)
-        buzzer.duty_u16(0)
-    except Exception as e:
-        print(f"Error in system_startup_indicator: {e}")
-    finally:
-        buzzer.duty_u16(0)  # Turn off the buzzer
-        led.value(0)
-
-# System ready indicator
-async def system_ready_indicator(armed = True):
-    """Play the system ready indicator based on the current system state.
+async def indicator_signal(indicator_type, state=None):
+    """Play the specified indicator signal.
 
     Args:
-    - armed: Boolean flag to indicate state.
+    - indicator_type (str): The type of indicator to play. 
+      Options: "system_startup", "system_ready", "buzzer_volume", 
+               "keypad_entry", "keypad_lock", "alarm_mode_switch".
+    - state (bool, optional): Used for indicators that have different states (e.g., armed/disarmed, locked/unlocked, silent/loud).
     """
     try:
+        led.value(1)
         buzzer.duty_u16(buzzer_volume)
 
-        led.value(1)
+        if indicator_type == "system_startup":
+            for freq in [500, 1000, 1500, 2000]:
+                buzzer.freq(freq)
+                await asyncio.sleep(0.1)
 
-        if armed:
-            buzzer.freq(1000)
-            await asyncio.sleep(0.1)
+        elif indicator_type == "system_ready":
+            if state:  # Armed
+                for freq in [1000, 1500, 2000]:
+                    buzzer.freq(freq)
+                    await asyncio.sleep(0.1)
+            else:  # Disarmed
+                for freq in [2000, 1500, 1000]:
+                    buzzer.freq(freq)
+                    await asyncio.sleep(0.1)
+
+        elif indicator_type == "buzzer_volume":
             buzzer.freq(1500)
             await asyncio.sleep(0.1)
-            buzzer.freq(2000)
-            await asyncio.sleep(0.1)
-        else:
-            buzzer.freq(2000)
-            await asyncio.sleep(0.1)
-            buzzer.freq(1500)
-            await asyncio.sleep(0.1)
-            buzzer.freq(1000)
-            await asyncio.sleep(0.1)
 
-        buzzer.duty_u16(0)
-
-        led.value(0)
-    except Exception as e:
-        print(f"Error in system_ready_indicator: {e}")
-    finally:
-        buzzer.duty_u16(0)  # Turn off the buzzer
-        led.value(0)
-
-# Buzzer volume indicator
-async def buzzer_volume_indicator():
-    """Play the buzzer volume indicator."""
-    try:
-        led.value(1)
-        buzzer.duty_u16(buzzer_volume)
-        buzzer.freq(1500)
-        await asyncio.sleep(0.1)
-        buzzer.duty_u16(0)
-        led.value(0)
-    except Exception as e:
-        print(f"Error in buzzer_volume_indicator: {e}")
-    finally:
-        buzzer.duty_u16(0)  # Turn off the buzzer
-        led.value(0)
-
-# Keypad entry indicator
-def keypad_entry_indicator():
-    """Play the keypad entry indicator."""
-    try:
-        led.value(1)
-        buzzer.duty_u16(buzzer_volume)
-        buzzer.freq(200)
-        time.sleep(0.05)
-        buzzer.duty_u16(0)
-        led.value(0)
-    except Exception as e:
-        print(f"Error in keypad_entry_indicator: {e}")
-    finally:
-        buzzer.duty_u16(0)  # Turn off the buzzer
-        led.value(0)
-
-# Keypad lock indicator
-async def keypad_lock_indicator(locked = True):
-    """Play the keypad lock indicator.
-
-    Args:
-    - locked: Boolean flag to indicate state.
-    """
-    try:
-        buzzer.duty_u16(buzzer_volume)
-
-        led.value(1)
-
-        if locked:
-            buzzer.freq(600)
-            await asyncio.sleep(0.05)
-            buzzer.freq(400)
-            await asyncio.sleep(0.05)
+        elif indicator_type == "keypad_entry":
             buzzer.freq(200)
-            await asyncio.sleep(0.05)
-        else:
-            buzzer.freq(200)
-            await asyncio.sleep(0.05)
-            buzzer.freq(400)
-            await asyncio.sleep(0.05)
-            buzzer.freq(600)
-            await asyncio.sleep(0.05)
+            time.sleep(0.05)
+
+        elif indicator_type == "keypad_lock":
+            if state:  # Locked
+                for freq in [600, 400, 200]:
+                    buzzer.freq(freq)
+                    await asyncio.sleep(0.05)
+            else:  # Unlocked
+                for freq in [200, 400, 600]:
+                    buzzer.freq(freq)
+                    await asyncio.sleep(0.05)
+
+        elif indicator_type == "alarm_mode_switch":
+            if state:  # Silent mode
+                for freq in [1200, 1000, 800]:
+                    buzzer.freq(freq)
+                    await asyncio.sleep(0.05)
+            else:  # Loud mode
+                for freq in [800, 1000, 1200]:
+                    buzzer.freq(freq)
+                    await asyncio.sleep(0.05)
 
         buzzer.duty_u16(0)
-
         led.value(0)
+
     except Exception as e:
-        print(f"Error in keypad_lock_indicator: {e}")
+        print(f"Error in indicator_signal({indicator_type}): {e}")
     finally:
-        buzzer.duty_u16(0)  # Turn off the buzzer
-        led.value(0)
-
-# Alarm mode switch indicator
-async def alarm_mode_switch_indicator(silent = True):
-    """Play the alarm mode switch indicator.
-
-    Args:
-    - silent: Boolean flag to indicate state.
-    """
-    try:
-        buzzer.duty_u16(buzzer_volume)
-
-        led.value(1)
-
-        if silent:
-            buzzer.freq(1200)
-            await asyncio.sleep(0.05)
-            buzzer.freq(1000)
-            await asyncio.sleep(0.05)
-            buzzer.freq(800)
-            await asyncio.sleep(0.05)
-        else:
-            buzzer.freq(800)
-            await asyncio.sleep(0.05)
-            buzzer.freq(1000)
-            await asyncio.sleep(0.05)
-            buzzer.freq(1200)
-            await asyncio.sleep(0.05)
-
-        buzzer.duty_u16(0)
-
-        led.value(0)
-    except Exception as e:
-        print(f"Error in alarm_mode_switch_indicator: {e}")
-    finally:
-        buzzer.duty_u16(0)  # Turn off the buzzer
+        buzzer.duty_u16(0)  # Ensure buzzer is off
         led.value(0)
 
 # Matrix keypad lock
@@ -1071,11 +974,11 @@ async def keypad_lock():
         if keypad_locked:
             print("Keypad unlocked.")
             keypad_locked = False
-            await keypad_lock_indicator(keypad_locked)
+            await indicator_signal("keypad_lock", state=keypad_locked)
         else:
             print("Keypad locked.")
             keypad_locked = True
-            await keypad_lock_indicator(keypad_locked)
+            await indicator_signal("keypad_lock", state=keypad_locked)
     except Exception as e:
         print(f"Error in keypad_lock: {e}")
 
@@ -1147,14 +1050,14 @@ async def alarm_mode_switch():
         if silent_alarm:
             print("Alarm mode set to audible.")
             silent_alarm = False
-            await alarm_mode_switch_indicator(silent_alarm)
+            await indicator_signal("alarm_mode_switch", state=silent_alarm)
             if system_status_notifications:
                 if general_notifications:
                     asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to audible."))
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
-            await alarm_mode_switch_indicator(silent_alarm)
+            await indicator_signal("alarm_mode_switch", state=silent_alarm)
             if system_status_notifications:
                 if general_notifications:
                     asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to silent."))
@@ -1430,7 +1333,7 @@ async def system_startup():
     try:
         await validate_config()
 
-        await system_startup_indicator()
+        await indicator_signal("system_startup")
 
         if utils.isPicoW():
             await utils.configure_network()
@@ -1439,7 +1342,7 @@ async def system_startup():
 
         await warmup_pir_sensor()
 
-        await system_ready_indicator(is_armed)
+        await indicator_signal("system_ready", state=is_armed)
 
         print("System ready.")
 

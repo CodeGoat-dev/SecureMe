@@ -6,6 +6,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### Changes
 
+#### System Indicators
+
+Consolidates system indicators to reduce code duplication.
+
 #### Automatic Update
 
 Improves error handling when checking for updates to prevent unexpected reboots.
