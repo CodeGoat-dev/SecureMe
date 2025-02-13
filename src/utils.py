@@ -4,13 +4,19 @@
 
 # Imports
 from machine import Pin, PWM
+import sys
 import uasyncio as asyncio
 
 # Constants
 NUM_PINS = 30
 
+def isRP2040():
+    """Checks if running on an RP2040 based microcontroller."""
+    return "RP2040" in sys.implementation[2]
+
 # Check if running on a PicoW microcontroller
 def isPicoW():
+    """Checks if the current microcontroller is wi-fi enabled."""
     try:
         # Try to import the network module, which is only available on Pico W
         import network
@@ -21,6 +27,7 @@ def isPicoW():
 
 # Check if the network is connected
 def isNetworkConnected():
+    """Checks if the station interface is currently connected."""
     try:
         import network
         sta = network.WLAN(network.STA_IF)
@@ -82,7 +89,8 @@ async def deinitialize_pins(skip_pins=None):
 
 # Pin type checker
 def pin_is_input(pin):
-    """Checks if a GPIO pin is configured as an input.
+    """
+    Checks if a GPIO pin is configured as an input.
 
     Args:
     - pin: The GPIO pin object to check.
@@ -96,6 +104,7 @@ def pin_is_input(pin):
 
 # Configure network interfaces on PicoW
 async def configure_network():
+    """Configures all network interfaces with a default disabled state."""
     print("Initializing network interfaces...")
 
     import network
