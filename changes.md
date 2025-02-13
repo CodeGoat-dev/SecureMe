@@ -24,6 +24,8 @@ Adjusts the high-low alarm duration to be shorter.
 
 #### Automatic Update
 
+Adds memory defragmentation prior to online update when running on RP2040 based microcontrollers.
+
 Improves error handling when checking for updates to prevent unexpected reboots.
 
 #### Web Interface

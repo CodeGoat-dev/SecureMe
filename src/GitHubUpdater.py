@@ -255,7 +255,11 @@ class GitHubUpdater:
         if not utils.isNetworkConnected():
             return
 
+        if utils.isRP2040():
+            utils.defragment_memory()
+
         await self.check_for_update()
+
         if await self.is_update_available():
             if self.system_status_notifications:
                 if self.update_notifications:
