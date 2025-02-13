@@ -11,7 +11,7 @@ import urequests
 import utils
 
 # Validate Pushover API key
-async def validate_api_key(app_token, api_key, timeout =5):
+async def validate_api_key(app_token=None, api_key=None, timeout=5):
     """Validate a Pushover API key.
 
         Args:
@@ -65,7 +65,7 @@ async def validate_api_key(app_token, api_key, timeout =5):
     return key_is_valid
 
 # Send push notifications using Pushover
-async def send_notification(app_token, api_key, title="Goat - SecureMe", message=None, priority=0, timeout =5):
+async def send_notification(app_token=None, api_key=None, title="Goat - SecureMe", message=None, priority=0, timeout=5):
     """Send push notifications using Pushover.
 
         Args:
