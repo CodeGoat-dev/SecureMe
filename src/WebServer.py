@@ -515,7 +515,7 @@ class WebServer:
         return self.html_template("Unauthorized", body)
 
     def serve_index(self):
-        """Serves the web server index page."""
+        """Serves the web interface index page."""
         body = """<p>Welcome to the Goat - SecureMe - Portable Security System.<br>
         Use the SecureMe web interface to manage system settings securely.</p>
         <h2>System Settings</h2>
@@ -601,7 +601,7 @@ class WebServer:
         return self.html_template("Change Admin Password", form)
 
     def serve_pushover_settings_form(self):
-        """Serves the Pushover Settings form with the current credentials pre-populated."""
+        """Serves the Pushover Settings form with the current credentials and settings pre-populated."""
         status_notifications_checked = 'checked' if self.system_status_notifications else ''
         general_notifications_checked = 'checked' if self.general_notifications else ''
         security_code_notifications_checked = 'checked' if self.security_code_notifications else ''
@@ -639,7 +639,7 @@ class WebServer:
         return self.html_template("Pushover Settings", form)
 
     def serve_change_security_code_form(self):
-        """Serves the change security code form with the current key pre-populated.""" 
+        """Serves the change security code form.""" 
         form = f"""<h2>Change Security Code</h2>
         <p>The system security code is required to arm or disarm the system.<br>
         The security code will also be required when changing the alarm mode or resetting the configuration to factory settings.</p>
@@ -715,7 +715,7 @@ class WebServer:
         return self.html_template("Reboot Device", form)
 
     def serve_reset_firmware_form(self):
-        """Serves the reset firmware form with the current key pre-populated.""" 
+        """Serves the reset firmware form.""" 
         form = f"""<h2>Reset SecureMe Firmware</h2>
         <p>If you are having trouble with your SecureMe security system you can try resetting the firmware.<br>
         Resetting the firmware will clear all current configuration data.</p>
