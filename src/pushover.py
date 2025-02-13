@@ -65,7 +65,7 @@ async def validate_api_key(app_token, api_key, timeout =5):
     return key_is_valid
 
 # Send push notifications using Pushover
-async def send_notification(app_token, api_key, title="Goat - SecureMe", message="Testing", priority=0, timeout =5):
+async def send_notification(app_token, api_key, title="Goat - SecureMe", message=None, priority=0, timeout =5):
     """Send push notifications using Pushover.
 
         Args:
@@ -95,6 +95,10 @@ async def send_notification(app_token, api_key, title="Goat - SecureMe", message
 
     if not api_key:
         print("A Pushover API key is required to send push notifications.")
+        return
+
+    if not message:
+        print("A message must be provided to send push notifications.")
         return
 
     data_dict = {
