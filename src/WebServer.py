@@ -63,6 +63,8 @@ class WebServer:
         self.security_code_notifications = None
         self.web_interface_notifications = None
         self.update_notifications = None
+        self.web_server_address = "0.0.0.0"
+        self.default_web_server_address = "0.0.0.0"
         self.web_server_http_port = 8000
         self.default_web_server_http_port = 8000
         self.admin_password = "secureme"
@@ -90,28 +92,28 @@ class WebServer:
         self.hostname = config.get_entry("network", "hostname")
         if not isinstance(self.hostname, str):
             self.hostname = self.default_hostname
-            config.set_entry("network", "hostname", self.hostname)
-            await config.write_async()
+            self.config.set_entry("network", "hostname", self.hostname)
+            await self.config.write_async()
         self.ip_address = config.get_entry("network", "ip_address")
         if not isinstance(self.ip_address, str):
             self.ip_address = self.default_ip_address
-            config.set_entry("network", "ip_address", self.ip_address)
-            await config.write_async()
+            self.config.set_entry("network", "ip_address", self.ip_address)
+            await self.config.write_async()
         self.subnet_mask = config.get_entry("network", "subnet_mask")
         if not isinstance(self.subnet_mask, str):
             self.subnet_mask = self.default_subnet_mask
-            config.set_entry("network", "subnet_mask", self.subnet_mask)
-            await config.write_async()
+            self.config.set_entry("network", "subnet_mask", self.subnet_mask)
+            await self.config.write_async()
         self.gateway = config.get_entry("network", "gateway")
         if not isinstance(self.gateway, str):
             self.gateway = self.default_gateway
-            config.set_entry("network", "gateway", self.gateway)
-            await config.write_async()
+            self.config.set_entry("network", "gateway", self.gateway)
+            await self.config.write_async()
         self.dns = config.get_entry("network", "dns")
         if not isinstance(self.dns, str):
             self.dns = self.default_dns
-            config.set_entry("network", "dns", self.dns)
-            await config.write_async()
+            self.config.set_entry("network", "dns", self.dns)
+            await self.config.write_async()
         self.detect_motion = self.config.get_entry("security", "detect_motion")
         if not isinstance(self.detect_motion, bool):
             self.detect_motion = True
@@ -169,6 +171,11 @@ class WebServer:
             self.security_code = self.default_security_code
             self.config.set_entry("security", "security_code", self.security_code)
             await self.config.write_async()
+        self.web_server_address = self.config.get_entry("server", "address")
+        if not isinstance(self.web_server_address, str):
+            self.web_server_address = self.default_web_server_address
+            self.config.set_entry("server", "address", self.web_server_address)
+            self.await config.write_async()
         self.web_server_http_port = self.config.get_entry("server", "http_port")
         if not isinstance(self.web_server_http_port, int):
             self.web_server_http_port = self.default_web_server_http_port
@@ -392,8 +399,11 @@ class WebServer:
             elif "POST /update_web_interface_settings" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
+                address = 'address' in post_data
                 http_port = 'http_port' in post_data
+                self.web_server_address = address
                 self.web_server_http_port = http_port
+                self.config.set_entry("server", "address", self.web_server_address)
                 self.config.set_entry("server", "http_port", self.web_server_http_port)
                 await self.config.write_async()
                 self.alert_text = "Web interface settings updated."
@@ -641,6 +651,8 @@ class WebServer:
         <p><b>The SecureMe system must be restarted after changing web interface settings.</b></p>
         <p><b>Improper modification of the settings below may render the SecureMe web interface inaccessible.</b></p>
         <form method="POST" action="/update_web_interface_settings">
+            <label for="address">Listen Address:</label>
+            <input type="text" id="address" name="address" value="{self.web_server_address}" required><br>
             <label for="http_port">HTTP Port:</label>
             <input type="number" id="http_port" name="http_port" minlength=1 maxlength=5 value="{self.web_server_http_port}" required><br>
             <input type="submit" value="Save Settings">
