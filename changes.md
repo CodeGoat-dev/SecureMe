@@ -44,6 +44,10 @@ Improves configuration validation during initialization.
 
 Implements memory defragmentation for RP2040 based microcontrollers after initialization.
 
+#### Pico Network Manager
+
+Updated Pico Network Manager to v1.2.0.
+
 ## V1.4.8
 
 ### Changes
