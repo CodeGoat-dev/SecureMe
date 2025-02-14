@@ -812,7 +812,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
             return
 
         asyncio.create_task(pushover.send_notification(app_token=pushover_app_token, api_key=pushover_api_key, title=title, message=message, priority=priority, timeout=timeout))
-   except Exception as e:
+    except Exception as e:
         print(f"Error sending notification: {e}")
 
 async def send_system_status_notification(status_message):
@@ -1347,7 +1347,7 @@ async def validate_config():
 
         if not isinstance(alarm_sound, int):
             alarm_sound = default_alarm_sound
-            config.set_entry(""alarm", "alarm_sound", alarm_sound)
+            config.set_entry("alarm", "alarm_sound", alarm_sound)
             await config.write_async()
 
         buzzer_volume = config.get_entry("buzzer", "buzzer_volume")
@@ -1498,7 +1498,7 @@ async def configure_network_settings():
     try:
         if ip_address == "0.0.0.0":
             network_manager.reset_to_dhcp()
-        else
+        else:
             network_manager.set_static_ip(ip=ip_address, subnet=subnet_mask, gateway=gateway, dns=dns)
     except Exception as e:
         print(f"Unable to configure network settings: {e}")
@@ -1536,7 +1536,7 @@ async def main():
 
     if utils.isPicoW():
         tasks.append(asyncio.create_task(network_manager.run()))
-        tasks.append(asyncio.create_task(configure_ip_settings())
+        tasks.append(asyncio.create_task(configure_ip_settings()))
         tasks.append(asyncio.create_task(updater.run_periodically()))
 
     # Run all tasks concurrently
