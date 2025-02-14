@@ -1529,6 +1529,12 @@ try:
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=enable_time_sync, time_server=time_sync_server, time_sync_interval=time_sync_interval, sta_web_server=web_server)
         updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval, auto_reboot =True)
 
+    try:
+        if utils.isRP2040():
+            utils.defragment_memory()
+    except Exception as e:
+        print(f"Unable to defragment memory: {e}")
+
     asyncio.run(main())
 except KeyboardInterrupt:
     print("Keyboard interupt detected.")

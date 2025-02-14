@@ -40,6 +40,10 @@ Implements a new **Pushover** library for sending push notifications to consolid
 
 Improves configuration validation during initialization.
 
+#### Initialization
+
+Implements memory defragmentation for RP2040 based microcontrollers after initialization.
+
 ## V1.4.8
 
 ### Changes
