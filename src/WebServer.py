@@ -39,6 +39,16 @@ class WebServer:
         self.config_file = "secureme.conf"
         self.network_config_file = "network_config.conf"
 
+        self.hostname = "SecureMe"
+        self.default_hostname = "SecureMe"
+        self.ip_address = "0.0.0.0"
+        self.default_ip_address = "0.0.0.0"
+        self.subnet_mask = "0.0.0.0"
+        self.default_subnet_mask = "0.0.0.0"
+        self.gateway = "0.0.0.0"
+        self.default_gateway = "0.0.0.0"
+        self.dns = "0.0.0.0"
+        self.default_dns = "0.0.0.0"
         self.detect_motion = None
         self.detect_tilt = None
         self.detect_sound = None
@@ -77,6 +87,31 @@ class WebServer:
         self.config = ConfigManager(self.config_directory, self.config_file)
         await self.config.read_async()
 
+        self.hostname = config.get_entry("network", "hostname")
+        if not isinstance(self.hostname, str):
+            self.hostname = self.default_hostname
+            config.set_entry("network", "hostname", self.hostname)
+            await config.write_async()
+        self.ip_address = config.get_entry("network", "ip_address")
+        if not isinstance(self.ip_address, str):
+            self.ip_address = self.default_ip_address
+            config.set_entry("network", "ip_address", self.ip_address)
+            await config.write_async()
+        self.subnet_mask = config.get_entry("network", "subnet_mask")
+        if not isinstance(self.subnet_mask, str):
+            self.subnet_mask = self.default_subnet_mask
+            config.set_entry("network", "subnet_mask", self.subnet_mask)
+            await config.write_async()
+        self.gateway = config.get_entry("network", "gateway")
+        if not isinstance(self.gateway, str):
+            self.gateway = self.default_gateway
+            config.set_entry("network", "gateway", self.gateway)
+            await config.write_async()
+        self.dns = config.get_entry("network", "dns")
+        if not isinstance(self.dns, str):
+            self.dns = self.default_dns
+            config.set_entry("network", "dns", self.dns)
+            await config.write_async()
         self.detect_motion = self.config.get_entry("security", "detect_motion")
         if not isinstance(self.detect_motion, bool):
             self.detect_motion = True
@@ -311,7 +346,9 @@ class WebServer:
                 return
 
             # Serve the appropriate pages based on the request
-            if "GET /web_interface_settings" in request:
+            if "GET /network_settings" in request:
+                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_network_settings_form()
+            elif "GET /web_interface_settings" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_web_interface_settings_form()
             elif "GET /detection_settings" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_detection_settings_form()
@@ -331,6 +368,27 @@ class WebServer:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_reboot_device_form()
             elif "GET /" in request:
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + self.serve_index()
+            elif "POST /update_network_settings" in request:
+                content = request.split("\r\n\r\n")[1]
+                post_data = self.parse_form_data(content)  # Parse the form data manually
+                hostname = post_data.get('hostname', self.hostname)
+                ip_address = f"{post_data.get('ip1', '0')}.{post_data.get('ip2', '0')}.{post_data.get('ip3', '0')}.{post_data.get('ip4', '0')}"
+                subnet_mask = f"{post_data.get('subnet1', '0')}.{post_data.get('subnet2', '0')}.{post_data.get('subnet3', '0')}.{post_data.get('subnet4', '0')}"
+                gateway = f"{post_data.get('gateway1', '0')}.{post_data.get('gateway2', '0')}.{post_data.get('gateway3', '0')}.{post_data.get('gateway4', '0')}"
+                dns = f"{post_data.get('dns1', '0')}.{post_data.get('dns2', '0')}.{post_data.get('dns3', '0')}.{post_data.get('dns4', '0')}"
+                self.hostname = hostname
+                self.ip_address = ip_address
+                self.subnet_mask = subnet_mask
+                self.gateway = gateway
+                self.dns = dns
+                self.config.set_entry("network", "hostname", self.hostname)
+                self.config.set_entry("network", "ip_address", self.ip_address)
+                self.config.set_entry("network", "subnet_mask", self.subnet_mask)
+                self.config.set_entry("network", "gateway", self.gateway)
+                self.config.set_entry("network", "dns", self.dns)
+                await self.config.write_async()
+                self.alert_text = "Network settings updated."
+                response = "HTTP/1.1 303 See Other\r\nLocation: /network_settings\r\n\r\n"
             elif "POST /update_web_interface_settings" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
@@ -521,6 +579,7 @@ class WebServer:
         <h2>System Settings</h2>
         <p>Select a setting from the list below.<br>
         <ul>
+        <li><a href="/network_settings">Network Settings</a></li>
         <li><a href="/web_interface_settings">Web Interface Settings</a></li>
         <li><a href="/detection_settings">Detection Settings</a></li>
         <li><a href="/change_password">Change Admin Password</a><br></li>
@@ -536,6 +595,43 @@ class WebServer:
         """
 
         return self.html_template("Welcome", body)
+
+    def serve_network_settings_form(self):
+        """Serves the network settings configuration form."""
+        form = f"""
+        <h2>Network Settings</h2>
+        <p>The settings below control the SecureMe network connection.<br>
+        Make sure you provide valid values to avoid connectivity issues.</p>
+        <p><b>Incorrect configuration of the SecureMe network settings may require a configuration reset.</b></p>
+        <form method="POST" action="/update_network_settings">
+            <label for="hostname">Hostname:</label>
+            <input type="text" id="hostname" name="hostname" value="{self.escape_html(self.hostname)}" required><br>
+            <h3>IP Address Configuration</h3>
+            <label>IP Address:</label>
+            <input type="number" name="ip1" min="0" max="255" value="{self.ip_address.split('.')[0]}" required>.
+            <input type="number" name="ip2" min="0" max="255" value="{self.ip_address.split('.')[1]}" required>.
+            <input type="number" name="ip3" min="0" max="255" value="{self.ip_address.split('.')[2]}" required>.
+            <input type="number" name="ip4" min="0" max="255" value="{self.ip_address.split('.')[3]}" required><br>
+            <label>Subnet Mask:</label>
+            <input type="number" name="subnet1" min="0" max="255" value="{self.subnet_mask.split('.')[0]}" required>.
+            <input type="number" name="subnet2" min="0" max="255" value="{self.subnet_mask.split('.')[1]}" required>.
+            <input type="number" name="subnet3" min="0" max="255" value="{self.subnet_mask.split('.')[2]}" required>.
+            <input type="number" name="subnet4" min="0" max="255" value="{self.subnet_mask.split('.')[3]}" required><br>
+            <label>Gateway:</label>
+            <input type="number" name="gateway1" min="0" max="255" value="{self.gateway.split('.')[0]}" required>.
+            <input type="number" name="gateway2" min="0" max="255" value="{self.gateway.split('.')[1]}" required>.
+            <input type="number" name="gateway3" min="0" max="255" value="{self.gateway.split('.')[2]}" required>.
+            <input type="number" name="gateway4" min="0" max="255" value="{self.gateway.split('.')[3]}" required><br>
+            <label>DNS Server:</label>
+            <input type="number" name="dns1" min="0" max="255" value="{self.dns.split('.')[0]}" required>.
+            <input type="number" name="dns2" min="0" max="255" value="{self.dns.split('.')[1]}" required>.
+            <input type="number" name="dns3" min="0" max="255" value="{self.dns.split('.')[2]}" required>.
+            <input type="number" name="dns4" min="0" max="255" value="{self.dns.split('.')[3]}" required><br>
+            <input type="submit" value="Save Settings">
+        </form>
+        """
+
+        return self.html_template("Network Settings", form)
 
     def serve_web_interface_settings_form(self):
         """Serves the web interface settings form with the current settings pre-populated."""

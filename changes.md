@@ -30,6 +30,8 @@ Improves error handling when checking for updates to prevent unexpected reboots.
 
 #### Web Interface
 
+Adds a **Network Settings** page to enable configuration of the SecureMe hostname and IP settings.
+
 Updates web interface settings pages to provide additional information.
 
 #### Notifications
