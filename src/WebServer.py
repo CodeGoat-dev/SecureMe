@@ -612,11 +612,15 @@ class WebServer:
         <h2>Network Settings</h2>
         <p>The settings below control the SecureMe network connection.<br>
         Make sure you provide valid values to avoid connectivity issues.</p>
+        <p><b>The SecureMe system must be restarted after changing network settings.</b></p>
         <p><b>Incorrect configuration of the SecureMe network settings may require a configuration reset.</b></p>
         <form method="POST" action="/update_network_settings">
+            <p>The hostname is the name used to identify the SecureMe device on your network.<br>
+            You can specify a custom hostname or use the default.</p>
             <label for="hostname">Hostname:</label>
             <input type="text" id="hostname" name="hostname" value="{self.escape_html(self.hostname)}" required><br>
-            <h3>IP Address Configuration</h3>
+            <p>By default, SecureMe obtains an IP address via DHCP.<br>
+            You can optionally customise the IP address settings below.</p>
             <label>IP Address:</label>
             <input type="number" name="ip1" min="0" max="255" value="{self.ip_address.split('.')[0]}" required>.
             <input type="number" name="ip2" min="0" max="255" value="{self.ip_address.split('.')[1]}" required>.
