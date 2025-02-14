@@ -42,6 +42,8 @@ Implements a new **Pushover** library for sending push notifications to consolid
 
 Adds network configuration settings to control the hostname and IP address.
 
+Adds a setting to specify the web server listen address.
+
 Improves configuration validation during initialization.
 
 #### Initialization

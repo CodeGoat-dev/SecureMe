@@ -105,6 +105,8 @@ default_alarm_sound = 0
 buzzer_volume = 3072
 default_buzzer_volume = 3072
 
+web_server_address = "0.0.0.0"
+default_web_server_address = "0.0.0.0"
 web_server_http_port = 8000
 default_web_server_http_port = 8000
 admin_password = "secureme"
@@ -1303,7 +1305,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, alarm_sound, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, web_server_http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
+    global hostname, ip_address, subnet_mask, gateway, dns, enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, alarm_sound, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, web_server_address, web_server_http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
 
     print("Validating firmware configuration...")
 
@@ -1415,6 +1417,11 @@ async def validate_config():
                 update_notifications = True
                 config.set_entry("pushover", "update_notifications", update_notifications)
                 await config.write_async()
+            web_server_address = config.get_entry("server", "address")
+            if not isinstance(web_server_address, str):
+                web_server_address = default_web_server_address
+                config.set_entry("server", "address", web_server_address)
+                await config.write_async()
             web_server_http_port = config.get_entry("server", "http_port")
             if not isinstance(web_server_http_port, int):
                 web_server_http_port = default_web_server_http_port
@@ -1464,6 +1471,7 @@ async def validate_config():
             general_notifications = False
             security_code_notifications = False
             web_interface_notifications = False
+            web_server_address = default_web_server_address
             web_server_http_port = default_web_server_http_port
             admin_password = default_admin_password
             enable_auto_update = False
@@ -1582,7 +1590,7 @@ try:
 
     # Instantiate network specific features
     if utils.isPicoW():
-        web_server = WebServer(http_port =web_server_http_port)
+        web_server = WebServer(ip_address=web_server_address, http_port =web_server_http_port)
         network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname=hostname, time_sync=enable_time_sync, time_server=time_sync_server, time_sync_interval=time_sync_interval, sta_web_server=web_server)
         updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval, auto_reboot =True)
 
