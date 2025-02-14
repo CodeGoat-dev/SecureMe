@@ -89,27 +89,27 @@ class WebServer:
         self.config = ConfigManager(self.config_directory, self.config_file)
         await self.config.read_async()
 
-        self.hostname = config.get_entry("network", "hostname")
+        self.hostname = self.config.get_entry("network", "hostname")
         if not isinstance(self.hostname, str):
             self.hostname = self.default_hostname
             self.config.set_entry("network", "hostname", self.hostname)
             await self.config.write_async()
-        self.ip_address = config.get_entry("network", "ip_address")
+        self.ip_address = self.config.get_entry("network", "ip_address")
         if not isinstance(self.ip_address, str):
             self.ip_address = self.default_ip_address
             self.config.set_entry("network", "ip_address", self.ip_address)
             await self.config.write_async()
-        self.subnet_mask = config.get_entry("network", "subnet_mask")
+        self.subnet_mask = self.config.get_entry("network", "subnet_mask")
         if not isinstance(self.subnet_mask, str):
             self.subnet_mask = self.default_subnet_mask
             self.config.set_entry("network", "subnet_mask", self.subnet_mask)
             await self.config.write_async()
-        self.gateway = config.get_entry("network", "gateway")
+        self.gateway = self.config.get_entry("network", "gateway")
         if not isinstance(self.gateway, str):
             self.gateway = self.default_gateway
             self.config.set_entry("network", "gateway", self.gateway)
             await self.config.write_async()
-        self.dns = config.get_entry("network", "dns")
+        self.dns = self.config.get_entry("network", "dns")
         if not isinstance(self.dns, str):
             self.dns = self.default_dns
             self.config.set_entry("network", "dns", self.dns)
