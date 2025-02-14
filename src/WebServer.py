@@ -175,7 +175,7 @@ class WebServer:
         if not isinstance(self.web_server_address, str):
             self.web_server_address = self.default_web_server_address
             self.config.set_entry("server", "address", self.web_server_address)
-            self.await config.write_async()
+            await self.config.write_async()
         self.web_server_http_port = self.config.get_entry("server", "http_port")
         if not isinstance(self.web_server_http_port, int):
             self.web_server_http_port = self.default_web_server_http_port
