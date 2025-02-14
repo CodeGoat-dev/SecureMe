@@ -76,6 +76,17 @@ tasks = []
 
 pir_warmup_time = 60
 
+hostname = "SecureMe"
+default_hostname = "SecureMe"
+ip_address = "0.0.0.0"
+default_ip_address = "0.0.0.0"
+subnet_mask = "0.0.0.0"
+default_subnet_mask = "0.0.0.0"
+gateway = "0.0.0.0"
+default_gateway = "0.0.0.0"
+dns = "0.0.0.0"
+default_dns = "0.0.0.0"
+
 pir_timeout = None
 tilt_timeout = None
 mic_timeout = None
@@ -91,8 +102,8 @@ default_arming_cooldown = 10
 alarm_sound = 0
 default_alarm_sound = 0
 
-default_buzzer_volume = 3072
 buzzer_volume = 3072
+default_buzzer_volume = 3072
 
 web_server_http_port = 8000
 default_web_server_http_port = 8000
@@ -1354,6 +1365,31 @@ async def validate_config():
             await config.write_async()
 
         if utils.isPicoW():
+            hostname = config.get_entry("network", "hostname")
+            if not isinstance(hostname, str):
+                hostname = default_hostname
+                config.set_entry("network", "hostname", hostname)
+                await config.write_async()
+            ip_address = config.get_entry("network", "ip_address")
+            if not isinstance(ip_address, str):
+                ip_address = default_ip_address
+                config.set_entry("network", "ip_address", ip_address)
+                await config.write_async()
+            subnet_mask = config.get_entry("network", "subnet_mask")
+            if not isinstance(subnet_mask, str):
+                subnet_mask = default_subnet_mask
+                config.set_entry("network", "subnet_mask", subnet_mask)
+                await config.write_async()
+            gateway = config.get_entry("network", "gateway")
+            if not isinstance(gateway, str):
+                gateway = default_gateway
+                config.set_entry("network", "gateway", gateway)
+                await config.write_async()
+            dns = config.get_entry("network", "dns")
+            if not isinstance(dns, str):
+                dns = default_dns
+                config.set_entry("network", "dns", dns)
+                await config.write_async()
             system_status_notifications = config.get_entry("pushover", "system_status_notifications")
             if not isinstance(system_status_notifications, bool):
                 system_status_notifications = True
@@ -1417,6 +1453,11 @@ async def validate_config():
 
         # Conditionally disable settings which require internet access
         if not utils.isPicoW():
+            hostname = default_hostname
+            ip_address = default_ip_address
+            subnet_mask = default_subnet_mask
+            gateway = default_gateway
+            dns = default_dns
             pushover_app_token = None
             pushover_api_key = None
             system_status_notifications = False

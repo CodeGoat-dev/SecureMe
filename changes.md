@@ -38,6 +38,8 @@ Implements a new **Pushover** library for sending push notifications to consolid
 
 #### Configuration
 
+Adds network configuration settings to control the hostname and IP address.
+
 Improves configuration validation during initialization.
 
 #### Initialization
