@@ -158,6 +158,8 @@ class GitHubUpdater:
                     # Get file list from the 'build' directory
                     contents_url = f"{self.repo_url}/contents/build?ref={self.latest_version}"
                     try:
+                        if utils.isRP2040():
+                            utils.defragment_memory()
                         self.files_to_download = await self.get_files_in_directory(contents_url)
                     except Exception as e:
                         print(f"Unable to fetch update contents: {e}")
