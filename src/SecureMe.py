@@ -1488,6 +1488,21 @@ async def warmup_pir_sensor():
     except Exception as e:
         print(f"Error in warmup_pir_sensor: {e}")
 
+async def configure_network_settings():
+    if not utils.isPicoW():
+        return
+
+    while not utils.isNetworkConnected():
+        await asyncio.sleep(0.1)
+
+    try:
+        if ip_address == "0.0.0.0":
+            network_manager.reset_to_dhcp()
+        else
+            network_manager.set_static_ip(ip=ip_address, subnet=subnet_mask, gateway=gateway, dns=dns)
+    except Exception as e:
+        print(f"Unable to configure network settings: {e}")
+
 async def system_shutdown():
     """System firmware shutdown."""
     global tasks
@@ -1521,6 +1536,7 @@ async def main():
 
     if utils.isPicoW():
         tasks.append(asyncio.create_task(network_manager.run()))
+        tasks.append(asyncio.create_task(configure_ip_settings())
         tasks.append(asyncio.create_task(updater.run_periodically()))
 
     # Run all tasks concurrently
@@ -1567,7 +1583,7 @@ try:
     # Instantiate network specific features
     if utils.isPicoW():
         web_server = WebServer(http_port =web_server_http_port)
-        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname="SecureMe", time_sync=enable_time_sync, time_server=time_sync_server, time_sync_interval=time_sync_interval, sta_web_server=web_server)
+        network_manager = NetworkManager(ap_ssid="Goat - SecureMe", ap_password="secureme", ap_dns_server=True, hostname=hostname, time_sync=enable_time_sync, time_server=time_sync_server, time_sync_interval=time_sync_interval, sta_web_server=web_server)
         updater = GitHubUpdater(current_version=VERSION, repo_url=REPO_URL, update_interval=update_check_interval, auto_reboot =True)
 
     try:
