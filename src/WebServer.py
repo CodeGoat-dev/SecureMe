@@ -379,10 +379,16 @@ class WebServer:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 hostname = post_data.get('hostname', self.hostname)
+                dhcp = post_data.get('dhcp', True)
                 ip_address = f"{post_data.get('ip1', '0')}.{post_data.get('ip2', '0')}.{post_data.get('ip3', '0')}.{post_data.get('ip4', '0')}"
                 subnet_mask = f"{post_data.get('subnet1', '0')}.{post_data.get('subnet2', '0')}.{post_data.get('subnet3', '0')}.{post_data.get('subnet4', '0')}"
                 gateway = f"{post_data.get('gateway1', '0')}.{post_data.get('gateway2', '0')}.{post_data.get('gateway3', '0')}.{post_data.get('gateway4', '0')}"
                 dns = f"{post_data.get('dns1', '0')}.{post_data.get('dns2', '0')}.{post_data.get('dns3', '0')}.{post_data.get('dns4', '0')}"
+                if dhcp:
+                    ip_address = "0.0.0.0"
+                    subnet_mask = "0.0.0.0"
+                    gateway = "0.0.0.0"
+                    dns = "0.0.0.0"
                 self.hostname = hostname
                 self.ip_address = ip_address
                 self.subnet_mask = subnet_mask
@@ -608,6 +614,8 @@ class WebServer:
 
     def serve_network_settings_form(self):
         """Serves the network settings configuration form."""
+        dhcp_enabled = "checked" if self.ip_address == "0.0.0.0" else ""
+
         form = f"""
         <h2>Network Settings</h2>
         <p>The settings below control the SecureMe network connection.<br>
@@ -621,6 +629,8 @@ class WebServer:
             <input type="text" id="hostname" name="hostname" value="{self.escape_html(self.hostname)}" required><br>
             <p>By default, SecureMe obtains an IP address via DHCP.<br>
             You can optionally customise the IP address settings below.</p>
+            <label for="dhcp">Use DHCP:</label>
+            <input type="checkbox" id="dhcp" name="dhcp" {dhcp_enabled} onchange="toggleIPFields()"><br>
             <label>IP Address:</label>
             <input type="number" name="ip1" min="0" max="255" value="{self.ip_address.split('.')[0]}" required>.
             <input type="number" name="ip2" min="0" max="255" value="{self.ip_address.split('.')[1]}" required>.
@@ -643,6 +653,17 @@ class WebServer:
             <input type="number" name="dns4" min="0" max="255" value="{self.dns.split('.')[3]}" required><br>
             <input type="submit" value="Save Settings">
         </form>
+        <script>
+            function toggleIPFields() {{
+                var dhcpChecked = document.getElementById('dhcp').checked;
+                var ipFields = document.querySelectorAll('input[type="number"]');
+                ipFields.forEach(field => {{
+                    field.disabled = dhcpChecked;
+                }});
+            }}
+            // Run on page load to set correct state
+            window.onload = toggleIPFields;
+        </script>
         """
 
         return self.html_template("Network Settings", form)
