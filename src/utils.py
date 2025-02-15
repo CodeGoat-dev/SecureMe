@@ -20,7 +20,7 @@ def isPicoW():
     try:
         # Try to import the network module, which is only available on Pico W
         import network
-        return True  # Pico W has Wi-Fi, so return True
+        return True
     except ImportError:
         # If the network module is unavailable, it's a regular Pico
         return False
@@ -32,11 +32,10 @@ def isNetworkConnected():
         import network
         sta = network.WLAN(network.STA_IF)
         if sta.isconnected():
-            return True  # Network is connected
+            return True
         else:
-            return False  # Network is not connected
+            return False
     except ImportError:
-        # If the network module is unavailable, the network is not connected.
         return False
 
 # Memory defragmentation
@@ -78,7 +77,7 @@ async def initialize_pins(skip_pins=None):
 # Pin de-initialization function
 async def deinitialize_pins(skip_pins=None):
     """
-    Deinitializes pins, excluding specified pins.
+    De-initializes pins, excluding specified pins.
 
     Args:
         skip_pins: List of pin numbers to skip during de-initialization (default: None).
