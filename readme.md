@@ -159,7 +159,7 @@ If you want to build the **SecureMe** system yourself, follow the instructions p
 - If you are unable to obtain the IP address, try connecting using the hostname ***"SecureMe"***.
 - Login with the username **"admin"** and password **"secureme"** and change the password.
 - You can configure detection settings as well as Pushover notification settings for system and alarm notifications.
-- You can additionally modify the web administration password and system security code, along with automatic update, time synchronisation and web interface settings.
+- You can additionally modify the web administration password and system security code, along with automatic update, time synchronisation, network and web interface settings.
 
 ---
 
