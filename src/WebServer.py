@@ -537,7 +537,7 @@ class WebServer:
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
                         asyncio.create_task(self.send_system_status_notification(status_message="Configuration reset to factory defaults."))
-                            await asyncio.sleep(10)
+                        await asyncio.sleep(10)
                     machine.reset()
             else:
                 response = "HTTP/1.1 404 Not Found\r\n\r\n" + self.serve_error()
