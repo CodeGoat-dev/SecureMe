@@ -623,10 +623,12 @@ class WebServer:
         <p><b>The SecureMe system must be restarted after changing network settings.</b></p>
         <p><b>Incorrect configuration of the SecureMe network settings may require a configuration reset.</b></p>
         <form method="POST" action="/update_network_settings">
+            <h3>System Hostname</h3>
             <p>The hostname is the name used to identify the SecureMe device on your network.<br>
             You can specify a custom hostname or use the default.</p>
             <label for="hostname">Hostname:</label>
             <input type="text" id="hostname" name="hostname" value="{self.escape_html(self.hostname)}" required><br>
+            <h3>IP Address</h3>
             <p>By default, SecureMe obtains an IP address via DHCP.<br>
             You can optionally customise the IP address settings below.</p>
             <label for="dhcp">Use DHCP:</label>
@@ -676,8 +678,14 @@ class WebServer:
         <p><b>The SecureMe system must be restarted after changing web interface settings.</b></p>
         <p><b>Improper modification of the settings below may render the SecureMe web interface inaccessible.</b></p>
         <form method="POST" action="/update_web_interface_settings">
+            <h3>Listen Address</h3>
+            <p>The listen address is the address SecureMe uses to serve the web interface.<br>
+            If the address is set to "0.0.0.0", connections are allowed from all interfaces.</p>
             <label for="address">Listen Address:</label>
             <input type="text" id="address" name="address" value="{self.web_server_address}" required><br>
+            <h3>HTTP Port</h3>
+            <p>The HTTP port is the port used by the web server to serve the web interface.<br>
+            By default the web interface listens on port "8000".</p>
             <label for="http_port">HTTP Port:</label>
             <input type="number" id="http_port" name="http_port" minlength=1 maxlength=5 value="{self.web_server_http_port}" required><br>
             <input type="submit" value="Save Settings">
@@ -696,6 +704,7 @@ class WebServer:
         <p>The settings below control how the SecureMe system detects movement.<br>
         You can control which sensors are enabled as well as adjust cooldown times.</p>
         <form method="POST" action="/update_detection_settings">
+            <h3>Detection</h3>
             <p>Select the types of motion you want to detect.</p>
             <label for="detect_motion">Enable Motion Detection</label>
             <input type="checkbox" id="detect_motion" name="detect_motion" {detect_motion_checked}><br>
@@ -703,6 +712,7 @@ class WebServer:
             <input type="checkbox" id="detect_tilt" name="detect_tilt" {detect_tilt_checked}><br>
             <label for="detect_sound">Enable Sound Detection</label>
             <input type="checkbox" id="detect_sound" name="detect_sound" {detect_sound_checked}><br>
+            <h3>Cooldown Settings</h3>
             <p>After detecting motion, the system will cool down for a specified time before detecting again.<br>
             The cooldown is applied separately per sensor.<br>
             Specify how long in seconds the cooldown should last.</p>
@@ -725,6 +735,7 @@ class WebServer:
         <p>It is recommended to change the SecureMe web interface password to prevent unauthorized access.<br>
         To change the web interface administrator password, enter a new password below.</p>
         <form method="POST" action="/update_password">
+            <h3>Administration Password</h3>
             <label for="password">New Admin Password:</label>
             <input type="password" id="password" name="password" required><br>
             <input type="submit" value="Update Password">
@@ -745,6 +756,7 @@ class WebServer:
         <p>To register an application and obtain an API key for Pushover, visit the <a href="https://pushover.net">Pushover</a> web site.<br>
         Sign up for an account and register an application to obtain a token, and a device to obtain a key.</p>
         <form method="POST" action="/update_pushover_settings">
+            <h3>Pushover API Credentials</h3>
         <p>In order to receive system status notifications and use silent alarms, you must specify Pushover API credentials.<br>
         The Pushover app token identifies your application with Pushover.<br>
         The Pushover API key enables the SecureMe firmware to send push notifications.</p>
@@ -753,6 +765,7 @@ class WebServer:
             <input type="text" id="pushover_token" name="pushover_token" value="{self.pushover_app_token}" required><br>
             <label for="pushover_key">Pushover API Key:</label>
             <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required><br>
+            <h3>Push Notifications</h3>
             <p>SecureMe can send system status notifications to keep you informed about how the system is operating.</p>
             <label for="status_notifications">Enable System Status Notifications</label>
             <input type="checkbox" id="status_notifications" name="status_notifications" {status_notifications_checked}><br>
@@ -778,6 +791,7 @@ class WebServer:
         The security code will also be required when changing the alarm mode or resetting the configuration to factory settings.</p>
         <p>You should change the security code from the default value of "0000" if you have not already done so.</p>
         <form method="POST" action="/update_security_code">
+            <h3>System Security Code</h3>
             <label for="security_code">New Security Code:</label>
             <input type="number" id="security_code" name="security_code" minlength={self.security_code_min_length} maxlength={self.security_code_max_length} value="{self.security_code}" required><br>
             <input type="submit" value="Update Security Code">
@@ -794,9 +808,11 @@ class WebServer:
         <p>The settings below control how the SecureMe system checks for firmware updates.<br>
         You can control whether automatic update is enabled as well as adjust the update interval.</p>
         <form method="POST" action="/update_auto_update_settings">
+            <h3>Enable Automatic Update</h3>
             <p>Choose whether to enable the automatic update feature.</p>
             <label for="enable_auto_update">Enable Automatic Update</label>
             <input type="checkbox" id="enable_auto_update" name="enable_auto_update" {enable_auto_update_checked}><br>
+            <h3>Update Check Interval</h3>
             <p>After checking for updates when the system starts, SecureMe will wait for a specified duration before checking again.<br>
             Specify how long in minutes to wait between update checks.</p>
             <label for="update_check_interval">Update Check Interval (Min):</label>
@@ -815,15 +831,18 @@ class WebServer:
         <p>The settings below control how the SecureMe system synchronises the time and date.<br>
         You can control whether time synchronisation is enabled, the sync interval and the server to synchronise from.</p>
         <form method="POST" action="/update_time_sync_settings">
+            <h3>Enable Time Synchronisation</h3>
             <p>Choose whether to enable the time synchronisation feature.</p>
             <label for="enable_time_sync">Enable Time Synchronisation</label>
             <input type="checkbox" id="enable_time_sync" name="enable_time_sync" {enable_time_sync_checked}><br>
+            <h3>Synchronisation Server</h3>
             <p>By default, SecureMe will use the <b>Goatbot.org</b> server for time synchronisation.<br>
             You can optionally specify an alternate server to use.<br>
             You should only choose an alternative server if you are self-hosting the Time Synchronisation API from the Pico Network Manager library.<br>
             Specify the time synchronisation server you want to use below.</p>
             <label for="time_sync_server">Time Synchronisation Server:</label>
             <input type="string" id="time_sync_server" name="time_sync_server" value="{self.time_sync_server}" required><br>
+            <h3>Synchronisation Interval</h3>
             <p>The system date and time are synchronised automatically after a specified interval.<br>
             You can optionally customize the time synchronisation interval below.</p>
             <label for="time_sync_interval">Time Synchronisation Interval (Min):</label>
@@ -853,6 +872,7 @@ class WebServer:
         <p>If you are having trouble with your SecureMe security system you can try resetting the firmware.<br>
         Resetting the firmware will clear all current configuration data.</p>
         <form method="POST" action="/reset_firmware">
+            <h3>Reset Configuration</h3>
         <p>To reset the device, type "secureme" in the box below.</p>
             <label for="reset_confirmation">Reset Confirmation:</label>
             <input type="text" id="reset_confirmation" name="reset_confirmation" required><br>
