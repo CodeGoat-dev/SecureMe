@@ -10,6 +10,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 Fixes an issue checking the network connection during automatic update.
 
+#### Web Interface
+
+Fixes an issue sending notifications when resetting the system configuration or rebooting.
+
 ### Changes
 
 #### System Indicators

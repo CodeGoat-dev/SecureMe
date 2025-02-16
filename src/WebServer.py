@@ -520,23 +520,24 @@ class WebServer:
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
                         asyncio.create_task(self.send_system_status_notification(status_message="System rebooting."))
+                        await asyncio.sleep(10)
                 machine.reset()
             elif "POST /reset_firmware" in request:
                 content = request.split("\r\n\r\n")[1]
                 post_data = self.parse_form_data(content)  # Parse the form data manually
                 reset_confirmation = post_data.get('reset_confirmation', None)
                 if reset_confirmation != "secureme":
-                    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nReset confirmation mismatch."
-                else:
-                    response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
+                    self.alert_text = "Reset confirmation mismatch."
                     if self.config_file in uos.listdir(self.config_directory):
                         uos.remove(f"{self.config_directory}/{self.config_file}")
                     if self.network_config_file in uos.listdir(self.config_directory):
                         uos.remove(f"{self.config_directory}/{self.network_config_file}")
                     uos.rmdir(self.config_directory)
+                response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
                         asyncio.create_task(self.send_system_status_notification(status_message="Configuration reset to factory defaults."))
+                            await asyncio.sleep(10)
                     machine.reset()
             else:
                 response = "HTTP/1.1 404 Not Found\r\n\r\n" + self.serve_error()
@@ -578,6 +579,8 @@ class WebServer:
         Please check your access credentials and try again.</p>
         <h2>System Recovery</h2>
         <p>If you are unable to access the web interface due to lost credentials, perform a configuration reset using the SecureMe console.</p>
+        <h2>Return To Home</h2>
+        <p>Click <a href="/">Here</a> to return to the home page.</p>
         """
         return self.html_template("Unauthorized", body)
 
@@ -654,7 +657,7 @@ class WebServer:
             <input type="number" name="dns3" min="0" max="255" value="{self.dns.split('.')[2]}" required>.
             <input type="number" name="dns4" min="0" max="255" value="{self.dns.split('.')[3]}" required><br>
             <input type="submit" value="Save Settings">
-        </form>
+        </form><br>
         <script>
             function toggleIPFields() {{
                 var dhcpChecked = document.getElementById('dhcp').checked;
