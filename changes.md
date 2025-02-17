@@ -50,6 +50,8 @@ Adds network configuration settings to control the hostname and IP address.
 
 Adds a setting to specify the web server listen address.
 
+Adds a setting to customise the PIR sensor warmup time.
+
 Improves configuration validation during initialization.
 
 #### Initialization

@@ -74,8 +74,6 @@ network_config_file = "network_config.conf"
 
 tasks = []
 
-pir_warmup_time = 60
-
 hostname = "SecureMe"
 default_hostname = "SecureMe"
 ip_address = "0.0.0.0"
@@ -87,10 +85,6 @@ default_gateway = "0.0.0.0"
 dns = "0.0.0.0"
 default_dns = "0.0.0.0"
 
-pir_timeout = None
-tilt_timeout = None
-mic_timeout = None
-
 enable_detect_motion = True
 enable_detect_tilt = True
 enable_detect_sound = True
@@ -98,6 +92,8 @@ sensor_cooldown = 10
 default_sensor_cooldown = 10
 arming_cooldown = 10
 default_arming_cooldown = 10
+pir_warmup_time = 60
+default_pir_warmup_time = 60
 
 alarm_sound = 0
 default_alarm_sound = 0
@@ -136,6 +132,10 @@ time_sync_server = "https://goatbot.org"
 default_time_sync_server = "https://goatbot.org"
 time_sync_interval = 360
 default_time_sync_interval = 360
+
+pir_timeout = None
+tilt_timeout = None
+mic_timeout = None
 
 is_armed = True
 alarm_active = False
@@ -1305,7 +1305,7 @@ async def system_startup():
 # Configuration validation
 async def validate_config():
     """Validates the firmware configuration."""
-    global hostname, ip_address, subnet_mask, gateway, dns, enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, alarm_sound, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, web_server_address, web_server_http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
+    global hostname, ip_address, subnet_mask, gateway, dns, enable_detect_motion, enable_detect_tilt, enable_detect_sound, sensor_cooldown, arming_cooldown, pir_warmup_time, alarm_sound, buzzer_volume, security_code, system_status_notifications, general_notifications, security_code_notifications, web_interface_notifications, update_notifications, web_server_address, web_server_http_port, admin_password, enable_auto_update, update_check_interval, enable_time_sync, time_sync_server
 
     print("Validating firmware configuration...")
 
@@ -1343,6 +1343,13 @@ async def validate_config():
         if not isinstance(arming_cooldown, int):
             arming_cooldown = default_arming_cooldown
             config.set_entry("security", "arming_cooldown", arming_cooldown)
+            await config.write_async()
+
+        pir_warmup_time = config.get_entry("security", "pir_warmup_time")
+
+        if not isinstance(pir_warmup_time, int):
+            pir_warmup_time = default_pir_warmup_time
+            config.set_entry("security", "pir_warmup_time", pir_warmup_time)
             await config.write_async()
 
         alarm_sound = config.get_entry("alarm", "alarm_sound")
@@ -1484,7 +1491,7 @@ async def validate_config():
 
 # PIR sensor warmup
 async def warmup_pir_sensor():
-    """Waits for 60 seconds to let the PIR sensor warm up."""
+    """Waits for the configured PIR sensor warmup time to let the PIR sensor warm up."""
     print("Warming up PIR sensor...")
 
     try:
