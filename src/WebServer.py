@@ -768,10 +768,11 @@ class WebServer:
             <input type="text" id="pushover_token" name="pushover_token" value="{self.pushover_app_token}" required><br>
             <label for="pushover_key">Pushover API Key:</label>
             <input type="text" id="pushover_key" name="pushover_key" value="{self.pushover_api_key}" required><br>
-            <h3>Push Notifications</h3>
+            <h3>System Status Notifications</h3>
             <p>SecureMe can send system status notifications to keep you informed about how the system is operating.</p>
             <label for="status_notifications">Enable System Status Notifications</label>
             <input type="checkbox" id="status_notifications" name="status_notifications" {status_notifications_checked}><br>
+           <h3>Notification Types</h3>
             <p>Specify which status notifications you want to receive.</p>
             <label for="general_notifications">General Notifications</label>
             <input type="checkbox" id="general_notifications" name="general_notifications" {general_notifications_checked}><br>
@@ -813,6 +814,7 @@ class WebServer:
         <form method="POST" action="/update_auto_update_settings">
             <h3>Enable Automatic Update</h3>
             <p>Choose whether to enable the automatic update feature.</p>
+            <p><b>Note that automatic update may cause memory issues on RP2040 based microcontrollers.</b></p>
             <label for="enable_auto_update">Enable Automatic Update</label>
             <input type="checkbox" id="enable_auto_update" name="enable_auto_update" {enable_auto_update_checked}><br>
             <h3>Update Check Interval</h3>
@@ -861,7 +863,7 @@ class WebServer:
         form = f"""<h2>Reboot Device</h2>
         <p>If you recently made configuration changes and want to restart the SecureMe system, you can do so here.<br>
         Restarting the system will not affect any configuration settings.</p>
-        <p>To reboot the SecureMe system, click "Reboot" below.</p>
+        <p>To reboot the SecureMe system, click the "Reboot" button below.</p>
         <form method="POST" action="/reboot_device">
             <input type="submit" value="Reboot Device">
         </form><br>
@@ -876,7 +878,7 @@ class WebServer:
         Resetting the firmware will clear all current configuration data.</p>
         <form method="POST" action="/reset_firmware">
             <h3>Reset Configuration</h3>
-        <p>To reset the device, type "secureme" in the box below.</p>
+        <p>To reset the device, type "secureme" in the confirmation box below.</p>
             <label for="reset_confirmation">Reset Confirmation:</label>
             <input type="text" id="reset_confirmation" name="reset_confirmation" required><br>
             <input type="submit" value="Reset Device">
