@@ -38,6 +38,8 @@ Adds a **Network Settings** page to enable configuration of the SecureMe hostnam
 
 Adds a setting to the **Web Interface Settings** page to specify the web interface listen address.
 
+Adds a setting to the **Detection Settings** page to customise the PIR sensor warmup time.
+
 Updates web interface settings pages to provide additional information.
 
 #### Notifications

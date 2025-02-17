@@ -56,6 +56,8 @@ class WebServer:
         self.default_sensor_cooldown = 10
         self.arming_cooldown = 10
         self.default_arming_cooldown = 10
+        self.pir_warmup_time = 60
+        self.default_pir_warmup_time = 60
         self.pushover_app_token = None
         self.pushover_api_key = None
         self.system_status_notifications = None
@@ -138,6 +140,11 @@ class WebServer:
         if not isinstance(self.arming_cooldown, int):
             self.arming_cooldown = self.default_arming_cooldown
             self.config.set_entry("security", "arming_cooldown", self.arming_cooldown)
+            await self.config.write_async()
+        self.pir_warmup_time = self.config.get_entry("security", "pir_warmup_time")
+        if not isinstance(self.pir_warmup_time, int):
+            self.pir_warmup_time = self.default_pir_warmup_time
+            self.config.set_entry("security", "pir_warmup_time", self.pir_warmup_time)
             await self.config.write_async()
         self.pushover_app_token = self.config.get_entry("pushover", "app_token")
         self.pushover_api_key = self.config.get_entry("pushover", "api_key")
@@ -425,16 +432,19 @@ class WebServer:
                 detect_sound = 'detect_sound' in post_data
                 sensor_cooldown = 'sensor_cooldown' in post_data
                 arming_cooldown = 'arming_cooldown' in post_data
+                pir_warmup_time = 'pir_warmup_time' in post_data
                 self.detect_motion = detect_motion
                 self.detect_tilt = detect_tilt
                 self.detect_sound = detect_sound
                 self.sensor_cooldown = sensor_cooldown
                 self.arming_cooldown = arming_cooldown
+                self.pir_warmup_time = pir_warmup_time
                 self.config.set_entry("security", "detect_motion", self.detect_motion)
                 self.config.set_entry("security", "detect_tilt", self.detect_tilt)
                 self.config.set_entry("security", "detect_sound", self.detect_sound)
                 self.config.set_entry("security", "sensor_cooldown", self.sensor_cooldown)
                 self.config.set_entry("security", "arming_cooldown", self.arming_cooldown)
+                self.config.set_entry("security", "pir_warmup_time", self.pir_warmup_time)
                 await self.config.write_async()
                 self.alert_text = "Detection settings updated."
                 if self.system_status_notifications:
@@ -726,6 +736,11 @@ class WebServer:
             Specify how long in seconds the cooldown should last.</p>
             <label for="arming_cooldown">Arming Cooldown Time (Sec):</label>
             <input type="number" id="arming_cooldown" name="arming_cooldown" minlength=1 maxlength=2 value="{self.arming_cooldown}" required><br>
+            <h3>PIR Warmup Time</h3>
+            <p>You can customise the PIR sensor warmup time to match the requirements of your sensor.<br>
+            Specify how long in seconds the PIR sensor should warm up for.</p>
+            <label for="pir_warmup_time">PIR Warmup Time (Sec):</label>
+            <input type="number" id="pir_warmup_time" name="pir_warmup_time" minlength=1 maxlength=3 value="{self.pir_warmup_time}" required><br>
             <input type="submit" value="Save Settings">
         </form><br>
         """
