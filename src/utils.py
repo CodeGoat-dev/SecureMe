@@ -43,12 +43,11 @@ def defragment_memory():
     """Frees up and defragments memory."""
     try:
         gc.collect()
-        _ = bytearray(16_000)  # Allocate 16KB (or as much as possible)
-        del _
-        gc.collect()  # Run GC again after freeing large block
         print("Memory defragmented")
     except MemoryError:
         print("Memory allocation failed, skipping defrag")
+    except Exception as e:
+        print(f"Memory allocation failed: {e}")
 
 # Unused pin initialization function
 async def initialize_pins(skip_pins=None):
