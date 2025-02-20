@@ -1511,9 +1511,7 @@ async def configure_network_settings():
         await asyncio.sleep(0.1)
 
     try:
-        if ip_address == "0.0.0.0":
-            network_manager.reset_to_dhcp()
-        else:
+        if not ip_address == "0.0.0.0":
             network_manager.set_static_ip(ip=ip_address, subnet=subnet_mask, gateway=gateway, dns=dns)
     except Exception as e:
         print(f"Unable to configure network settings: {e}")
@@ -1551,7 +1549,7 @@ async def main():
 
     if utils.isPicoW():
         tasks.append(asyncio.create_task(network_manager.run()))
-        tasks.append(asyncio.create_task(configure_ip_settings()))
+        tasks.append(asyncio.create_task(configure_network_settings()))
         tasks.append(asyncio.create_task(updater.run_periodically()))
 
     # Run all tasks concurrently
