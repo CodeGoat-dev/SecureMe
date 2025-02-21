@@ -293,7 +293,7 @@ class GitHubUpdater:
         await asyncio.sleep(30)  # Delay before starting
 
         while True:
-            if not self.isNetworkConnected():
+            if not utils.isNetworkConnected():
                 print("The network is not currently connected. Retrying in 10 seconds.")
                 await asyncio.sleep(10)
 
