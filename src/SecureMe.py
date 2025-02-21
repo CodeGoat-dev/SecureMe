@@ -761,7 +761,7 @@ def read_keypad_key():
                 if col.value() == 1:
                     row.low()
                     if entering_security_code:
-                        indicator_signal("keypad_entry")
+                        asyncio.create_task(indicator_signal("keypad_entry"))
                     time.sleep_ms(100)
                     return keypad_characters[i][j]
             row.low()

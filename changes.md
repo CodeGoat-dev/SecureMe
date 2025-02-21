@@ -6,6 +6,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### Bug Fixes
 
+#### Keypad Entry
+
+Fixes an issue which caused the keypad entry indicator to not be played on entry.
+
 #### Networking
 
 Fixes an issue resetting the IP configuration to DHCP.
