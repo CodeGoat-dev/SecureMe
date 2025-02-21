@@ -1,5 +1,5 @@
 # Goat - Pico Network Manager library
-# Version 1.2.0
+# Version 1.2.1
 # © (c) 2024-2025 Goat Technologies
 # Description:
 # Provides network management for your device firmware.
@@ -33,7 +33,7 @@ class NetworkManager:
         self.config_file = "network_config.conf"
 
         # Constants
-        self.VERSION = "1.2.0"
+        self.VERSION = "1.2.1"
         self.REPO_URL = "https://github.com/CodeGoat-dev/Pico-Network-Manager"
 
         # Interface configuration
@@ -264,7 +264,6 @@ class NetworkManager:
             self.sta_if.ifconfig(('0.0.0.0', '0.0.0.0', '0.0.0.0', '0.0.0.0'))  # Release IP
             time.sleep(2)  # Short wait before reconnecting
             self.sta_if.disconnect()
-            self.sta_if.connect()  # Attempt to reconnect
 
             # Wait for DHCP lease
             timeout = utime.time() + 10

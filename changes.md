@@ -2,6 +2,20 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.5.1
+
+### Bug Fixes
+
+#### Networking
+
+Fixes an issue resetting the IP configuration to DHCP.
+
+### Changes
+
+#### Pico Network Manager
+
+Updated Pico Network Manager to v1.2.1.
+
 ## V1.5.0
 
 ### Bug Fixes
