@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.5.2
+
+### Bug Fixes
+
+#### Alarm
+
+Fixes an issue where the new **bell** alarm sound would not be used when selected.
+
 ## V1.5.1
 
 ### Bug Fixes

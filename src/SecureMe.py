@@ -286,7 +286,7 @@ async def alarm(message):
     try:
         alarm_sound = config.get_entry("alarm", "alarm_sound")
 
-        if not alarm_sound == 0 and not alarm_sound == 1 and not alarm_sound == 2 and not alarm_sound == 3:
+        if not alarm_sound == 0 and not alarm_sound == 1 and not alarm_sound == 2 and not alarm_sound == 3 and not alarm_sound == 4:
             alarm_sound = 0
             config.set_entry("alarm", "alarm_sound", alarm_sound)
             await config.write_async()
