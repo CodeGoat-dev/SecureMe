@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.6
+# Version 1.1.7
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
