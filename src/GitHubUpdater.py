@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.7
+# Version 1.1.8
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -121,16 +121,6 @@ class GitHubUpdater:
             return
 
         try:
-            self.pushover_app_token = self.config.get_entry("pushover", "app_token")
-
-            if not self.pushover_app_token:
-                return
-
-            self.pushover_api_key = self.config.get_entry("pushover", "api_key")
-
-            if not self.pushover_api_key:
-                return
-
             self.system_status_notifications = self.config.get_entry("pushover", "system_status_notifications")
 
             if self.system_status_notifications:

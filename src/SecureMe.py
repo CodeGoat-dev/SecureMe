@@ -838,16 +838,6 @@ async def send_system_status_notification(message_title, status_message):
 
     if utils.isPicoW():
         try:
-            pushover_app_token = config.get_entry("pushover", "app_token")
-
-            if not pushover_app_token:
-                return
-
-            pushover_api_key = config.get_entry("pushover", "api_key")
-
-            if not pushover_api_key:
-                return
-
             if system_status_notifications:
                 if not utils.isNetworkConnected():
                     while not utils.isNetworkConnected():
