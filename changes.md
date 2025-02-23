@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.5.4
+
+### Changes
+
+#### Notifications
+
+Removes duplicate code from system status notification methods.
+
 ## V1.5.3
 
 ### Changes
