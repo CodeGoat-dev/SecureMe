@@ -416,7 +416,7 @@ async def handle_arming():
                     print("Disarming")
                     is_armed = False
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
-                    await indicator_signal("system_ready", state=is_armed)
+                    asyncio.create_task(indicator_signal("system_ready", state=is_armed))
                     if system_status_notifications:
                         if general_notifications:
                             asyncio.create_task(send_system_status_notification(status_message="System disarmed."))
@@ -437,7 +437,7 @@ async def handle_arming():
                     print("Arming")
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     is_armed = True
-                    await indicator_signal("system_ready", state=is_armed)
+                    asyncio.create_task(indicator_signal("system_ready", state=is_armed))
                     if system_status_notifications:
                         if general_notifications:
                             asyncio.create_task(send_system_status_notification(status_message="System armed."))
@@ -737,7 +737,7 @@ async def increase_buzzer_volume():
     config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
     await config.write_async()
     print(f"Buzzer volume increased to: {buzzer_volume}")
-    await indicator_signal("buzzer_volume")
+    asyncio.create_task(indicator_signal("buzzer_volume"))
 
 # Method to decrease buzzer volume by 10%
 async def decrease_buzzer_volume():
@@ -749,7 +749,7 @@ async def decrease_buzzer_volume():
     config.set_entry("buzzer", "buzzer_volume", buzzer_volume)
     await config.write_async()
     print(f"Buzzer volume decreased to: {buzzer_volume}")
-    await indicator_signal("buzzer_volume")
+    asyncio.create_task(indicator_signal("buzzer_volume"))
 
 # Read a single key from the keypad
 def read_keypad_key():
@@ -925,11 +925,11 @@ async def keypad_lock():
         if keypad_locked:
             print("Keypad unlocked.")
             keypad_locked = False
-            await indicator_signal("keypad_lock", state=keypad_locked)
+            asyncio.create_task(indicator_signal("keypad_lock", state=keypad_locked))
         else:
             print("Keypad locked.")
             keypad_locked = True
-            await indicator_signal("keypad_lock", state=keypad_locked)
+            asyncio.create_task(indicator_signal("keypad_lock", state=keypad_locked))
     except Exception as e:
         print(f"Error in keypad_lock: {e}")
 
@@ -1001,14 +1001,14 @@ async def alarm_mode_switch():
         if silent_alarm:
             print("Alarm mode set to audible.")
             silent_alarm = False
-            await indicator_signal("alarm_mode_switch", state=silent_alarm)
+            asyncio.create_task(indicator_signal("alarm_mode_switch", state=silent_alarm))
             if system_status_notifications:
                 if general_notifications:
                     asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to audible."))
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
-            await indicator_signal("alarm_mode_switch", state=silent_alarm)
+            asyncio.create_task(indicator_signal("alarm_mode_switch", state=silent_alarm))
             if system_status_notifications:
                 if general_notifications:
                     asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to silent."))
@@ -1284,7 +1284,7 @@ async def system_startup():
     try:
         await validate_config()
 
-        await indicator_signal("system_startup")
+        asyncio.create_task(indicator_signal("system_startup"))
 
         if utils.isPicoW():
             await utils.configure_network()
@@ -1293,7 +1293,7 @@ async def system_startup():
 
         await warmup_pir_sensor()
 
-        await indicator_signal("system_ready", state=is_armed)
+        asyncio.create_task(indicator_signal("system_ready", state=is_armed))
 
         print("System ready.")
 

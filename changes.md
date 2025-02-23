@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.5.3
+
+### Changes
+
+#### Indicators
+
+Runs all indicators as background tasks to improve system performance.
+
 ## V1.5.2
 
 ### Bug Fixes
