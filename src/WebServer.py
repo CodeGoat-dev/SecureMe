@@ -254,13 +254,18 @@ class WebServer:
         except Exception as e:
             print(f"Error sending notification: {e}")
 
-    async def send_system_status_notification(self, status_message):
+    async def send_system_status_notification(self, message_title, status_message):
         """Sends a system status notification via Pushover.
 
         Args:
+        - message_title: The title of the message to send.
         - status_message: The message to send.
         """
         await asyncio.sleep(0)
+
+        if not message_title:
+            print("A message title is required.")
+            return
 
         if not status_message:
             print("A status message is required.")
@@ -280,7 +285,7 @@ class WebServer:
             self.system_status_notifications = self.config.get_entry("pushover", "system_status_notifications")
 
             if self.system_status_notifications:
-                asyncio.create_task(self.send_pushover_notification(message=status_message))
+                asyncio.create_task(self.send_pushover_notification(title=message_title, message=status_message))
         except Exception as e:
             print(f"Unable to send system status notification: {e}")
 
@@ -338,7 +343,7 @@ class WebServer:
 
             if self.system_status_notifications:
                 if self.web_interface_notifications:
-                    asyncio.create_task(self.send_system_status_notification(status_message="Web interface authorisation error."))
+                    asyncio.create_task(self.send_system_status_notification(message_title="Web Interface", status_message="Web interface authorisation error."))
 
             return False
         except Exception as e:
@@ -422,7 +427,7 @@ class WebServer:
                 self.alert_text = "Web interface settings updated."
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Web interface settings updated."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration", status_message="Web interface settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_detection_settings" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -449,7 +454,7 @@ class WebServer:
                 self.alert_text = "Detection settings updated."
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Detection settings updated."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration", status_message="Detection settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_pushover_settings" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -472,7 +477,7 @@ class WebServer:
                 self.alert_text = "Pushover settings updated."
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Pushover settings updated."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration", status_message="Pushover settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_security_code" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -483,7 +488,7 @@ class WebServer:
                 self.alert_text = "System security code updated."
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="System security code updated."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration", status_message="System security code updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_password" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -494,7 +499,7 @@ class WebServer:
                 self.alert_text = "Web administration password updated."
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Web administration password updated."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration", status_message="Web administration password updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_auto_update_settings" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -507,7 +512,7 @@ class WebServer:
                 self.alert_text = "Automatic update settings updated."
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Automatic update settings updated."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration", status_message="Automatic update settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /update_time_sync_settings" in request:
                 content = request.split("\r\n\r\n")[1]
@@ -522,14 +527,14 @@ class WebServer:
                 self.alert_text = "Time synchronisation settings updated."
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Time synchronisation settings updated."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration", status_message="Time synchronisation settings updated."))
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
             elif "POST /reboot_device" in request:
                 content = request.split("\r\n\r\n")[1]
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="System rebooting."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="System Reboot", status_message="System rebooting."))
                         await asyncio.sleep(10)
                 machine.reset()
             elif "POST /reset_firmware" in request:
@@ -546,7 +551,7 @@ class WebServer:
                 response = "HTTP/1.1 303 See Other\r\nLocation: /\r\n\r\n"
                 if self.system_status_notifications:
                     if self.web_interface_notifications:
-                        asyncio.create_task(self.send_system_status_notification(status_message="Configuration reset to factory defaults."))
+                        asyncio.create_task(self.send_system_status_notification(message_title="Configuration Reset", status_message="Configuration reset to factory defaults."))
                         await asyncio.sleep(10)
                     machine.reset()
             else:

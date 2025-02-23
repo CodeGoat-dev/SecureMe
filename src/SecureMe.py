@@ -296,7 +296,7 @@ async def alarm(message):
 
         if utils.isPicoW():
             if silent_alarm:
-                asyncio.create_task(send_pushover_notification(message=message))
+                asyncio.create_task(send_pushover_notification(title="Alarm", message=message))
                 alarm_active = False
                 return
 
@@ -419,7 +419,7 @@ async def handle_arming():
                     asyncio.create_task(indicator_signal("system_ready", state=is_armed))
                     if system_status_notifications:
                         if general_notifications:
-                            asyncio.create_task(send_system_status_notification(status_message="System disarmed."))
+                            asyncio.create_task(send_system_status_notification(message_title="Security", status_message="System disarmed."))
                 else:
                     if security_code:
                         entering_security_code = True
@@ -440,7 +440,7 @@ async def handle_arming():
                     asyncio.create_task(indicator_signal("system_ready", state=is_armed))
                     if system_status_notifications:
                         if general_notifications:
-                            asyncio.create_task(send_system_status_notification(status_message="System armed."))
+                            asyncio.create_task(send_system_status_notification(message_title="Security", status_message="System armed."))
 
             idle()
 
@@ -817,15 +817,20 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
     except Exception as e:
         print(f"Error sending notification: {e}")
 
-async def send_system_status_notification(status_message):
+async def send_system_status_notification(message_title, status_message):
     """Sends a system status notification via Pushover.
 
     Args:
+    - message_title: The title of the message to send.
     - status_message: The message to send.
     """
     global pushover_app_token, pushover_api_key
 
     await asyncio.sleep(0)
+
+    if not message_title:
+        print("A message title is required.")
+        return
 
     if not status_message:
         print("A status message is required.")
@@ -847,7 +852,7 @@ async def send_system_status_notification(status_message):
                 if not utils.isNetworkConnected():
                     while not utils.isNetworkConnected():
                         await asyncio.sleep(0.1)
-                asyncio.create_task(send_pushover_notification(message=status_message))
+                asyncio.create_task(send_pushover_notification(title=message_title, message=status_message))
         except Exception as e:
             print(f"Unable to send system status notification: {e}")
 
@@ -1004,14 +1009,14 @@ async def alarm_mode_switch():
             asyncio.create_task(indicator_signal("alarm_mode_switch", state=silent_alarm))
             if system_status_notifications:
                 if general_notifications:
-                    asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to audible."))
+                    asyncio.create_task(send_system_status_notification(message_title="Alarm", status_message="Alarm mode set to audible."))
         else:
             print("Alarm mode set to silent.")
             silent_alarm = True
             asyncio.create_task(indicator_signal("alarm_mode_switch", state=silent_alarm))
             if system_status_notifications:
                 if general_notifications:
-                    asyncio.create_task(send_system_status_notification(status_message="Alarm mode set to silent."))
+                    asyncio.create_task(send_system_status_notification(message_title="Alarm", status_message="Alarm mode set to silent."))
     except Exception as e:
         print(f"Error in alarm_mode_switch: {e}")
 
@@ -1105,7 +1110,7 @@ async def change_security_code():
             print(f"Security code updated. New code: {security_code}")
             if system_status_notifications:
                 if general_notifications:
-                    asyncio.create_task(send_system_status_notification(status_message=f"System security code updated. New code: {security_code}"))
+                    asyncio.create_task(send_system_status_notification(message_title="Security", status_message=f"System security code updated. New code: {security_code}"))
 
         entering_security_code = False
     except Exception as e:
@@ -1169,7 +1174,7 @@ async def reset_firmware_config():
 
         if system_status_notifications:
             if general_notifications:
-                asyncio.create_task(send_system_status_notification(status_message="Resetting firmware configuration to factory defaults."))
+                asyncio.create_task(send_system_status_notification(message_title="Configuration Reset", status_message="Resetting firmware configuration to factory defaults."))
 
         await play_dynamic_bell(50, buzzer_volume, 0.05, 5)
 
@@ -1208,7 +1213,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
                         await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
                         if system_status_notifications:
                             if security_code_notifications:
-                                asyncio.create_task(send_system_status_notification(status_message="The provided security code is too short."))
+                                asyncio.create_task(send_system_status_notification(message_title="Security", status_message="The provided security code is too short."))
                         return None  # Cancellation
                     print(f"Code entered: {code}")
                     break
@@ -1217,7 +1222,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
                         print("Code entry cancelled.")
                         if system_status_notifications:
                             if security_code_notifications:
-                                asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
+                                asyncio.create_task(send_system_status_notification(message_title="Security", status_message="Security code entry cancelled."))
                         return None  # Cancellation
                     print("Code cleared!")
                     code = ""  # Reset
@@ -1230,7 +1235,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
             print("Code entry cancelled.")
             if system_status_notifications:
                 if security_code_notifications:
-                    asyncio.create_task(send_system_status_notification(status_message="Security code entry cancelled."))
+                    asyncio.create_task(send_system_status_notification(message_title="Security", status_message="Security code entry cancelled."))
             return None
 
         if len(code) < min_length:  # Code too short
@@ -1238,7 +1243,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
             await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
             if system_status_notifications:
                 if security_code_notifications:
-                    asyncio.create_task(send_system_status_notification(status_message="Security code too short."))
+                    asyncio.create_task(send_system_status_notification(message_title="Security", status_message="Security code too short."))
             return None
 
         if code != security_code:  # Incorrect code
@@ -1247,7 +1252,7 @@ async def enter_security_code(security_code, max_attempts, min_length, max_lengt
             await play_dynamic_bell(50, buzzer_volume, 0.05, 1)
             if system_status_notifications:
                 if security_code_notifications:
-                    asyncio.create_task(send_system_status_notification(status_message="Invalid security code provided."))
+                    asyncio.create_task(send_system_status_notification(message_title="Security", status_message="Invalid security code provided."))
             if attempts >= max_attempts:
                 print("Maximum attempts reached. Triggering alarm.")
                 asyncio.create_task(alarm("Invalid Security Code Provided."))  # Trigger the alarm after too many attempts
@@ -1298,7 +1303,7 @@ async def system_startup():
         print("System ready.")
 
         # Send system ready notification
-        asyncio.create_task(send_system_status_notification(status_message="System ready."))
+        asyncio.create_task(send_system_status_notification(message_title="System", status_message="System ready."))
     except Exception as e:
         print(f"Error in system_startup: {e}")
 

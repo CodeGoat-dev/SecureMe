@@ -10,6 +10,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 Runs all indicators as background tasks to improve system performance.
 
+#### Notifications
+
+Uses notification titles for more descriptive notifications.
+
 ## V1.5.2
 
 ### Bug Fixes

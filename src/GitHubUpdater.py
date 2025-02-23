@@ -103,13 +103,18 @@ class GitHubUpdater:
         except Exception as e:
             print(f"Error sending notification: {e}")
 
-    async def send_system_status_notification(self, status_message):
+    async def send_system_status_notification(self, message_title, status_message):
         """Sends a system status notification via Pushover.
 
         Args:
+        - message_title: The title of the message to send.
         - status_message: The message to send.
         """
         await asyncio.sleep(0)
+
+        if not message_title:
+            print("A message title is required.")
+            return
 
         if not status_message:
             print("A status message is required.")
@@ -129,7 +134,7 @@ class GitHubUpdater:
             self.system_status_notifications = self.config.get_entry("pushover", "system_status_notifications")
 
             if self.system_status_notifications:
-                asyncio.create_task(self.send_pushover_notification(message=status_message))
+                asyncio.create_task(self.send_pushover_notification(title=message_title, message=status_message))
         except Exception as e:
             print(f"Unable to send system status notification: {e}")
 
@@ -270,13 +275,13 @@ class GitHubUpdater:
         if await self.is_update_available():
             if self.system_status_notifications:
                 if self.update_notifications:
-                    asyncio.create_task(self.send_system_status_notification(status_message=f"Firmware update available. Updating from {self.current_version} to {self.latest_version}"))
+                    asyncio.create_task(self.send_system_status_notification(message_title="Automatic Update", status_message=f"Firmware update available. Updating from {self.current_version} to {self.latest_version}"))
             await self.download_update()
             self.current_version = self.latest_version
             print(f"Firmware update complete. Updated to version {self.current_version}")
             if self.system_status_notifications:
                 if self.update_notifications:
-                    asyncio.create_task(self.send_system_status_notification(status_message=f"Firmware update complete. Updated to {self.latest_version}."))
+                    asyncio.create_task(self.send_system_status_notification(message_title="Automatic Update", status_message=f"Firmware update complete. Updated to {self.latest_version}."))
             if self.auto_reboot:
                 print("Restarting system...")
                 await asyncio.sleep(10)  # Delay before rebooting
