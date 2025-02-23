@@ -4,6 +4,12 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ## V1.5.4
 
+### Bug Fixes
+
+#### Notifications
+
+Fixes an issue where status indicators could be blocked during execution when sending notifications.
+
 ### Changes
 
 #### Notifications

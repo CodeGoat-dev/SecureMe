@@ -808,6 +808,14 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         return
 
     try:
+        if alarm_active:
+            while alarm_active:
+                await asyncio.sleep(0.05)
+
+        if not buzzer.duty_u16() == 0:
+            while not buzzer.duty_u16() == 0:
+                await asyncio.sleep(0.05)
+
         key_is_valid = await pushover.validate_api_key(app_token=pushover_app_token, api_key=pushover_api_key)
         if not key_is_valid:
             print("The configured Pushover API key is invalid.")
