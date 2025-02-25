@@ -117,6 +117,7 @@ security_code_max_length = 8
 
 pushover_app_token = None
 pushover_api_key = None
+sending_pushover_notification = False
 system_status_notifications = True
 general_notifications = True
 security_code_notifications = True
@@ -786,7 +787,7 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         - timeout: The request timeout in seconds.
         """
 
-    global pushover_app_token, pushover_api_key
+    global pushover_app_token, pushover_api_key, sending_pushover_notification
 
     await asyncio.sleep(0)
 
@@ -819,6 +820,12 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
             while not buzzer.duty_u16() == 0:
                 await asyncio.sleep(0.05)
 
+        if sending_pushover_notification:
+            while sending_pushover_notification:
+                await asyncio.sleep(0.05)
+
+        sending_pushover_notification = True
+
         key_is_valid = await pushover.validate_api_key(app_token=pushover_app_token, api_key=pushover_api_key)
         if not key_is_valid:
             print("The configured Pushover API key is invalid.")
@@ -827,6 +834,8 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
         asyncio.create_task(pushover.send_notification(app_token=pushover_app_token, api_key=pushover_api_key, title=title, message=message, priority=priority, timeout=timeout))
     except Exception as e:
         print(f"Error sending notification: {e}")
+    finally:
+        sending_pushover_notification = False
 
 async def send_system_status_notification(message_title, status_message):
     """Sends a system status notification via Pushover.
@@ -867,6 +876,14 @@ async def indicator_signal(indicator_type, state=None):
     - state (bool, optional): Used for indicators that have different states (e.g., armed/disarmed, locked/unlocked, silent/loud).
     """
     try:
+        if alarm_active:
+            while alarm_active:
+                await asyncio.sleep(0.05)
+
+        if sending_pushover_notification:
+            while sending_pushover_notification:
+                await asyncio.sleep(0.05)
+
         led.value(1)
         buzzer.duty_u16(buzzer_volume)
 

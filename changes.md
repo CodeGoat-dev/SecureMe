@@ -6,6 +6,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 ### Bug Fixes
 
+#### Notifications
+
+Fixes an issue where status indicators and alarms could be blocked during execution when sending notifications.
+
 #### Debounce
 
 Fixes debounce issues when locking and unlocking the keypad or changing buzzer volume.
