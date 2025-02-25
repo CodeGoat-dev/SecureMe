@@ -1,5 +1,5 @@
 # Goat - SecureMe WebServer class
-# Version 1.5.4
+# Version 1.5.5
 # © (c) 2024-2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
