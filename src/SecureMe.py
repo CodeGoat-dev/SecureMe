@@ -416,7 +416,6 @@ async def handle_arming():
                     print("Disarming")
                     is_armed = False
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
-                    asyncio.create_task(indicator_signal("system_ready", state=is_armed))
                     if system_status_notifications:
                         if general_notifications:
                             asyncio.create_task(send_system_status_notification(message_title="Security", status_message="System disarmed."))
@@ -437,10 +436,11 @@ async def handle_arming():
                     print("Arming")
                     await play_dynamic_bell(250, buzzer_volume, 0.05, arming_cooldown)
                     is_armed = True
-                    asyncio.create_task(indicator_signal("system_ready", state=is_armed))
                     if system_status_notifications:
                         if general_notifications:
                             asyncio.create_task(send_system_status_notification(message_title="Security", status_message="System armed."))
+
+                asyncio.create_task(indicator_signal("system_ready", state=is_armed))
 
             idle()
 
@@ -529,6 +529,7 @@ async def handle_buzzer_volume():
                     continue
                 print("Turning down volume.")
                 await decrease_buzzer_volume()
+                await asyncio.sleep(0.1)
 
             if volume_up_button.value() == 1:  # Button pressed
                 volume_up_button.init(Pin.OUT)
@@ -536,6 +537,7 @@ async def handle_buzzer_volume():
                     continue
                 print("Turning up volume.")
                 await increase_buzzer_volume()
+                await asyncio.sleep(0.1)
 
             idle()
 
@@ -709,6 +711,7 @@ async def detect_keypad_keys():
                 if key == "A":
                     print("Initiating keypad_lock.")
                     await keypad_lock()
+                    await asyncio.sleep(0.1)
                 elif key == "B":
                     print("Initiating alarm_mode_switch.")
                     await alarm_mode_switch()
@@ -1287,7 +1290,7 @@ async def system_startup():
     try:
         await validate_config()
 
-        asyncio.create_task(indicator_signal("system_startup"))
+        await indicator_signal("system_startup")
 
         if utils.isPicoW():
             await utils.configure_network()
@@ -1296,7 +1299,7 @@ async def system_startup():
 
         await warmup_pir_sensor()
 
-        asyncio.create_task(indicator_signal("system_ready", state=is_armed))
+        await indicator_signal("system_ready", state=is_armed)
 
         print("System ready.")
 

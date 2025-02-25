@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.5.5
+
+### Bug Fixes
+
+#### Debounce
+
+Fixes debounce issues when locking and unlocking the keypad or changing buzzer volume.
+
 ## V1.5.4
 
 ### Bug Fixes
