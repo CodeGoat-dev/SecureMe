@@ -14,6 +14,14 @@ Fixes an issue where status indicators and alarms could be blocked during execut
 
 Fixes debounce issues when locking and unlocking the keypad or changing buzzer volume.
 
+### Changes
+
+#### Indicators
+
+Switches back to normal execution for specific indicators.
+
+Improves indicator execution by waiting for any sounds or notifications to complete.
+
 ## V1.5.4
 
 ### Bug Fixes
