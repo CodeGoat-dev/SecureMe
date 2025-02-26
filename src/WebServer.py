@@ -25,7 +25,7 @@ class WebServer:
     def __init__(self, ip_address="0.0.0.0", http_port=8000):
         """Constructs the class and exposes properties."""
         # Constants
-        self.VERSION = "1.5.4"
+        self.VERSION = "1.5.5"
         self.REPO_URL = "https://github.com/CodeGoat-dev/SecureMe"
 
         self.default_ip_address = "0.0.0.0"
