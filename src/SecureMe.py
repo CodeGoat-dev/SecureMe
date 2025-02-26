@@ -880,6 +880,10 @@ async def indicator_signal(indicator_type, state=None):
             while alarm_active:
                 await asyncio.sleep(0.05)
 
+        if not buzzer.duty_u16() == 0:
+            while not buzzer.duty_u16() == 0:
+                await asyncio.sleep(0.05)
+
         if sending_pushover_notification:
             while sending_pushover_notification:
                 await asyncio.sleep(0.05)
