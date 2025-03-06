@@ -826,11 +826,6 @@ async def send_pushover_notification(title="Goat - SecureMe", message="Testing",
 
         sending_pushover_notification = True
 
-        key_is_valid = await pushover.validate_api_key(app_token=pushover_app_token, api_key=pushover_api_key)
-        if not key_is_valid:
-            print("The configured Pushover API key is invalid.")
-            return
-
         asyncio.create_task(pushover.send_notification(app_token=pushover_app_token, api_key=pushover_api_key, title=title, message=message, priority=priority, timeout=timeout))
     except Exception as e:
         print(f"Error sending notification: {e}")

@@ -2,6 +2,14 @@
 
 This document outlines the changes made between versions of the **Goat - SecureMe** firmware.
 
+## V1.5.6
+
+### Changes
+
+#### Notifications
+
+Pushover API keys are no longer validated for every notification.
+
 ## V1.5.5
 
 ### Bug Fixes

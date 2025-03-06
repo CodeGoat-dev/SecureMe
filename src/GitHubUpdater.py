@@ -1,5 +1,5 @@
 # Goat - GitHub Updater library
-# Version 1.1.8
+# Version 1.1.9
 # © (c) 2025 Goat Technologies
 # https://github.com/CodeGoat-dev/SecureMe
 # Description:
@@ -94,11 +94,6 @@ class GitHubUpdater:
             return
 
         try:
-            key_is_valid = await pushover.validate_api_key(app_token=self.pushover_app_token, api_key=self.pushover_api_key)
-            if not key_is_valid:
-                print("The configured Pushover API key is invalid.")
-                return
-
             asyncio.create_task(pushover.send_notification(app_token=self.pushover_app_token, api_key=self.pushover_api_key, title=title, message=message, priority=priority, timeout=timeout))
         except Exception as e:
             print(f"Error sending notification: {e}")
