@@ -10,6 +10,10 @@ This document outlines the changes made between versions of the **Goat - SecureM
 
 Pushover API keys are no longer validated for every notification.
 
+#### Initialization
+
+Improves exception handling during firmware initialization.
+
 ## V1.5.5
 
 ### Bug Fixes

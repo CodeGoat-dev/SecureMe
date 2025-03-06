@@ -1630,6 +1630,8 @@ try:
     asyncio.run(main())
 except KeyboardInterrupt:
     print("Keyboard interupt detected.")
+except Exception as e:
+    print(f"Unable to start: {e}")
 finally:
     buzzer.duty_u16(0)
     led.value(0)
